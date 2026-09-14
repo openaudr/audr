@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://openaudr.dev/spec/v1.0.0/audr.schema.json",
   "title": "Agent Usage Detail Record (AUDR)",
-  "description": "One record describing one metered event in an agent system. Carries raw counts and business attribution. Never carries a rated amount. Spec v1.0.0; see the field reference for normative prose.\n\nPROVENANCE. emitter.component identifies the logical component that wrote the record: harness | router | provider. When an SDK constructs or serializes a record, emitter.component identifies the SDK's logical host component. Record provenance is tracked only at the emitter level.\n\nWHAT THIS SCHEMA CANNOT ENFORCE. The following rules are normative but are enforced by the sink, not here: default-deny, a record missing attribution.environment MUST be ignored and MUST NOT be rated, which is why that field is not listed as required, and a sink MUST NOT infer it; record_id dedupe and correction replacement, including holding corrections whose target has not arrived and rejecting cycles; one writer per block per merge key; the uniqueness of (run.run_id, run.span_id) as naming exactly one metered operation; that a spawned sub-agent reuses the parent run_id; that run.parent_span_id names a span within the same run_id; that a correction is emitted by the same emitter.component as the record it corrects; cost consistency, since components are gross and providers round at different points; and how long a sink waits before declaring a missing counterpart an orphan, which is a sink operational choice and not a time watermark in this spec.",
+  "description": "This specification defines the Agent Usage Detail Record (AUDR), a JSON object that describes one metered operation in an agent system. A record identifies its emitter and resource, reports raw model or tool usage, associates the operation with a run, and carries attribution required for downstream cost allocation. A record MAY include an informational cost assertion.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -22,19 +22,20 @@
       "examples": [
         "1.0.0"
       ],
-      "description": "Version of the AUDR spec. Pinned to the 1.0.x family by this schema. Consumers MUST reject major versions they do not understand and records outside the 1.0.x family.",
+      "description": "AUDR schema version, constrained here to 1.0.x. Consumers MUST reject unsupported major versions.",
       "x_summary": "AUDR schema version, constrained here to 1.0.x. Consumers MUST reject unsupported major versions."
     },
     "record_id": {
       "type": "string",
       "minLength": 8,
       "maxLength": 64,
-      "description": "ULID or UUIDv7. The idempotency key. Unique per EMITTED RECORD, not per logical event: two components describing one call carry different record_ids and are merged, not deduped.",
+      "description": "ULID or UUIDv7 idempotency key, unique to each emitted record rather than each logical event. Records from different components use distinct IDs and are merged, not deduplicated.",
       "x_summary": "ULID or UUIDv7 idempotency key, unique to each emitted record rather than each logical event. Records from different components use distinct IDs and are merged, not deduplicated."
     },
     "emitter": {
       "type": "object",
       "additionalProperties": false,
+      "description": "Identifies the software component that wrote the record.",
       "required": [
         "component",
         "name",
@@ -47,7 +48,7 @@
             "router",
             "provider"
           ],
-          "description": "The component that WROTE this record. In practice records are emitted by harness or router; provider is for a provider emitting AUDR natively. This field is the discriminator between provider-billed and caller-billed tool execution.",
+          "description": "Component that wrote the record. This field identifies the caller that metered tool usage and cost.",
           "x_summary": "Component that wrote the record. This field identifies the caller that metered tool usage and cost."
         },
         "name": {
@@ -56,7 +57,7 @@
           "examples": [
             "@audr/openrouter"
           ],
-          "description": "Package identifier.",
+          "description": "Package identifier for the emitter.",
           "x_summary": "Package identifier for the emitter."
         },
         "version": {
@@ -65,7 +66,7 @@
           "examples": [
             "0.5.1"
           ],
-          "description": "Emitter version. Needed to attribute bad data to a bad release.",
+          "description": "Emitter release used to attribute data-quality issues.",
           "x_summary": "Emitter release used to attribute data-quality issues."
         }
       },
@@ -76,12 +77,13 @@
       "type": "string",
       "minLength": 8,
       "maxLength": 64,
-      "description": "The record_id this record restates. Its presence is what makes a record a correction; there is no record_type. Names exactly one previously emitted record, never a merge key and never a whole assembled event. A correction MUST carry the full corrected state rather than a delta, MUST be emitted by the same emitter.component as the record it corrects, and carries its own fresh record_id. A void is a correction whose usage counters are explicitly 0.",
+      "description": "Identifies one earlier record fully restated by this correction. The correction MUST contain full state, use a fresh record_id, and come from the same emitter.component; all-zero usage represents a void.",
       "x_summary": "Identifies one earlier record fully restated by this correction. The correction MUST contain full state, use a fresh record_id, and come from the same emitter.component; all-zero usage represents a void."
     },
     "timing": {
       "type": "object",
       "additionalProperties": false,
+      "description": "Event completion, ingest, and duration observations.",
       "required": [
         "event_time"
       ],
@@ -90,20 +92,20 @@
           "type": "string",
           "format": "date-time",
           "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$",
-          "description": "RFC3339 with millisecond precision. When the metered event COMPLETED. For streaming responses, termination of the stream, not first token. Each emitted record carries its own event_time observation; merged observations are never averaged.",
+          "description": "Event invocation time in RFC 3339 format with millisecond precision; for streams, use stream termination.",
           "x_summary": "Event invocation time in [RFC 3339](https://www.rfc-editor.org/rfc/rfc3339) format with millisecond precision; for streams, use stream termination."
         },
         "received_time": {
           "type": "string",
           "format": "date-time",
           "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$",
-          "description": "RFC3339 with millisecond precision. Set at ingest. An emitter MUST NOT set it, and its absence on an emitted record is normal and expected; a sink overwrites any value it finds. Drives lateness and watermark logic.",
+          "description": "Ingest time in RFC 3339 format with millisecond precision. Set by the sink.",
           "x_summary": "Ingest time in [RFC 3339](https://www.rfc-editor.org/rfc/rfc3339) format with millisecond precision. Set by the sink."
         },
         "duration_ms": {
           "type": "integer",
           "minimum": 0,
-          "description": "Wall-clock of the call. Not billing-relevant today; useful for anomaly detection.",
+          "description": "Event execution duration in milliseconds.",
           "x_summary": "Event execution duration in milliseconds."
         }
       },
@@ -119,7 +121,7 @@
         "name",
         "operation"
       ],
-      "description": "What was consumed. resource.type and resource.name identify the resource: type is model or tool, name is its identity. On model operations type MUST be model and name is the provider model string verbatim. On tool_execution and retrieval type MUST be tool and name is the logical tool or index identity. Both are required at the block level; the type/operation pairing is a document-level allOf.",
+      "description": "Identifies the consumed model or tool. Model operations require type=model; tool_execution and retrieval require type=tool.",
       "x_summary": "Identifies the consumed model or tool. Model operations require type=model; tool_execution and retrieval require type=tool.",
       "x_title": "Resource Object",
       "properties": {
@@ -134,7 +136,7 @@
             "azure-openai",
             "self-hosted"
           ],
-          "description": "Canonical lowercase provider slug. On a tool_execution or retrieval this is the vendor or platform that EXECUTED it: the tool vendor's slug, or self-hosted for a tool you run yourself.",
+          "description": "Canonical lowercase provider slug. For tool operations, identify the executing vendor or platform; use self-hosted for locally run tools.",
           "x_summary": "Canonical lowercase provider slug. For tool operations, identify the executing vendor or platform; use self-hosted for locally run tools."
         },
         "type": {
@@ -142,7 +144,7 @@
             "model",
             "tool"
           ],
-          "description": "Kind of named resource. model on model operations; tool on tool_execution and retrieval. Selects how name is interpreted, not which usage block is present — that remains resource.operation.",
+          "description": "Named resource kind: model for model operations or tool for tool_execution and retrieval. resource.operation selects the usage block.",
           "x_summary": "Named resource kind: model for model operations or tool for tool_execution and retrieval. resource.operation selects the usage block."
         },
         "name": {
@@ -154,7 +156,7 @@
             "run_sql",
             "web_search"
           ],
-          "description": "Identity of the resource named by type. When type is model this is the provider model string VERBATIM: do not normalise, alias, or strip version suffixes; the price book is keyed on this. When type is tool this is the stable logical identity of the tool or retrieval backend that was invoked, not a URL and not a version-suffixed function symbol. The emitting component supplies this value.",
+          "description": "Verbatim provider model identifier for models, or stable logical tool/backend identifier for tools. Do not normalize model names or use URLs and versioned function symbols for tools.",
           "x_summary": "Verbatim provider model identifier for models, or stable logical tool/backend identifier for tools. Do not normalize model names or use URLs and versioned function symbols for tools."
         },
         "operation": {
@@ -165,7 +167,7 @@
             "tool_execution",
             "retrieval"
           ],
-          "description": "MODEL tasks or operations are generation, embedding, reranking: these require resource.type=model and carry usage.llm. The remaining two, tool_execution and retrieval, require resource.type=tool and carry usage.tool. retrieval is separate from tool_execution because a vector-store query is frequently not modelled as a named tool by the caller; it still carries type=tool and a name for the index or store.",
+          "description": "Operation class that selects resource.type and usage: model operations use model with usage.llm; tool_execution and retrieval use tool with usage.tool.",
           "x_summary": "Operation class that selects resource.type and usage: model operations use model with usage.llm; tool_execution and retrieval use tool with usage.tool."
         },
         "modality": {
@@ -185,7 +187,7 @@
             "team-research",
             "byo-acme"
           ],
-          "description": "Label of the credential the call was made with, from the gateway's own key registry. A NAME, NEVER THE KEY: no secret, no prefix, no hash. Putting key material or any substring of it in this field is a security incident, and the field is an unstructured string precisely so nobody is tempted to make it structured.",
+          "description": "Credential label from the gateway registry. It MUST contain no key material, prefix, hash, or other secret substring.",
           "x_summary": "Credential label from the gateway registry. It MUST contain no key material, prefix, hash, or other secret substring."
         },
         "region": {
@@ -194,7 +196,7 @@
             "us-east-1",
             "eu-central-1"
           ],
-          "description": "Affects price and data residency.",
+          "description": "Region affecting price and data residency.",
           "x_summary": "Region affecting price and data residency."
         },
         "deployment": {
@@ -217,7 +219,7 @@
         "run_id",
         "span_id"
       ],
-      "description": "What makes a TASK costable rather than a CALL. A spawned sub-agent reuses the parent run_id; parent_span_id is the rollup link and MUST name a span within the same run_id. There is no separate root-run identifier. A run is closed by the harness record that carries outcome.",
+      "description": "Groups metered operations into a task and span hierarchy. Spawned agents reuse run_id, parent_span_id links within that run, and a harness outcome closes the run.",
       "x_summary": "Groups metered operations into a task and span hierarchy. Spawned agents reuse run_id, parent_span_id links within that run, and a harness outcome closes the run.",
       "x_title": "Run Object",
       "properties": {
@@ -225,25 +227,25 @@
           "type": "string",
           "minLength": 8,
           "maxLength": 64,
-          "description": "Minted by the harness where one exists and by the router where none does. Passed to the router in request metadata and echoed back; this echo is the single mechanical dependency of the whole spec. Opaque string, ULID or UUIDv7 recommended, no format mandated. MUST be unique within the emitting organisation and identical on every record belonging to the run, including records emitted by spawned sub-agents. A router-only deployment produces per-call cost, not per-task cost. A router-minted run_id is indistinguishable on the record from a harness-minted run_id on a genuine single_call run; a sink that needs the distinction knows it from deployment topology, not from this field.",
+          "description": "Unique run identifier, generated by the harness or by the router when no harness exists. It MUST be account-unique and identical on every record in the run, including spawned-agent records.",
           "x_summary": "Unique run identifier, generated by the harness or by the router when no harness exists. It MUST be account-unique and identical on every record in the run, including spawned-agent records."
         },
         "name": {
           "type": "string",
           "minLength": 1,
-          "description": "Optional human-readable name of the agentic run. When absent, consumers MUST use run_id in its place for display purposes.",
+          "description": "Optional human-readable name of the agentic run. When absent, run_id is used in its place for display purposes.",
           "x_summary": "Optional human-readable name of the agentic run. When absent, run_id is used in its place for display purposes."
         },
         "span_id": {
           "type": "string",
           "minLength": 1,
-          "description": "Identifies ONE METERED OPERATION. Opaque string, unique within its run_id. Together with run_id forms the merge key at the sink. Two different metered operations MUST NOT share a merge key, even when they happen inside one provider call: a provider-executed tool invoked during an inference call is emitted as its own span with parent_span_id naming the inference span.",
+          "description": "Span identifier for one metered operation, unique within run_id. Together they form the sink merge key, which MUST NOT be shared by different operations.",
           "x_summary": "Span identifier for one metered operation, unique within run_id. Together they form the sink merge key, which MUST NOT be shared by different operations."
         },
         "parent_span_id": {
           "type": "string",
           "minLength": 1,
-          "description": "Sub-agent and nested-tool hierarchy, and the link from a provider-executed tool span to the inference span that triggered it. MUST name a span_id within the same run_id, which this schema cannot check. A spawned sub-agent MUST reuse the parent run_id and MUST set this to the span that spawned it. Cost rollup is a graph walk of parent_span_id within one run_id; there is no separate root-run identifier.",
+          "description": "Links nested tools and spawned agents to a span in the same run_id. Spawned agents MUST reuse the parent run_id and set this field to their spawning span.",
           "x_summary": "Links nested tools and spawned agents to a span in the same run_id. Spawned agents MUST reuse the parent run_id and set this field to their spawning span."
         },
         "step": {
@@ -253,7 +255,7 @@
         },
         "trace_id": {
           "type": "string",
-          "description": "W3C trace ID, for joining to OpenTelemetry traces. Populate it if you have it: free correlation with existing observability.",
+          "description": "W3C trace identifier for OpenTelemetry correlation.",
           "x_summary": "W3C trace identifier for OpenTelemetry correlation."
         },
         "run_type": {
@@ -262,6 +264,7 @@
             "workflow",
             "single_call"
           ],
+          "description": "Overall work shape.",
           "x_summary": "Overall work shape."
         },
         "error_code": {
@@ -275,7 +278,7 @@
             "SERVICE_UNAVAILABLE",
             "CLIENT_CANCELLED"
           ],
-          "description": "Stable machine-readable failure identifier; aggregate on this. Deliberately NOT an enum, because failure modes are open-ended and a closed list would be wrong within a quarter. The router emits failures that only it observed. Errors are metered, not excused: a span that consumed tokens and then failed still reports the counts it burned, and whether it is chargeable is decided downstream.",
+          "description": "Error code when the run fails. Report consumed usage even on failure; downstream rating decides billability.",
           "x_summary": "Error code when the run fails. Report consumed usage even on failure; downstream rating decides billability."
         },
         "error_reason": {
@@ -284,7 +287,7 @@
           "examples": [
             "sandbox wall-clock exceeded"
           ],
-          "description": "Short human-readable failure label. The hard cap of 32 characters makes it a label rather than a message and structurally prevents an exception string carrying prompt or completion content into a financial system. Truncate at emit; do not spill detail here.",
+          "description": "Human-readable message of the run failure, limited to 32 characters.",
           "x_summary": "Human-readable message of the run failure, limited to 32 characters."
         },
         "outcome": {
@@ -294,7 +297,7 @@
             "abandoned",
             "failed"
           ],
-          "description": "How the run ended. Emitted only on the record that CLOSES THE RUN, and only by a harness, since a router does not know a run ended. Closed vocabulary: pick the closest value, do not invent a fifth; omit the field until the run has closed. This record is the spec's only signal that no further spans will arrive. Populate it if outcome-based pricing or outcome analysis is intended.",
+          "description": "The agent run's final outcome, emitted only by the harness.",
           "x_summary": "The agent run's final outcome, emitted only by the harness."
         }
       }
@@ -302,7 +305,7 @@
     "attribution": {
       "type": "object",
       "additionalProperties": false,
-      "description": "The block that separates this from observability.\n\nDEFAULT DENY: a record missing environment MUST be treated as cost-only, MUST NOT be rated, and MUST NOT reach an invoice. The field is deliberately NOT listed in 'required' so that the rule is expressible on a real record: if it were schema-required, a record missing it would simply be invalid and no conformant sink could ever hold one to treat as cost-only. A conformant emitter MUST populate environment; enforcement lives at ingest, where the sink ignores the record.\n\nIdentity model: account_id = who pays and user_id = who triggered the operation.",
+      "description": "Carries billability and allocation dimensions. Emitters MUST supply environment; sinks ignore records missing it, and production records require account_id.",
       "x_summary": "Carries billability and allocation dimensions. Emitters MUST supply environment; sinks ignore records missing it, and production records require account_id.",
       "x_title": "Attribution Object",
       "properties": {
@@ -314,25 +317,25 @@
             "test",
             "evaluation"
           ],
-          "description": "A conformant emitter MUST populate this. See the default-deny note on this block for why it is not schema-required.",
+          "description": "Deployment environment. A conformant emitter MUST populate it; a missing value triggers default-deny ignore.",
           "x_summary": "Deployment environment. A conformant emitter MUST populate it; a missing value triggers default-deny ignore.",
           "x_requirement": "conditional"
         },
         "user_id": {
           "type": "string",
-          "description": "WHO TRIGGERED IT: an individual inside the paying account, or one of their end users. MUST be a pseudonymous identifier, never an email or name. MUST NOT be used to derive a billable amount; use account_id for that. Never billed directly: seat analytics, per-user quotas, abuse investigation.",
+          "description": "Pseudonymous identity of the triggering user; never an email or name. It MUST NOT be used by rating; account_id MUST be used for rating.",
           "x_summary": "Pseudonymous identity of the triggering user; never an email or name. It MUST NOT be used by rating; account_id MUST be used for rating."
         },
         "account_id": {
           "type": "string",
           "minLength": 1,
-          "description": "WHO PAYS. The paying account on the contract; the subject of the invoice. The only identity field a rating engine may aggregate on. Required when environment=production and optional otherwise. Ordinarily not personal data, but an account key identifying a sole trader or named individual is.",
+          "description": "The account that pays the bill. Rating may aggregate usage by this account. Required for production traffic; optional otherwise.",
           "x_summary": "The account that pays the bill. Rating may aggregate usage by this account. Required for production traffic; optional otherwise.",
           "x_requirement": "conditional"
         },
         "subscription_id": {
           "type": "string",
-          "description": "The only sink-enrichable field. A sink MAY populate it by looking up account_id, MUST NOT overwrite an emitter-supplied value, and MUST list the path in sink.enriched_fields. Enrichment is lookup by a key the emitter supplied, never inference: a sink MUST NOT infer environment from hostname, API key, IP, or any other signal.",
+          "description": "Subscription associated with the paying account for this usage record.",
           "x_summary": "Subscription associated with the paying account for this usage record."
         },
         "labels": {
@@ -346,7 +349,7 @@
             "type": "string",
             "maxLength": 256
           },
-          "description": "Free-form dimensions. Escape hatch so teams don't fork the schema. MUST NOT contain PII, and MUST NOT carry a billable identity: usage-based resale is out of scope, so there is no field for the customer's-customer as a billable entity and labels is not a substitute for one. Enforcement is documentary: this schema does not scan values, and the SDK is not required to reject or warn on emit.",
+          "description": "Up to 20 free-form dimensions for non-billable metadata. Labels MUST NOT contain PII.",
           "x_summary": "Up to 20 free-form dimensions for non-billable metadata. Labels MUST NOT contain PII."
         }
       },
@@ -374,7 +377,7 @@
     "usage": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Raw counts. NO PRICES. Exactly one of llm or tool is present, selected by resource.operation; the other MUST be absent. A present sub-block MUST contain at least one counter, because an empty object asserts nothing.\n\nABSENT VS ZERO is normative: an absent key means not applicable or not reported, while a key present with value 0 means measured and the measurement was zero. A consumer MUST NOT coerce absent to 0 when computing a rated amount, because 'the provider didn't tell us how many cache reads there were' and 'there were no cache reads' produce different invoices and different follow-up actions.",
+      "description": "Raw, non-monetary counters with exactly one non-empty llm or tool block selected by resource.operation. An absent counter means unreported or inapplicable; zero means measured as zero and MUST NOT be inferred from absence.",
       "x_summary": "Raw, non-monetary counters with exactly one non-empty llm or tool block selected by resource.operation. An absent counter means unreported or inapplicable; zero means measured as zero and MUST NOT be inferred from absence.",
       "x_title": "Usage Object",
       "properties": {
@@ -382,50 +385,50 @@
           "type": "object",
           "minProperties": 1,
           "additionalProperties": false,
-          "description": "Counters produced by a model call. A harness that reads these counters from the provider response may emit them with emitter.component set to harness.",
+          "description": "Non-empty model-call counters. A harness may emit counters read from the provider response.",
           "x_summary": "Non-empty model-call counters. A harness may emit counters read from the provider response.",
           "x_requirement": "conditional",
           "properties": {
             "input_tokens": {
               "type": "integer",
               "minimum": 0,
-              "description": "Uncached input tokens only. Do NOT include cache reads here.",
+              "description": "Uncached input tokens; MUST exclude cache reads.",
               "x_summary": "Uncached input tokens; MUST exclude cache reads."
             },
             "output_tokens": {
               "type": "integer",
               "minimum": 0,
-              "description": "Excludes reasoning tokens when reasoning_tokens is present, mirroring the cost rule.",
+              "description": "Output tokens; exclude reasoning tokens when reasoning_tokens is present.",
               "x_summary": "Output tokens; exclude reasoning tokens when reasoning_tokens is present."
             },
             "cache_read_tokens": {
               "type": "integer",
               "minimum": 0,
-              "description": "Priced differently by every provider. Must be separate.",
+              "description": "Prompt-cache read tokens, reported separately for distinct pricing.",
               "x_summary": "Prompt-cache read tokens, reported separately for distinct pricing."
             },
             "cache_write_tokens": {
               "type": "integer",
               "minimum": 0,
-              "description": "Tokens written to a prompt cache on this call.",
+              "description": "Tokens written to a prompt cache by this call.",
               "x_summary": "Tokens written to a prompt cache by this call."
             },
             "reasoning_tokens": {
               "type": "integer",
               "minimum": 0,
-              "description": "Billed as output by most providers today; kept separate because that will not stay true.",
+              "description": "Reasoning tokens, separate from output for independent pricing.",
               "x_summary": "Reasoning tokens, separate from output for independent pricing."
             },
             "requests": {
               "type": "integer",
               "minimum": 0,
-              "description": "For per-request pricing tiers. NO DEFAULT: absent means not reported, exactly as for every other counter. A router that means 'one request' writes 1.",
+              "description": "Request count for per-request pricing. No default applies: absent means unreported, while one request is encoded as 1.",
               "x_summary": "Request count for per-request pricing. No default applies: absent means unreported, while one request is encoded as 1."
             },
             "images_processed": {
               "type": "integer",
               "minimum": 0,
-              "description": "Images in the model input.",
+              "description": "Images supplied in model input.",
               "x_summary": "Images supplied in model input."
             },
             "audio_input_seconds": {
@@ -446,7 +449,7 @@
                 "number"
               ],
               "minimum": 0,
-              "description": "Provider-specific counter, namespaced x_<provider>_<name>. Unknown keys are VALID.",
+              "description": "Non-negative provider counter named x_<provider>_<name>.",
               "x_summary": "Non-negative provider counter named x_<provider>_<name>."
             }
           }
@@ -455,26 +458,26 @@
           "type": "object",
           "minProperties": 1,
           "additionalProperties": false,
-          "description": "Counters produced by tool execution or retrieval. Written by whoever EXECUTED the tool: the harness for tools run against a contract the caller holds, the router for provider-executed tools such as provider-side web search, server-side code execution, and computer use. The choice is per-record, not per-field, and it follows execution. emitter.component is the discriminator between the two cases, so a component MUST NOT report tool counters for a tool it did not execute.\n\nThe standard fields are intentionally minimal: type classifies the metered unit, call_count is the primary invocation or run count, sandbox_time is wall-clock compute held in a sandbox in milliseconds (distinct from timing.duration_ms, which is whole-operation elapsed time), and x_* carries implementation-specific counters such as API fan-out, search or fetch counts, retrieval queries, documents returned, or failures.",
+          "description": "Non-empty counters reported by the component that executed the tool: harness for caller-held contracts, router for provider-executed tools.",
           "x_summary": "Non-empty counters reported by the component that executed the tool: harness for caller-held contracts, router for provider-executed tools.",
           "x_requirement": "conditional",
           "properties": {
             "type": {
               "type": "string",
               "minLength": 1,
-              "description": "Metering class for this tool record. Open vocabulary: the emitter chooses the closest stable label for what was measured, such as invocation, api, web_search, code_execution, or retrieval. Complements resource.operation and resource.name; it does not replace them.",
+              "description": "The tool operation being metered, such as invocation, api, web_search, code_execution, or retrieval. It complements resource.operation and resource.name.",
               "x_summary": "The tool operation being metered, such as invocation, api, web_search, code_execution, or retrieval. It complements resource.operation and resource.name."
             },
             "call_count": {
               "type": "integer",
               "minimum": 0,
-              "description": "Primary invocation or run count for this record. The base unit of per-call tool pricing. For retrieval, this is usually the number of queries issued.",
+              "description": "Invocation or run count used for per-call pricing. For retrieval, this is usually the query count.",
               "x_summary": "Invocation or run count used for per-call pricing. For retrieval, this is usually the query count."
             },
             "sandbox_time": {
               "type": "number",
               "minimum": 0,
-              "description": "Wall-clock compute held in a sandbox, in milliseconds. Execution count alone under-prices a tool that runs for four minutes. Not the same as timing.duration_ms.",
+              "description": "Sandbox compute wall-clock time in milliseconds, distinct from whole-operation timing.duration_ms. Used when an agent run spins up a sandbox for tool execution.",
               "x_summary": "Sandbox compute wall-clock time in milliseconds, distinct from whole-operation timing.duration_ms. Used when an agent run spins up a sandbox for tool execution."
             }
           },
@@ -485,7 +488,7 @@
                 "number"
               ],
               "minimum": 0,
-              "description": "Implementation-specific counter, namespaced x_<name>. Unknown keys are VALID.",
+              "description": "Non-negative implementation counter named x_<name>.",
               "x_summary": "Non-negative implementation counter named x_<name>."
             }
           }
@@ -499,20 +502,20 @@
         "total_cost",
         "currency"
       ],
-      "description": "What the provider or router ASSERTED this event cost. A sink MAY use this assertion as rating input, or it MAY ignore the assertion and calculate amounts independently; AUDR does not prescribe that policy. It exists so implementers can see their own spend without each maintaining a drifting historical price book keyed on provider, model, region, date, and kind of token (input, output, cache read, cache write, reasoning).\n\nThe emitter.component value records which component wrote the cost assertion.\n\nGROSS COMPONENTS, NET TOTAL: every field inside cost.llm, including total_token_cost, and every monetary field inside cost.tool is gross (before discount). cost.total_cost is net (after discount). There is no third convention and no per-field exception.\n\nA record carries AT MOST ONE cost sub-block, matching its usage block. Consistency is asserted, not enforced here, because providers round at different points and rejecting a record over a half-cent disagreement would lose the cost data entirely. Where present these should hold, all in cost.currency: cost.llm components sum to total_token_cost; original_cost is approximately the gross subtotal when one is reported; original_cost - discount_amount is approximately total_cost; and with no discount reported, total_cost is approximately the gross subtotal. A sink SHOULD compare and alert, and MUST NOT recompute total_cost from the parts.",
+      "description": "Provider- or router-asserted cost that rating MAY use or ignore according to its billing configuration. Components are gross, total_cost is net, and the single cost sub-block must match usage; rating MAY check consistency but MUST NOT overwrite the total.",
       "x_summary": "Provider- or router-asserted cost that rating MAY use or ignore according to its billing configuration. Components are gross, total_cost is net, and the single cost sub-block must match usage; rating MAY check consistency but MUST NOT overwrite the total.",
       "x_title": "Cost Object",
       "properties": {
         "total_cost": {
           "type": "number",
           "minimum": 0,
-          "description": "NET asserted cost of this event, AFTER any discount. The headline figure and the event-level number. A consumer summing total_cost with the subtotal double-counts; on a record with no discount the two are equal, which is exactly when the similar names are most likely to be misread.",
+          "description": "Event-level total cost after discounts.",
           "x_summary": "Event-level total cost after discounts."
         },
         "currency": {
           "type": "string",
           "pattern": "^[A-Z]{3}$",
-          "description": "ISO 4217, uppercase. Applies to every monetary field in the block.",
+          "description": "Currency code of the costs in uppercase according to ISO 4217 format.",
           "x_summary": "Currency code of the costs in uppercase according to ISO 4217 format."
         },
         "llm": {
@@ -521,44 +524,44 @@
           "required": [
             "total_token_cost"
           ],
-          "description": "Money for a model call, mirroring usage.llm. Present only on model operations. All values gross.",
+          "description": "The gross cost of the model operation calls. The breakdown is similar to usage.llm and is present only for model operations.",
           "x_summary": "The gross cost of the model operation calls. The breakdown is similar to usage.llm and is present only for model operations.",
           "x_requirement": "conditional",
           "properties": {
             "total_token_cost": {
               "type": "number",
               "minimum": 0,
-              "description": "Gross subtotal for the model call. Required whenever cost.llm is present. Carried rather than derived because providers round the subtotal, not the parts.",
+              "description": "Total token cost for this model call event. Reference only and MAY have rounding differences with the sum of individual token costs.",
               "x_summary": "Total token cost for this model call event. Reference only and MAY have rounding differences with the sum of individual token costs."
             },
             "input_token_cost": {
               "type": "number",
               "minimum": 0,
-              "description": "Uncached input tokens. MUST exclude cache reads when cache_read_cost is present. Where the specific field is absent the cost may be folded in here, since absent means 'not reported apart'.",
+              "description": "Cost of uncached input tokens. This would be the total input token cost if cache_read_cost were absent.",
               "x_summary": "Cost of uncached input tokens. This would be the total input token cost if cache_read_cost were absent."
             },
             "output_token_cost": {
               "type": "number",
               "minimum": 0,
-              "description": "Output tokens. MUST exclude reasoning when reasoning_cost is present.",
+              "description": "Output token cost and MUST exclude reasoning_cost.",
               "x_summary": "Output token cost and MUST exclude reasoning_cost."
             },
             "cache_read_cost": {
               "type": "number",
               "minimum": 0,
-              "description": "Cache reads, priced below base input by every provider that offers them.",
+              "description": "Prompt-cache read cost.",
               "x_summary": "Prompt-cache read cost."
             },
             "cache_write_cost": {
               "type": "number",
               "minimum": 0,
-              "description": "Cache writes, frequently priced ABOVE base input. Folding this into input_token_cost is what makes cache economics unanalysable.",
+              "description": "Prompt-cache write cost.",
               "x_summary": "Prompt-cache write cost."
             },
             "reasoning_cost": {
               "type": "number",
               "minimum": 0,
-              "description": "Reasoning tokens, where the provider prices them apart from output.",
+              "description": "Reasoning-token cost.",
               "x_summary": "Reasoning-token cost."
             }
           }
@@ -567,26 +570,26 @@
           "type": "object",
           "minProperties": 1,
           "additionalProperties": false,
-          "description": "Money for tool execution, mirroring usage.tool. Present only on tool_execution and retrieval. The component that executed the tool emits the record. All values gross.\n\nThe standard fields are intentionally minimal: type matches usage.tool.type, call_cost is the primary per-invocation or per-run charge against usage.tool.call_count, sandbox_cost is the charge against usage.tool.sandbox_time, and x_* carries implementation-specific monetary extensions such as API, search, fetch, or retrieval charges.",
+          "description": "The gross cost of the tool execution calls. The breakdown is similar to usage.tool and is present only for tool_execution and retrieval.",
           "x_summary": "The gross cost of the tool execution calls. The breakdown is similar to usage.tool and is present only for tool_execution and retrieval.",
           "x_requirement": "conditional",
           "properties": {
             "type": {
               "type": "string",
               "minLength": 1,
-              "description": "Metering class for this tool cost block. SHOULD match usage.tool.type on the same record.",
+              "description": "The tool operation being metered. It SHOULD match usage.tool.type on the same record.",
               "x_summary": "The tool operation being metered. It SHOULD match usage.tool.type on the same record."
             },
             "call_cost": {
               "type": "number",
               "minimum": 0,
-              "description": "Primary per-invocation or per-run charge, against usage.tool.call_count.",
+              "description": "Per-invocation charge corresponding to usage.tool.call_count.",
               "x_summary": "Per-invocation charge corresponding to usage.tool.call_count."
             },
             "sandbox_cost": {
               "type": "number",
               "minimum": 0,
-              "description": "Charge against usage.tool.sandbox_time.",
+              "description": "Charge corresponding to usage.tool.sandbox_time.",
               "x_summary": "Charge corresponding to usage.tool.sandbox_time."
             }
           },
@@ -594,7 +597,7 @@
             "^x_[a-z0-9_]+$": {
               "type": "number",
               "minimum": 0,
-              "description": "Implementation-specific monetary extension, namespaced x_<name>. Unknown keys are VALID.",
+              "description": "Charge amount for an implementation-specific field named x_<name>.",
               "x_summary": "Charge amount for an implementation-specific field named x_<name>."
             }
           }
@@ -602,20 +605,20 @@
         "original_cost": {
           "type": "number",
           "minimum": 0,
-          "description": "List cost before any commitment, negotiated rate, or promotion. Equal to the record's gross subtotal when the emitter reports one.",
+          "description": "List cost before commitments, negotiated rates, or promotions.",
           "x_summary": "List cost before commitments, negotiated rates, or promotions."
         },
         "discount_amount": {
           "type": "number",
           "minimum": 0,
-          "description": "original_cost - total_cost.",
+          "description": "Difference between original_cost and total_cost.",
           "x_summary": "Difference between original_cost and total_cost."
         },
         "discount_percent": {
           "type": "number",
           "minimum": 0,
           "maximum": 100,
-          "description": "Redundant with original_cost and discount_amount, carried because several providers report the percentage directly and re-deriving it invites rounding disputes.",
+          "description": "Any provider promotional discount percentage.",
           "x_summary": "Any provider promotional discount percentage."
         }
       }
