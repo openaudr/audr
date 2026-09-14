@@ -40,12 +40,12 @@ attribution that the records join.
 | --- | --- |
 | Implement it | [Specification v1.0.0](spec/v1.0.0/SPEC.md) |
 | Validate records | [`audr.schema.json`](spec/v1.0.0/audr.schema.json) |
-| See a complete record | [`examples/record.json`](examples/record.json) |
+| See a complete record | [`record.json`](spec/v1.0.0/examples/record.json) |
 
 The schema's canonical URL is its `$id`:
 
 ```
-https://openaudr.dev/specification/v1.0.0.schema.json
+https://openaudr.dev/spec/v1.0.0/audr.schema.json
 ```
 
 Validate the example against it with any JSON Schema Draft 2020-12 validator:
@@ -55,8 +55,8 @@ pip install jsonschema
 python3 -c "
 import json, urllib.request
 from jsonschema import Draft202012Validator as V
-schema = json.load(urllib.request.urlopen('https://openaudr.dev/specification/v1.0.0.schema.json'))
-V(schema).validate(json.load(open('examples/record.json')))
+schema = json.load(urllib.request.urlopen('https://openaudr.dev/spec/v1.0.0/audr.schema.json'))
+V(schema).validate(json.load(open('spec/v1.0.0/examples/record.json')))
 print('valid')
 "
 ```
@@ -77,6 +77,12 @@ community-owned. As adoption grows, the goal is to move cost governance to an
 independent foundation.
 
 Stewarded by Chargebee. Contact us at <audr@chargebee.com>.
+
+## Contributing
+
+Tell us where AUDR breaks for a cost model you have and we haven't imagined.
+[Open an issue](https://github.com/openaudr/audr/issues) or email
+<audr@chargebee.com>. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Security
 

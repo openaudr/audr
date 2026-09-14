@@ -23,7 +23,7 @@ vulnerability, that is in scope and we want to hear it.
 ## Reporting
 
 Report privately through
-[GitHub's private vulnerability reporting](https://github.com/openaudr/openaudr/security/advisories/new).
+[GitHub's private vulnerability reporting](https://github.com/openaudr/audr/security/advisories/new).
 Do not open a public issue for a suspected vulnerability.
 
 We will acknowledge within three business days and give an assessment within ten.

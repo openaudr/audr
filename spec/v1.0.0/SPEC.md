@@ -1,4 +1,4 @@
-<!-- GENERATED FILE -- edit spec/v1.0.0/{schema,outline.yaml,prose/} instead. -->
+<!-- GENERATED FILE -- field semantics are derived from audr.schema.json. -->
 
 # Agent Usage Detail Record (AUDR)
 
@@ -64,7 +64,7 @@ Each emitted record has an independent `record_id` for deduplication and
 correction processing. Downstream rating components MAY use or ignore the
 asserted `cost` object according to its own billing configuration.
 
-**Schema ID**: `https://openaudr.dev/specification/v1.0.0.schema.json`
+**Schema ID**: `https://openaudr.dev/spec/v1.0.0/audr.schema.json`
 
 **Root type**: JSON object
 
@@ -122,26 +122,22 @@ explicitly defined. All other additional properties are invalid.
 ## 3.2 Conformance
 
 A conformant record MUST contain all top-level required properties and MUST
-satisfy the cross-field operation constraints in [section 3.13](#cross-field).
+satisfy the cross-field operation constraints in [section 3.13](#313-cross-field-operation-constraints).
 
 ## 3.3 Validation Boundaries
 
 JSON Schema validation does not enforce every AUDR invariant. Conformant sinks
-and conformance tooling are responsible for the requirements below. Each is
-stated normatively, with an identifier, in [INVARIANTS.md](../INVARIANTS.md).
+are responsible for the following requirements:
 
 - A record missing `attribution.environment` MUST be ignored and MUST NOT be
-  rated. (I-02)
-- Sinks MUST apply `record_id` deduplication and correction replacement. (I-04)
-- Unknown `x_*` extension counters MUST be accepted, not rejected. (I-05)
-- Each block has one writer for a given `run_id` and `span_id` merge key. (I-07)
+  rated.
+- Sinks MUST apply `record_id` deduplication and correction replacement.
+- Unknown `x_*` extension counters MUST be accepted, not rejected.
+- Each block has one writer for a given `run_id` and `span_id` merge key.
 - Rating components MAY check cost-component consistency without overwriting
-  `cost.total_cost`. (I-01)
+  `cost.total_cost`.
 - A merge key MUST identify one metered operation.
 - A correction MUST use the same `emitter.component` as the corrected record.
-
-The last two requirements are normative but do not yet carry stable identifiers;
-see [INVARIANTS.md](../INVARIANTS.md) for the current assignment status.
 
 ## 3.4 AUDR Record Object
 
@@ -264,8 +260,7 @@ duration observations.
 ## 3.8 `resource` Object
 
 The REQUIRED `resource` object identifies the consumed model or tool and the
-operation performed. `resource.provider` values are drawn from the
-[provider registry](../registry/providers.md).
+operation performed.
 
 ### 3.8.1 JSON Example
 
@@ -352,7 +347,7 @@ subscription, and label dimensions.
 | `attribution.environment` | enum (`production`, `staging`, `development`, `test`, `evaluation`) | Conditional | Deployment environment. A conformant emitter MUST populate it; a missing value triggers default-deny ignore. |
 | `attribution.user_id` | string | Optional | Pseudonymous identity of the triggering user; never an email or name. It MUST NOT be used by rating; account_id MUST be used for rating. |
 | `attribution.account_id` | string (min 1 chars) | Conditional | The account that pays the bill. Rating may aggregate usage by this account. Required for production traffic; optional otherwise. |
-| `attribution.subscription_id` | string | Optional | Subscription of the paying account for this usage record is associated with. |
+| `attribution.subscription_id` | string | Optional | Subscription associated with the paying account for this usage record. |
 | `attribution.labels` | object (≤ 20 key-value pairs) | Optional | Up to 20 free-form dimensions for non-billable metadata. Labels MUST NOT contain PII. |
 
 ## 3.11 `usage` Object
@@ -430,8 +425,8 @@ assertion according to its own billing configuration.
 
 | Field Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `cost.llm.total_token_cost` | number ≥ 0 | Required | Total token cost this model call event. Reference only and MAY have rounding differences with the some of individual token costs. |
-| `cost.llm.input_token_cost` | number ≥ 0 | Optional | Cost of uncached input tokens. This would the total input token cost if cache_read_cost were absent. |
+| `cost.llm.total_token_cost` | number ≥ 0 | Required | Total token cost for this model call event. Reference only and MAY have rounding differences with the sum of individual token costs. |
+| `cost.llm.input_token_cost` | number ≥ 0 | Optional | Cost of uncached input tokens. This would be the total input token cost if cache_read_cost were absent. |
 | `cost.llm.output_token_cost` | number ≥ 0 | Optional | Output token cost and MUST exclude reasoning_cost. |
 | `cost.llm.cache_read_cost` | number ≥ 0 | Optional | Prompt-cache read cost. |
 | `cost.llm.cache_write_cost` | number ≥ 0 | Optional | Prompt-cache write cost. |
@@ -453,8 +448,7 @@ assertion according to its own billing configuration.
 ## 3.13 Cross-Field Operation Constraints
 
 `resource.operation` determines the required `resource.type`, `usage` and `cost`
-sub-objects. These constraints are enforced by the schema's root `allOf`, and are
-exercised by the [conformance fixtures](../../conformance/README.md).
+sub-objects. These constraints are enforced by the schema's root `allOf`.
 
 | Operation class | resource.type | usage | cost |
 | --- | --- | --- | --- |

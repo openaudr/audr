@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://openaudr.dev/specification/v1.0.0.schema.json",
+  "$id": "https://openaudr.dev/spec/v1.0.0/audr.schema.json",
   "title": "Agent Usage Detail Record (AUDR)",
-  "description": "One record describing one metered event in an agent system. Carries raw counts and business attribution. Never carries a rated amount. Spec v1.0.0; see the field reference for normative prose.\n\nPROVENANCE. emitter.component identifies the logical component that wrote the record: harness | router | provider. When an SDK constructs or serializes a record, emitter.component identifies the SDK's logical host component. Record provenance is tracked only at the emitter level.\n\nWHAT THIS SCHEMA CANNOT ENFORCE. The following rules are normative but are enforced by the sink and the conformance suite, not here: (I-02) default-deny, a record missing attribution.environment MUST be ignored and MUST NOT be rated, which is why that field is not listed as required, and a sink MUST NOT infer it; (I-04) record_id dedupe and correction replacement, including holding corrections whose target has not arrived and rejecting cycles; (I-07) one writer per block per merge key; the uniqueness of (run.run_id, run.span_id) as naming exactly one metered operation; that a spawned sub-agent reuses the parent run_id; that run.parent_span_id names a span within the same run_id; that a correction is emitted by the same emitter.component as the record it corrects; cost consistency, since components are gross and providers round at different points; and how long a sink waits before declaring a missing counterpart an orphan, which is a sink operational choice and not a time watermark in this spec.",
+  "description": "One record describing one metered event in an agent system. Carries raw counts and business attribution. Never carries a rated amount. Spec v1.0.0; see the field reference for normative prose.\n\nPROVENANCE. emitter.component identifies the logical component that wrote the record: harness | router | provider. When an SDK constructs or serializes a record, emitter.component identifies the SDK's logical host component. Record provenance is tracked only at the emitter level.\n\nWHAT THIS SCHEMA CANNOT ENFORCE. The following rules are normative but are enforced by the sink, not here: default-deny, a record missing attribution.environment MUST be ignored and MUST NOT be rated, which is why that field is not listed as required, and a sink MUST NOT infer it; record_id dedupe and correction replacement, including holding corrections whose target has not arrived and rejecting cycles; one writer per block per merge key; the uniqueness of (run.run_id, run.span_id) as naming exactly one metered operation; that a spawned sub-agent reuses the parent run_id; that run.parent_span_id names a span within the same run_id; that a correction is emitted by the same emitter.component as the record it corrects; cost consistency, since components are gross and providers round at different points; and how long a sink waits before declaring a missing counterpart an orphan, which is a sink operational choice and not a time watermark in this spec.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -134,7 +134,7 @@
             "azure-openai",
             "self-hosted"
           ],
-          "description": "Canonical lowercase slug from the registry in the spec repo. On a tool_execution or retrieval this is the vendor or platform that EXECUTED it: the tool vendor's slug, or self-hosted for a tool you run yourself.",
+          "description": "Canonical lowercase provider slug. On a tool_execution or retrieval this is the vendor or platform that EXECUTED it: the tool vendor's slug, or self-hosted for a tool you run yourself.",
           "x_summary": "Canonical lowercase provider slug. For tool operations, identify the executing vendor or platform; use self-hosted for locally run tools."
         },
         "type": {
@@ -302,7 +302,7 @@
     "attribution": {
       "type": "object",
       "additionalProperties": false,
-      "description": "The block that separates this from observability.\n\nDEFAULT DENY (I-02): a record missing environment MUST be treated as cost-only, MUST NOT be rated, and MUST NOT reach an invoice. The field is deliberately NOT listed in 'required' so that the rule is expressible on a real record: if it were schema-required, a record missing it would simply be invalid and no conformant sink could ever hold one to treat as cost-only. A conformant emitter MUST populate environment; enforcement lives at ingest, where the sink ignores the record.\n\nIdentity model: account_id = who pays and user_id = who triggered the operation.",
+      "description": "The block that separates this from observability.\n\nDEFAULT DENY: a record missing environment MUST be treated as cost-only, MUST NOT be rated, and MUST NOT reach an invoice. The field is deliberately NOT listed in 'required' so that the rule is expressible on a real record: if it were schema-required, a record missing it would simply be invalid and no conformant sink could ever hold one to treat as cost-only. A conformant emitter MUST populate environment; enforcement lives at ingest, where the sink ignores the record.\n\nIdentity model: account_id = who pays and user_id = who triggered the operation.",
       "x_summary": "Carries billability and allocation dimensions. Emitters MUST supply environment; sinks ignore records missing it, and production records require account_id.",
       "x_title": "Attribution Object",
       "properties": {
@@ -333,7 +333,7 @@
         "subscription_id": {
           "type": "string",
           "description": "The only sink-enrichable field. A sink MAY populate it by looking up account_id, MUST NOT overwrite an emitter-supplied value, and MUST list the path in sink.enriched_fields. Enrichment is lookup by a key the emitter supplied, never inference: a sink MUST NOT infer environment from hostname, API key, IP, or any other signal.",
-          "x_summary": "Subscription of the paying account for this usage record is associated with."
+          "x_summary": "Subscription associated with the paying account for this usage record."
         },
         "labels": {
           "type": "object",
@@ -446,8 +446,8 @@
                 "number"
               ],
               "minimum": 0,
-              "description": "Provider-specific counter, namespaced x_<provider>_<name>. Unknown keys are VALID (invariant I-05).",
-              "x_summary": "Non-negative provider counter named x_&lt;provider&gt;_&lt;name&gt;."
+              "description": "Provider-specific counter, namespaced x_<provider>_<name>. Unknown keys are VALID.",
+              "x_summary": "Non-negative provider counter named x_<provider>_<name>."
             }
           }
         },
@@ -485,8 +485,8 @@
                 "number"
               ],
               "minimum": 0,
-              "description": "Implementation-specific counter, namespaced x_<name>. Unknown keys are VALID (invariant I-05).",
-              "x_summary": "Non-negative implementation counter named x_&lt;name&gt;."
+              "description": "Implementation-specific counter, namespaced x_<name>. Unknown keys are VALID.",
+              "x_summary": "Non-negative implementation counter named x_<name>."
             }
           }
         }
@@ -499,7 +499,7 @@
         "total_cost",
         "currency"
       ],
-      "description": "What the provider or router ASSERTED this event cost. A sink MAY use this assertion as rating input, or it MAY ignore the assertion and calculate amounts independently; AUDR does not prescribe that policy (I-01). It exists so implementers can see their own spend without each maintaining a drifting historical price book keyed on provider, model, region, date, and kind of token (input, output, cache read, cache write, reasoning).\n\nThe emitter.component value records which component wrote the cost assertion.\n\nGROSS COMPONENTS, NET TOTAL: every field inside cost.llm, including total_token_cost, and every monetary field inside cost.tool is gross (before discount). cost.total_cost is net (after discount). There is no third convention and no per-field exception.\n\nA record carries AT MOST ONE cost sub-block, matching its usage block. Consistency is asserted, not enforced here, because providers round at different points and rejecting a record over a half-cent disagreement would lose the cost data entirely. Where present these should hold, all in cost.currency: cost.llm components sum to total_token_cost; original_cost is approximately the gross subtotal when one is reported; original_cost - discount_amount is approximately total_cost; and with no discount reported, total_cost is approximately the gross subtotal. A sink SHOULD compare and alert, and MUST NOT recompute total_cost from the parts.",
+      "description": "What the provider or router ASSERTED this event cost. A sink MAY use this assertion as rating input, or it MAY ignore the assertion and calculate amounts independently; AUDR does not prescribe that policy. It exists so implementers can see their own spend without each maintaining a drifting historical price book keyed on provider, model, region, date, and kind of token (input, output, cache read, cache write, reasoning).\n\nThe emitter.component value records which component wrote the cost assertion.\n\nGROSS COMPONENTS, NET TOTAL: every field inside cost.llm, including total_token_cost, and every monetary field inside cost.tool is gross (before discount). cost.total_cost is net (after discount). There is no third convention and no per-field exception.\n\nA record carries AT MOST ONE cost sub-block, matching its usage block. Consistency is asserted, not enforced here, because providers round at different points and rejecting a record over a half-cent disagreement would lose the cost data entirely. Where present these should hold, all in cost.currency: cost.llm components sum to total_token_cost; original_cost is approximately the gross subtotal when one is reported; original_cost - discount_amount is approximately total_cost; and with no discount reported, total_cost is approximately the gross subtotal. A sink SHOULD compare and alert, and MUST NOT recompute total_cost from the parts.",
       "x_summary": "Provider- or router-asserted cost that rating MAY use or ignore according to its billing configuration. Components are gross, total_cost is net, and the single cost sub-block must match usage; rating MAY check consistency but MUST NOT overwrite the total.",
       "x_title": "Cost Object",
       "properties": {
@@ -529,13 +529,13 @@
               "type": "number",
               "minimum": 0,
               "description": "Gross subtotal for the model call. Required whenever cost.llm is present. Carried rather than derived because providers round the subtotal, not the parts.",
-              "x_summary": "Total token cost this model call event. Reference only and MAY have rounding differences with the some of individual token costs."
+              "x_summary": "Total token cost for this model call event. Reference only and MAY have rounding differences with the sum of individual token costs."
             },
             "input_token_cost": {
               "type": "number",
               "minimum": 0,
               "description": "Uncached input tokens. MUST exclude cache reads when cache_read_cost is present. Where the specific field is absent the cost may be folded in here, since absent means 'not reported apart'.",
-              "x_summary": "Cost of uncached input tokens. This would the total input token cost if cache_read_cost were absent."
+              "x_summary": "Cost of uncached input tokens. This would be the total input token cost if cache_read_cost were absent."
             },
             "output_token_cost": {
               "type": "number",
@@ -594,8 +594,8 @@
             "^x_[a-z0-9_]+$": {
               "type": "number",
               "minimum": 0,
-              "description": "Implementation-specific monetary extension, namespaced x_<name>. Unknown keys are VALID (invariant I-05).",
-              "x_summary": "Charge amount for an implementation-specific field named x_&lt;name&gt;."
+              "description": "Implementation-specific monetary extension, namespaced x_<name>. Unknown keys are VALID.",
+              "x_summary": "Charge amount for an implementation-specific field named x_<name>."
             }
           }
         },
