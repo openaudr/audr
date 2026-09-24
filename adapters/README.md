@@ -14,10 +14,10 @@ application that emits records directly uses the core alone: the null adapter.
 
 ## Adapters
 
-| Adapter | Directory | Distribution |
-| --- | --- | --- |
-| Core (null adapter) | [`core/`](core/) | [![PyPI](https://img.shields.io/pypi/v/audr?include_prereleases&label=audr)](https://pypi.org/project/audr/) |
-| NVIDIA NeMo Relay | [`nemo-relay/`](nemo-relay/) | [![PyPI](https://img.shields.io/pypi/v/audr-adapter-nemo-relay?include_prereleases&label=audr-adapter-nemo-relay)](https://pypi.org/project/audr-adapter-nemo-relay/) |
+| Adapter | Directory | Distribution | CI |
+| --- | --- | --- | --- |
+| Core (null adapter) | [`core/`](core/) | [![PyPI](https://img.shields.io/pypi/v/audr?include_prereleases&label=audr)](https://pypi.org/project/audr/) | [![ci](https://img.shields.io/github/actions/workflow/status/openaudr/audr/adapter-core-python-verify.yml?branch=main&label=ci)](https://github.com/openaudr/audr/actions/workflows/adapter-core-python-verify.yml) |
+| NVIDIA NeMo Relay | [`nemo-relay/`](nemo-relay/) | [![PyPI](https://img.shields.io/pypi/v/audr-adapter-nemo-relay?include_prereleases&label=audr-adapter-nemo-relay)](https://pypi.org/project/audr-adapter-nemo-relay/) | [![ci](https://img.shields.io/github/actions/workflow/status/openaudr/audr/adapter-nemo-relay-python-verify.yml?branch=main&label=ci)](https://github.com/openaudr/audr/actions/workflows/adapter-nemo-relay-python-verify.yml) |
 
 ## Contributing
 

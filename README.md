@@ -1,11 +1,7 @@
 # AUDR — Agent Usage Detail Record
 
-[![Spec](https://github.com/openaudr/audr/actions/workflows/spec-verify.yml/badge.svg)](https://github.com/openaudr/audr/actions/workflows/spec-verify.yml)
-[![Core SDK](https://github.com/openaudr/audr/actions/workflows/adapter-core-python-verify.yml/badge.svg)](https://github.com/openaudr/audr/actions/workflows/adapter-core-python-verify.yml)
-[![NeMo Relay adapter](https://github.com/openaudr/audr/actions/workflows/adapter-nemo-relay-python-verify.yml/badge.svg)](https://github.com/openaudr/audr/actions/workflows/adapter-nemo-relay-python-verify.yml)
-[![Chargebee sink](https://github.com/openaudr/audr/actions/workflows/sink-chargebee-python-verify.yml/badge.svg)](https://github.com/openaudr/audr/actions/workflows/sink-chargebee-python-verify.yml)
-[![Docs](https://github.com/openaudr/audr/actions/workflows/docs-verify.yml/badge.svg)](https://github.com/openaudr/audr/actions/workflows/docs-verify.yml)
-
+[![spec](https://img.shields.io/github/actions/workflow/status/openaudr/audr/spec-verify.yml?branch=main&label=spec)](https://github.com/openaudr/audr/actions/workflows/spec-verify.yml)
+[![docs](https://img.shields.io/github/actions/workflow/status/openaudr/audr/docs-verify.yml?branch=main&label=docs)](https://github.com/openaudr/audr/actions/workflows/docs-verify.yml)
 [![Spec v1.0.0](https://img.shields.io/badge/spec-v1.0.0-blue)](spec/SPEC.md)
 [![PyPI](https://img.shields.io/pypi/v/audr?include_prereleases&label=pypi%20audr)](https://pypi.org/project/audr/)
 [![Python versions](https://img.shields.io/pypi/pyversions/audr)](https://pypi.org/project/audr/)

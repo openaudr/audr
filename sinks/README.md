@@ -22,9 +22,9 @@ it must not carry at the point it is built.
 
 ## Sinks
 
-| Sink | Directory | Distribution |
-| --- | --- | --- |
-| Chargebee | [`chargebee/`](chargebee/) | [![PyPI](https://img.shields.io/pypi/v/audr-sink-chargebee?include_prereleases&label=audr-sink-chargebee)](https://pypi.org/project/audr-sink-chargebee/) |
+| Sink | Directory | Distribution | CI |
+| --- | --- | --- | --- |
+| Chargebee | [`chargebee/`](chargebee/) | [![PyPI](https://img.shields.io/pypi/v/audr-sink-chargebee?include_prereleases&label=audr-sink-chargebee)](https://pypi.org/project/audr-sink-chargebee/) | [![ci](https://img.shields.io/github/actions/workflow/status/openaudr/audr/sink-chargebee-python-verify.yml?branch=main&label=ci)](https://github.com/openaudr/audr/actions/workflows/sink-chargebee-python-verify.yml) |
 
 ## Contributing
 
