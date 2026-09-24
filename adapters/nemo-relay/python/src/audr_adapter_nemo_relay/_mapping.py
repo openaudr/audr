@@ -7,6 +7,7 @@ here touches.
 
 from __future__ import annotations
 
+import math
 import re
 from collections import OrderedDict
 from collections.abc import Mapping
@@ -20,6 +21,7 @@ from audr import (
     AUDR,
     SPEC_VERSION,
     Attribution,
+    Cost,
     Emitter,
     LlmUsage,
     Resource,
@@ -41,8 +43,9 @@ _METADATA_NAMESPACE = "audr"
 _OTEL_STATUS_KEY = "otel.status_code"
 _OTEL_STATUS_ERROR = "ERROR"
 _METERED_CATEGORIES = frozenset({"llm", "tool"})
-# Relay codecs whose `prompt_tokens` already excludes cache reads and writes.
 _EXCLUSIVE_PROMPT_APIS = frozenset({"anthropic_messages"})
+_PROVIDER_REPORTED_COST = "provider_reported"
+_CURRENCY = re.compile(r"[A-Z]{3}")
 # AUDR restricts resource.provider to this alphabet; Relay scope names are free-form.
 _PROVIDER_ALLOWED = re.compile(r"[^a-z0-9-]+")
 
@@ -74,6 +77,7 @@ class LlmOperation(MeteredOperation):
     output_tokens: int | None = None
     cache_read_tokens: int | None = None
     cache_write_tokens: int | None = None
+    cost: Cost | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -347,6 +351,7 @@ def _normalize_llm(event: Mapping[str, object], shared: _SharedFields) -> LlmOpe
         output_tokens=output_tokens,
         cache_read_tokens=cache_read,
         cache_write_tokens=cache_write,
+        cost=_provider_reported_cost(usage.get("cost")),
     )
 
 
@@ -392,6 +397,7 @@ def encode_audr(operation: Operation) -> AUDR:
                 modality="text",
             )
             error_code = None
+            cost = operation.cost
         case ToolOperation():
             usage = Usage(tool=ToolUsage(type=_TOOL_TYPE, call_count=1))
             resource = Resource(
@@ -401,6 +407,7 @@ def encode_audr(operation: Operation) -> AUDR:
                 operation="tool_execution",
             )
             error_code = NeMoRelayRunErrorCode.TOOL_ERROR if operation.failed else None
+            cost = None
         case unreachable:
             assert_never(unreachable)
 
@@ -423,6 +430,7 @@ def encode_audr(operation: Operation) -> AUDR:
             error_code=error_code,
         ),
         attribution=operation.attribution,
+        cost=cost,
     )
 
 
@@ -476,6 +484,24 @@ def _exclusive_count(total: int | None, *parts: int | None) -> int | None:
     if total is None or all(part is None for part in parts):
         return total
     return max(0, total - sum(part or 0 for part in parts))
+
+
+def _provider_reported_cost(value: object) -> Cost | None:
+    """Return the provider's cost if its reported"""
+    if not isinstance(value, Mapping) or value.get("source") != _PROVIDER_REPORTED_COST:
+        return None
+    total = value.get("total")
+    currency = value.get("currency")
+    if (
+        isinstance(total, bool)
+        or not isinstance(total, int | float)
+        or not math.isfinite(total)
+        or total < 0
+        or not isinstance(currency, str)
+        or not _CURRENCY.fullmatch(currency)
+    ):
+        return None
+    return Cost(total_cost=float(total), currency=currency)
 
 
 def _optional_counter(values: Mapping[str, object], key: str) -> int | None:

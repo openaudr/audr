@@ -41,6 +41,12 @@ requires). The Relay scope UUID that ties related records together is carried on
 `run.span_id` instead, and the Relay root scope UUID is `run.run_id`. The client applies
 the normal AUDR validation before handing the record to your sink. The emitter is
 `audr-adapter-nemo-relay` at this package's own release, with component `harness`, so a
-mapping defect is attributed to the adapter version that produced it rather than to Relay. `requests` and
-`call_count` are one per completed operation. `total_tokens`, raw payloads, opaque
-results, and cost are never copied.
+mapping defect is attributed to the adapter version that produced it rather than to Relay.
+`requests` and `call_count` are one per completed operation. `total_tokens`, raw payloads
+and opaque results are never copied.
+
+## Cost
+
+An LLM record carries `cost.total_cost` and `cost.currency` only when Relay's
+`annotated_response.usage.cost` has `source` `provider_reported`, the cost the provider
+returned with the response.

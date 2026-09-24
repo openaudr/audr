@@ -42,8 +42,8 @@ attributed `AUDR` records to an `audr.Client` the host application owns.
    rather than falling back to defaults, which could bill the wrong subscription. Ignore
    metadata on a completing scope.
 5. Put Relay's scope UUID on `run.span_id` and the root scope UUID on `run.run_id`. Never
-   copy `total_tokens`, raw payloads or cost. `input_tokens` excludes cache reads and
-   writes.
+   copy `total_tokens` or raw payloads. `input_tokens` excludes cache reads and writes.
+   Copy cost if the source is `provider_reported`;
 6. Add a `NeMoRelayDiagnosticCode` or `NeMoRelayRunErrorCode` for every new diagnostic. Do
    not log free text. Warnings carry event IDs, field paths, counts and queue outcomes,
    never scope metadata values.
