@@ -65,7 +65,8 @@ jobs:
       # absolute github.com/openaudr/audr/blob/main/... form the PyPI READMEs use, which
       # would 404 here until the branch reaches main. The raw.githubusercontent.com form,
       # which the NeMo Relay README uses to fetch its example, is excluded for the same
-      # reason.
+      # reason. www.npmjs.com answers 403 to every non-browser client, so its package
+      # pages cannot be checked at all.
       - name: External URLs respond
         uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2
         with:
@@ -75,6 +76,7 @@ jobs:
             --accept 200,206,429
             --exclude 'https://github\.com/openaudr/audr/'
             --exclude 'https://raw\.githubusercontent\.com/openaudr/audr/'
+            --exclude 'https://www\.npmjs\.com/'
             --exclude 'mailto:'
             --exclude-path spec/prose
             '**/*.md'

@@ -16,7 +16,7 @@ application that emits records directly uses the core alone: the null adapter.
 
 | Adapter | Directory | Distribution |
 | --- | --- | --- |
-| Core (null adapter) | [`core/`](core/) | [![PyPI](https://img.shields.io/pypi/v/audr?include_prereleases&label=audr)](https://pypi.org/project/audr/) |
+| Core (null adapter) | [`core/`](core/) | [![PyPI](https://img.shields.io/pypi/v/audr?include_prereleases&label=audr)](https://pypi.org/project/audr/) [![npm](https://img.shields.io/npm/v/audr?include_prereleases&label=audr)](https://www.npmjs.com/package/audr) |
 | NVIDIA NeMo Relay | [`nemo-relay/`](nemo-relay/) | [![PyPI](https://img.shields.io/pypi/v/audr-adapter-nemo-relay?include_prereleases&label=audr-adapter-nemo-relay)](https://pypi.org/project/audr-adapter-nemo-relay/) |
 
 ## Contributing

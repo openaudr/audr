@@ -1,0 +1,82 @@
+{
+  "name": "audr",
+  "version": "0.1.0",
+  "description": "Vendor-neutral SDK for emitting AUDR (Agent Usage Detail Record) v1.0.0 records.",
+  "license": "Apache-2.0",
+  "author": "The AUDR contributors",
+  "homepage": "https://openaudr.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/openaudr/audr.git",
+    "directory": "adapters/core/typescript"
+  },
+  "bugs": {
+    "url": "https://github.com/openaudr/audr/issues"
+  },
+  "keywords": [
+    "audr",
+    "agent",
+    "usage",
+    "metering",
+    "billing",
+    "sdk"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./file": {
+      "types": "./dist/file-sink.d.ts",
+      "default": "./dist/file-sink.js"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "default": "./dist/testing.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . && prettier --check .",
+    "format": "eslint --fix . && prettier --write .",
+    "test": "vitest run --coverage",
+    "check:package": "publint --strict && attw --pack . --profile esm-only",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "uuid": "^14.0.2",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.19.0",
+    "@vitest/coverage-v8": "^5.0.0",
+    "ajv": "^8.20.0",
+    "eslint": "^10.10.0",
+    "prettier": "^3.9.6",
+    "publint": "^0.3.24",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.70.0",
+    "vitest": "^5.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

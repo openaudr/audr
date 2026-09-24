@@ -25,7 +25,7 @@ prevented it.
 ## Repository setup
 
 Prerequisites: Python 3.11 or later, and [`uv`](https://docs.astral.sh/uv/) for the
-packages.
+Python packages; Node.js 22.18 or later, with `npm`, for the TypeScript packages.
 
 ```bash
 git clone https://github.com/openaudr/audr.git
@@ -33,7 +33,8 @@ cd audr
 make install     # tooling for the specification: jsonschema, PyYAML
 make check       # schema, examples, conformance fixtures, cross-references, staleness, docs
 make python      # lint and test every Python package
-make all         # check + python: everything CI runs
+make typescript  # lint, test and package-check every TypeScript package
+make all         # check + python + typescript: everything CI runs
 ```
 
 | Target | Does |
@@ -49,6 +50,7 @@ make all         # check + python: everything CI runs
 | `make core-python` | `make verify` in `adapters/core/python` |
 | `make adapter-nemo-relay-python` | `make lint test` in `adapters/nemo-relay/python` |
 | `make sink-chargebee-python` | `make lint test` in `sinks/chargebee/python` |
+| `make core-typescript` | `make install verify` in `adapters/core/typescript` |
 
 ## Where a change belongs
 
@@ -139,6 +141,25 @@ make verify    # everything that package's CI runs
 Run `make verify` in the package before opening a pull request. Do not weaken or skip a
 lint, type-check or coverage gate to make a change pass.
 
+### Shared TypeScript toolchain
+
+TypeScript packages follow the same rules: a standalone project per directory, the same
+`Makefile` targets, and one toolchain shared by every package:
+
+| Concern | Choice |
+| --- | --- |
+| Runtime | Node.js 22.12 or later for users; 22.18 or later to develop (examples run with type stripping) |
+| Module format | ESM only, `"type": "module"`; `exports` map with one entry per public subpath |
+| Build | `tsc` to `dist/` with declarations; no bundler; version in `package.json` |
+| Environment | `npm`, with `package-lock.json` committed |
+| Formatter and linter | Prettier, `printWidth` 100; ESLint with typescript-eslint `strictTypeChecked` |
+| Types | `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes` |
+| Tests | Vitest with v8 coverage gated at 90% |
+| Package checks | `publint --strict` and `attw`, plus an install-from-tarball isolation check |
+
+The `make install / lint / test / build / verify` targets mean the same as for Python;
+`make install` runs `npm ci`.
+
 ## Documentation
 
 Every fact has one home. A document states a fact if and only if it is that fact's home;
@@ -164,11 +185,12 @@ every other document links to it.
 
 Rules that follow from the table:
 
-- A `*/python/README.md` is the distribution's long description on PyPI. It is
-  self-contained, user-facing only, and links outward with absolute
-  `https://github.com/openaudr/audr/...` URLs.
-- No Markdown file states a distribution version. Use a PyPI badge; `make versions`
-  enforces this.
+- A `*/python/README.md` is the distribution's long description on PyPI, and a
+  `*/typescript/README.md` is the package's page on npm. Each is self-contained,
+  user-facing only, and links outward with absolute `https://github.com/openaudr/audr/...`
+  URLs.
+- No Markdown file states a distribution version. Use a PyPI or npm badge;
+  `make versions` enforces this.
 - Every code block in a `README.md` is either runnable exactly as shown, or visibly elided
   with `...` and a comment naming where the full form lives. No code block appears in two
   READMEs.

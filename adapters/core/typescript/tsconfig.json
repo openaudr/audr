@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["es2023", "esnext.disposable"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "moduleDetection": "force",
+    "types": ["node"],
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+
+    // Examples import the package by name, exactly as an application does. At run time
+    // Node resolves that through the package's own `exports` after a build; the compiler
+    // needs the mapping to check them without one.
+    "paths": {
+      "audr": ["./src/index.ts"],
+      "audr/file": ["./src/file-sink.ts"],
+      "audr/testing": ["./src/testing.ts"]
+    },
+
+    "noEmit": true
+  },
+  "include": ["src", "tests", "examples", "scripts", "*.config.ts"]
+}

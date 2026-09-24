@@ -17,3 +17,6 @@
 /adapters/core/python/         @openaudr/audr-maintainers
 /adapters/nemo-relay/python/   @openaudr/audr-maintainers
 /sinks/chargebee/python/       @openaudr/audr-maintainers
+
+# The TypeScript packages.
+/adapters/core/typescript/     @openaudr/audr-maintainers
