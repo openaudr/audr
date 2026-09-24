@@ -5,7 +5,7 @@ import subprocess
 import sys
 from collections.abc import Callable, Iterator
 from importlib.metadata import PackageNotFoundError
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import pytest
 from audr import Attribution, Client, ConfigurationError
@@ -19,6 +19,9 @@ from audr_adapter_nemo_relay import (
     NeMoRelayPlugin,
     _plugin,
 )
+
+if TYPE_CHECKING:
+    from nemo_relay.plugin import PluginContext
 
 
 class _Context:
@@ -194,7 +197,7 @@ async def test_unsupported_relay_version_fails_before_subscriber_registration(
     context = _Context()
 
     with pytest.raises(NeMoRelayCompatibilityError, match=r">=0\.8,<0\.9"):
-        NeMoRelayPlugin(client=cast(Client, object())).register({}, context)
+        NeMoRelayPlugin(client=cast(Client, object())).register({}, cast("PluginContext", context))
 
     assert context.callback is None
 
@@ -208,7 +211,9 @@ async def test_missing_relay_extra_has_actionable_error(
     monkeypatch.setattr(_plugin, "package_version", missing)
 
     with pytest.raises(NeMoRelayCompatibilityError, match=r"nemo-relay.*extra"):
-        NeMoRelayPlugin(client=cast(Client, object())).register({}, _Context())
+        NeMoRelayPlugin(client=cast(Client, object())).register(
+            {}, cast("PluginContext", _Context())
+        )
 
 
 def test_core_and_integration_import_do_not_import_nemo_relay() -> None:
@@ -240,7 +245,7 @@ async def test_explicit_loop_allows_construction_off_the_running_loop(
     plugin = _make_plugin(asyncio.get_running_loop())
     context = _Context()
 
-    plugin.register({}, context)
+    plugin.register({}, cast("PluginContext", context))
 
     assert context.callback is not None
 
@@ -253,7 +258,7 @@ def test_explicit_non_running_loop_is_rejected_before_registration(
     context = _Context()
 
     with pytest.raises(NeMoRelayActivationError, match="must be running"):
-        _make_plugin(idle_loop).register({}, context)
+        _make_plugin(idle_loop).register({}, cast("PluginContext", context))
 
     assert context.callback is None
 
@@ -263,15 +268,15 @@ async def test_second_activation_is_refused_and_leaves_no_stale_state(
 ) -> None:
     monkeypatch.setattr(_plugin, "package_version", lambda _: "0.8.4")
     plugin = _make_plugin(asyncio.get_running_loop())
-    plugin.register({}, _Context())
+    plugin.register({}, cast("PluginContext", _Context()))
 
     with pytest.raises(NeMoRelayActivationError, match="already activated"):
-        plugin.register({}, _Context())
+        plugin.register({}, cast("PluginContext", _Context()))
 
     # Relay rolls the whole initialization back, so the refusal must not wedge
     # the instance against the host's next, corrected initialization.
     retried = _Context()
-    plugin.register({}, retried)
+    plugin.register({}, cast("PluginContext", retried))
     assert retried.callback is not None
 
 
@@ -283,6 +288,6 @@ async def test_invalid_component_config_is_refused_at_activation(
     context = _Context()
 
     with pytest.raises(ConfigurationError, match="max_tracked_scopes"):
-        plugin.register({"max_tracked_scopes": 0}, context)
+        plugin.register({"max_tracked_scopes": 0}, cast("PluginContext", context))
 
     assert context.callback is None

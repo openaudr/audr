@@ -5,7 +5,7 @@ import logging
 import threading
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime, timedelta
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import pytest
 from audr import AUDR, Client, SubmitOutcome, SubmitResult
@@ -15,6 +15,9 @@ from audr_adapter_nemo_relay import (
     NeMoRelayPlugin,
     _plugin,
 )
+
+if TYPE_CHECKING:
+    from nemo_relay.plugin import PluginContext
 
 _ROOT_ID = "0199f123-0000-7000-8000-000000000011"
 _LLM_ID = "0199f123-0000-7000-8000-000000000012"
@@ -131,7 +134,7 @@ async def _activated(
 ) -> tuple[NeMoRelayPlugin, _Context]:
     plugin = NeMoRelayPlugin(client=cast(Client, client))
     context = _Context()
-    plugin.register(config or {}, context)
+    plugin.register(config or {}, cast("PluginContext", context))
     assert context.callback is not None
     return plugin, context
 
@@ -296,12 +299,12 @@ async def test_registration_rolls_back_and_duplicate_activation_is_rejected() ->
     plugin = NeMoRelayPlugin(client=cast(Client, client))
 
     with pytest.raises(RuntimeError, match="registration failed"):
-        plugin.register({}, _Context(fail=True))
+        plugin.register({}, cast("PluginContext", _Context(fail=True)))
 
     context = _Context()
-    plugin.register({}, context)
+    plugin.register({}, cast("PluginContext", context))
     with pytest.raises(NeMoRelayActivationError, match="already activated"):
-        plugin.register({}, _Context())
+        plugin.register({}, cast("PluginContext", _Context()))
 
 
 async def test_draining_after_close_is_refused_instead_of_losing_events() -> None:
