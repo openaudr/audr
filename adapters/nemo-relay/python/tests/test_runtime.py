@@ -206,3 +206,86 @@ async def test_real_relay_scopes_bill_to_attribution_defaults_without_metadata()
     record = delivered[0]
     assert record.attribution.subscription_id == "default-subscription"
     assert record.resource.name == "demo-model-2026-01-01"
+
+
+async def _deliver_one(codec: object, body: dict[str, object], response: object) -> AUDR:
+    """Run one managed LLM call through the real runtime and return its record."""
+    sink = MemorySink()
+    client = Client(sink=sink)
+    plugin = NeMoRelayPlugin(client=client)
+    config = NeMoRelayConfig(
+        attribution_defaults=Attribution(environment="test", subscription_id="subscription"),
+    )
+    plugin_config = nemo_relay.plugin.PluginConfig(
+        components=[nemo_relay.plugin.ComponentSpec(kind=PLUGIN_KIND, config=config.to_dict())]
+    )
+    nemo_relay.plugin.register(PLUGIN_KIND, plugin)
+    try:
+        async with nemo_relay.plugin.plugin(plugin_config):
+
+            async def call_model(_: object) -> object:
+                return response
+
+            await nemo_relay.llm.execute(
+                "provider",
+                nemo_relay.LLMRequest({}, body),
+                call_model,
+                model_name="demo-model",
+                response_codec=codec,
+            )
+        await plugin.drain(timeout=5)
+    finally:
+        try:
+            await client.shutdown()
+        finally:
+            nemo_relay.plugin.deregister(PLUGIN_KIND)
+
+    assert len(sink.records) == 1
+    return sink.records[0]
+
+
+async def test_real_relay_anthropic_prompt_count_is_not_reduced_by_the_cache() -> None:
+    """Relay's Anthropic codec publishes uncached input as `prompt_tokens`."""
+    record = await _deliver_one(
+        nemo_relay.codecs.AnthropicMessagesCodec(),
+        {"model": "demo-model", "max_tokens": 8, "messages": [{"role": "user", "content": "x"}]},
+        {
+            "id": "msg-1",
+            "type": "message",
+            "role": "assistant",
+            "model": "demo-model",
+            "content": [{"type": "text", "text": "y"}],
+            "stop_reason": "end_turn",
+            "usage": {
+                "input_tokens": 100,
+                "output_tokens": 5,
+                "cache_read_input_tokens": 800,
+                "cache_creation_input_tokens": 50,
+            },
+        },
+    )
+
+    assert record.usage.llm is not None
+    assert record.usage.llm.input_tokens == 100
+    assert record.usage.llm.cache_read_tokens == 800
+    assert record.usage.llm.cache_write_tokens == 50
+
+
+async def test_real_relay_gateway_cost_is_carried_as_provider_reported() -> None:
+    record = await _deliver_one(
+        nemo_relay.codecs.OpenAIChatCodec(),
+        {"model": "demo-model", "messages": [{"role": "user", "content": "x"}]},
+        {
+            "id": "gen-1",
+            "model": "vendor/demo-model",
+            "choices": [
+                {"message": {"role": "assistant", "content": "y"}, "finish_reason": "stop"}
+            ],
+            "usage": {"prompt_tokens": 24, "completion_tokens": 32, "cost": 0.00042},
+        },
+    )
+
+    assert record.validate() == []
+    assert record.cost is not None
+    assert record.cost.total_cost == 0.00042
+    assert record.cost.currency == "USD"

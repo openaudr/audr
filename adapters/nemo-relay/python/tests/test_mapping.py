@@ -20,6 +20,7 @@ from audr_adapter_nemo_relay._mapping import (
     ToolOperation,
     encode_audr,
 )
+from audr_adapter_nemo_relay._version import __version__
 
 _ROOT_ID = "0199f123-0000-7000-8000-000000000001"
 _LLM_ID = "0199f123-0000-7000-8000-000000000002"
@@ -723,3 +724,155 @@ def test_a_tool_scope_without_a_name_is_malformed() -> None:
 
     assert isinstance(result, EventMalformed)
     assert result.path == "/name"
+
+
+# --- cache arithmetic per codec ------------------------------------------------------
+
+
+_CACHED_USAGE = {
+    "prompt_tokens": 100,
+    "completion_tokens": 5,
+    "cache_read_tokens": 30,
+    "cache_write_tokens": 20,
+}
+
+
+def _llm_with_api(api: str | None) -> LlmOperation:
+    profile = _llm_profile(usage=_CACHED_USAGE)
+    if api is not None:
+        profile["annotated_response"]["api_specific"] = {"api": api}  # type: ignore[index]
+    operation = _ready_operation(
+        _completed(_tracker(), _end(_LLM_ID, category="llm", name="p", profile=profile))
+    )
+    assert isinstance(operation, LlmOperation)
+    return operation
+
+
+def test_anthropic_prompt_tokens_already_exclude_cache_and_are_kept() -> None:
+    """Anthropic reports uncached input only; subtracting the cache again under-counts."""
+    operation = _llm_with_api("anthropic_messages")
+
+    assert operation.input_tokens == 100
+    assert operation.cache_read_tokens == 30
+    assert operation.cache_write_tokens == 20
+
+
+@pytest.mark.parametrize("api", ["openai_chat", "openai_responses", None])
+def test_inclusive_prompt_tokens_have_the_cache_subtracted(api: str | None) -> None:
+    assert _llm_with_api(api).input_tokens == 50
+
+
+def test_a_non_mapping_api_specific_is_treated_as_inclusive() -> None:
+    profile = _llm_profile(usage=_CACHED_USAGE, api_specific="anthropic_messages")
+    operation = _ready_operation(
+        _completed(_tracker(), _end(_LLM_ID, category="llm", name="p", profile=profile))
+    )
+
+    assert isinstance(operation, LlmOperation)
+    assert operation.input_tokens == 50
+
+
+# --- emitter -------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("category", ["llm", "tool"])
+def test_the_emitter_is_this_adapter_at_its_own_release(category: str) -> None:
+    scope_id = _LLM_ID if category == "llm" else _TOOL_ID
+    tracker = _tracker()
+    tracker.consume(_start(_ROOT_ID, category="agent", metadata={"audr": {"subscription_id": "s"}}))
+    tracker.consume(_start(scope_id, category=category, parent_id=_ROOT_ID, offset_ms=5))
+    profile = _llm_profile() if category == "llm" else None
+
+    result = tracker.consume(_end(scope_id, category=category, name="p", profile=profile))
+
+    emitter = encode_audr(_ready_operation(result)).emitter
+    assert emitter is not None
+    assert emitter.name == "audr-adapter-nemo-relay"
+    assert emitter.version == __version__
+    assert emitter.component == "harness"
+
+
+# --- provider-reported cost ----------------------------------------------------------
+
+
+def _llm_cost(cost: object) -> LlmOperation:
+    usage: dict[str, object] = {"prompt_tokens": 1}
+    if cost is not None:
+        usage["cost"] = cost
+    operation = _ready_operation(
+        _completed(
+            _tracker(),
+            _end(_LLM_ID, category="llm", name="p", profile=_llm_profile(usage=usage)),
+        )
+    )
+    assert isinstance(operation, LlmOperation)
+    return operation
+
+
+@pytest.mark.parametrize("total", [0.00042, 0, 3])
+def test_a_provider_reported_cost_is_carried_as_total_and_currency(total: float) -> None:
+    operation = _llm_cost(
+        {
+            "total": total,
+            "currency": "USD",
+            "source": "provider_reported",
+            "input": 0.0001,
+            "pricing_provider": "openrouter",
+        }
+    )
+
+    audr = encode_audr(operation)
+    assert audr.validate() == []
+    assert audr.cost is not None
+    assert audr.cost.total_cost == total
+    assert audr.cost.currency == "USD"
+    assert audr.cost.llm is None
+
+
+@pytest.mark.parametrize(
+    "cost",
+    [
+        pytest.param(None, id="absent"),
+        pytest.param({"total": 0.1, "currency": "USD", "source": "model_pricing"}, id="estimate"),
+        pytest.param({"total": 0.1, "currency": "USD"}, id="no-source"),
+        pytest.param("0.1", id="not-a-mapping"),
+    ],
+)
+def test_a_cost_that_is_not_provider_reported_is_left_to_rating(cost: object) -> None:
+    operation = _llm_cost(cost)
+
+    assert operation.cost is None
+    assert encode_audr(operation).cost is None
+
+
+@pytest.mark.parametrize(
+    ("total", "currency"),
+    [
+        pytest.param(None, "USD", id="no-total"),
+        pytest.param(-0.1, "USD", id="negative"),
+        pytest.param(True, "USD", id="bool"),
+        pytest.param("0.1", "USD", id="string-total"),
+        pytest.param(float("nan"), "USD", id="nan"),
+        pytest.param(float("inf"), "USD", id="infinite"),
+        pytest.param(0.1, None, id="no-currency"),
+        pytest.param(0.1, "usd", id="lowercase-currency"),
+        pytest.param(0.1, "US", id="short-currency"),
+    ],
+)
+def test_an_unusable_provider_cost_is_omitted_and_the_record_still_emitted(
+    total: object, currency: object
+) -> None:
+    operation = _llm_cost({"total": total, "currency": currency, "source": "provider_reported"})
+
+    assert operation.cost is None
+    assert encode_audr(operation).validate() == []
+
+
+def test_a_tool_record_carries_no_cost() -> None:
+    tracker = _tracker()
+    tracker.consume(_start(_ROOT_ID, category="agent", metadata={"audr": {"subscription_id": "s"}}))
+    tracker.consume(_start(_TOOL_ID, category="tool", parent_id=_ROOT_ID, offset_ms=5))
+
+    result = tracker.consume(_end(_TOOL_ID, category="tool", name="lookup"))
+
+    assert encode_audr(_ready_operation(result)).cost is None

@@ -77,6 +77,11 @@ def test_default_labels_survive_a_partial_override() -> None:
             id="unknown-field-in-the-namespace",
         ),
         pytest.param(
+            {"audr": {"person@example.com": "x"}},
+            "/metadata/audr",
+            id="caller-supplied-key-is-kept-out-of-the-pointer",
+        ),
+        pytest.param(
             {"audr": {"account_id": ""}},
             "/metadata/audr/account_id",
             id="empty-string-cannot-be-billed-on",
