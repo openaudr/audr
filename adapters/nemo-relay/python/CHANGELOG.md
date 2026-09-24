@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `usage.llm.input_tokens` for Relay's `AnthropicMessagesCodec` is the reported prompt count
   unchanged. That count already excludes cache reads and writes, and subtracting them again
   under-counted Anthropic calls with prompt caching.
+- `emitter.name` is `audr-adapter-nemo-relay` and `emitter.version` is this package's
+  release, as the specification defines them. Records previously carried `nemo-relay` and
+  the installed Relay version.
 
 ## [0.1.0] - 2026-09-22
 

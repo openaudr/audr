@@ -39,6 +39,8 @@ Every completed operation becomes one `AUDR` record, with `record_id` minted fre
 the SDK (Relay's scope UUIDs are not UUIDv7, the identifier shape AUDR's `record_id`
 requires). The Relay scope UUID that ties related records together is carried on
 `run.span_id` instead, and the Relay root scope UUID is `run.run_id`. The client applies
-the normal AUDR validation before handing the record to your sink. `requests` and
+the normal AUDR validation before handing the record to your sink. The emitter is
+`audr-adapter-nemo-relay` at this package's own release, with component `harness`, so a
+mapping defect is attributed to the adapter version that produced it rather than to Relay. `requests` and
 `call_count` are one per completed operation. `total_tokens`, raw payloads, opaque
 results, and cost are never copied.

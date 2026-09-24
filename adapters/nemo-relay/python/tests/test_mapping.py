@@ -141,7 +141,7 @@ def test_llm_scope_maps_normalized_usage_and_both_encoders() -> None:
     )
 
     operation = _ready_operation(result)
-    audr = encode_audr(operation, relay_version="0.8.4")
+    audr = encode_audr(operation)
     assert audr.validate() == []
     # Relay's scope UUID is not a conformant `record_id` (not UUIDv7), so it is
     # carried on `run.span_id` instead, and `record_id` is minted fresh.
@@ -193,7 +193,7 @@ def test_provider_is_normalized_to_the_audr_alphabet() -> None:
 
     operation = _ready_operation(result)
     assert operation.provider == "my-provider-v2"
-    assert encode_audr(operation, relay_version="0.8.4").validate() == []
+    assert encode_audr(operation).validate() == []
 
 
 def test_duration_is_measured_before_millisecond_truncation() -> None:
@@ -228,7 +228,7 @@ def test_duration_is_measured_before_millisecond_truncation() -> None:
 
     operation = _ready_operation(result)
     assert operation.duration_ms == 1
-    audr = encode_audr(operation, relay_version="0.8.4")
+    audr = encode_audr(operation)
     assert audr.validate() == []
     assert audr.timing.event_time is not None
     assert audr.timing.event_time.microsecond % 1000 == 0
@@ -254,7 +254,7 @@ def test_tool_scope_maps_call_and_reliable_otel_failure_only() -> None:
 
     operation = _ready_operation(result)
     assert isinstance(operation, ToolOperation)
-    audr = encode_audr(operation, relay_version="0.8.4")
+    audr = encode_audr(operation)
     assert audr.validate() == []
     assert "sensitive failure text" not in audr.model_dump_json()
     assert "must not escape" not in audr.model_dump_json()
@@ -280,7 +280,7 @@ def test_successful_tool_carries_no_error_code() -> None:
     )
 
     operation = _ready_operation(result)
-    audr = encode_audr(operation, relay_version="0.8.4")
+    audr = encode_audr(operation)
     assert audr.run.error_code is None
     assert audr.run.outcome is None
 
@@ -351,7 +351,7 @@ def test_streaming_final_end_maps_once_and_ignores_unknown_profile_fields() -> N
     )
 
     operation = _ready_operation(result)
-    audr = encode_audr(operation, relay_version="0.8.4")
+    audr = encode_audr(operation)
     assert audr.usage.llm is not None
     assert audr.usage.llm.requests == 1
 

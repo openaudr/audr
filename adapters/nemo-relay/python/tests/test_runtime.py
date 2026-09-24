@@ -138,7 +138,7 @@ async def test_real_relay_llm_and_tool_lifecycle_drains_before_client_stop() -> 
     relay_records = [
         record
         for record in delivered
-        if record.emitter is not None and record.emitter.name == "nemo-relay"
+        if record.emitter is not None and record.emitter.name == "audr-adapter-nemo-relay"
     ]
     assert len(relay_records) == 2
     for record in relay_records:

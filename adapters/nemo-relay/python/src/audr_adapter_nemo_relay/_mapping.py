@@ -32,8 +32,9 @@ from audr.ids import uuid7
 
 from audr_adapter_nemo_relay._attribution import resolve_attribution
 from audr_adapter_nemo_relay._errors import NeMoRelayRunErrorCode
+from audr_adapter_nemo_relay._version import __version__
 
-_EMITTER_NAME = "nemo-relay"
+_EMITTER_NAME = "audr-adapter-nemo-relay"
 _TOOL_PROVIDER = "self-hosted"
 _TOOL_TYPE = "invocation"
 _METADATA_NAMESPACE = "audr"
@@ -368,7 +369,7 @@ def _normalize_tool(event: Mapping[str, object], shared: _SharedFields) -> ToolO
     )
 
 
-def encode_audr(operation: Operation, *, relay_version: str) -> AUDR:
+def encode_audr(operation: Operation) -> AUDR:
     """Encode one normalized operation as typed AUDR."""
     match operation:
         case LlmOperation():
@@ -408,7 +409,7 @@ def encode_audr(operation: Operation, *, relay_version: str) -> AUDR:
         # Relay's scope UUIDs are not UUIDv7, so `record_id` is minted fresh here;
         # the scope identity that ties related records together lives in `run.span_id`.
         record_id=uuid7(),
-        emitter=Emitter(name=_EMITTER_NAME, version=relay_version, component="harness"),
+        emitter=Emitter(name=_EMITTER_NAME, version=__version__, component="harness"),
         timing=Timing(
             event_time=_to_millisecond_precision(operation.event_time),
             duration_ms=operation.duration_ms,

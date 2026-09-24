@@ -81,7 +81,6 @@ class NeMoRelayPlugin:
         self._loop = loop
         self._tracker: ScopeTracker | None = None
         self._bridge: EventLoopBridge | None = None
-        self._relay_version: str | None = None
         self._registered = False
         self._closed = False
 
@@ -149,7 +148,7 @@ class NeMoRelayPlugin:
                 "the event loop supplied to NeMoRelayPlugin must be running when "
                 "Relay activates the component"
             )
-        relay_version = _require_supported_relay_version()
+        _require_supported_relay_version()
         config = parse_config(plugin_config)
         tracker = ScopeTracker(
             defaults=config.attribution_defaults,
@@ -164,13 +163,11 @@ class NeMoRelayPlugin:
         context.register_subscriber(_SUBSCRIBER_NAME, self._on_event)
         self._tracker = tracker
         self._bridge = bridge
-        self._relay_version = relay_version
         self._registered = True
 
     def _forget_activation(self) -> None:
         self._tracker = None
         self._bridge = None
-        self._relay_version = None
         self._registered = False
 
     def _on_event(self, event: _RelayEvent) -> None:
@@ -223,15 +220,14 @@ class NeMoRelayPlugin:
 
     def _submit(self, operation: Operation, event_id: str) -> None:
         bridge = self._bridge
-        relay_version = self._relay_version
-        if bridge is None or relay_version is None:
+        if bridge is None:
             _LOGGER.warning(
                 "NeMo Relay event dropped: plugin is not active (event_id=%s)",
                 event_id,
             )
             return
 
-        record = encode_audr(operation, relay_version=relay_version)
+        record = encode_audr(operation)
         match bridge.submit(record, event_id):
             case HandoffOutcome.SCHEDULED:
                 return
