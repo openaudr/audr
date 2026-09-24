@@ -31,6 +31,7 @@ from audr import (
     Usage,
 )
 from audr.ids import uuid7
+from pydantic import ValidationError
 
 from audr_adapter_nemo_relay._attribution import resolve_attribution
 from audr_adapter_nemo_relay._errors import NeMoRelayRunErrorCode
@@ -45,7 +46,6 @@ _OTEL_STATUS_ERROR = "ERROR"
 _METERED_CATEGORIES = frozenset({"llm", "tool"})
 _EXCLUSIVE_PROMPT_APIS = frozenset({"anthropic_messages"})
 _PROVIDER_REPORTED_COST = "provider_reported"
-_CURRENCY = re.compile(r"[A-Z]{3}")
 # AUDR restricts resource.provider to this alphabet; Relay scope names are free-form.
 _PROVIDER_ALLOWED = re.compile(r"[^a-z0-9-]+")
 
@@ -487,21 +487,18 @@ def _exclusive_count(total: int | None, *parts: int | None) -> int | None:
 
 
 def _provider_reported_cost(value: object) -> Cost | None:
-    """Return the provider's cost if its reported"""
+    """Return the provider's cost if it is reported."""
     if not isinstance(value, Mapping) or value.get("source") != _PROVIDER_REPORTED_COST:
         return None
-    total = value.get("total")
-    currency = value.get("currency")
-    if (
-        isinstance(total, bool)
-        or not isinstance(total, int | float)
-        or not math.isfinite(total)
-        or total < 0
-        or not isinstance(currency, str)
-        or not _CURRENCY.fullmatch(currency)
-    ):
+    try:
+        cost = Cost.model_validate(
+            {"total_cost": value.get("total"), "currency": value.get("currency")}, strict=True
+        )
+    except ValidationError:
+        # The error embeds input values, so it is discarded rather than logged.
         return None
-    return Cost(total_cost=float(total), currency=currency)
+    # `Cost` admits infinity, which serializes as null.
+    return cost if math.isfinite(cost.total_cost) else None
 
 
 def _optional_counter(values: Mapping[str, object], key: str) -> int | None:
