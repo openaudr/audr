@@ -44,6 +44,7 @@ _METADATA_NAMESPACE = "audr"
 _OTEL_STATUS_KEY = "otel.status_code"
 _OTEL_STATUS_ERROR = "ERROR"
 _METERED_CATEGORIES = frozenset({"llm", "tool"})
+# Relay codecs whose `prompt_tokens` already excludes cache reads and writes.
 _EXCLUSIVE_PROMPT_APIS = frozenset({"anthropic_messages"})
 _PROVIDER_REPORTED_COST = "provider_reported"
 # AUDR restricts resource.provider to this alphabet; Relay scope names are free-form.

@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - LLM records carry `cost.total_cost` and `cost.currency` when Relay reports a
   provider-reported cost.
 
+### Changed
+
+- Consumers that select this adapter's records by `emitter.name` must match
+  `audr-adapter-nemo-relay` instead of `nemo-relay`.
+
 ### Fixed
 
 - `usage.llm.input_tokens` for Relay's `AnthropicMessagesCodec` is the reported prompt count
