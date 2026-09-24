@@ -52,3 +52,6 @@ jobs:
       - name: Generated files are not stale
         run: make fresh
 
+      - name: Repository tools pass their tests
+        run: make tools-test
+

@@ -54,7 +54,7 @@ identity and attribution that records from different systems join.
 
 ```bash
 make install   # tooling dependencies
-make check     # schema, examples, conformance, cross-references, staleness, links, versions
+make check     # schema, examples, conformance, cross-references, staleness, links, versions, tools
 make python    # lint and test every Python package
 make all       # check + python
 ```

@@ -1,0 +1,117 @@
+name: Publish Python package
+
+# A tag <distribution>/v<version> on a commit of main publishes that distribution to
+# PyPI through Trusted Publishing. The tag and the package's CHANGELOG.md section are the
+# release record; no GitHub Release is created.
+
+on:
+  push:
+    tags:
+      - "audr/v*"
+      - "audr-adapter-nemo-relay/v*"
+      - "audr-sink-chargebee/v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-python-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    name: Resolve tag
+    runs-on: ubuntu-latest
+    outputs:
+      distribution: ${{ steps.resolve.outputs.distribution }}
+      version: ${{ steps.resolve.outputs.version }}
+      directory: ${{ steps.resolve.outputs.directory }}
+    steps:
+      - name: Map tag to package
+        id: resolve
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          distribution="${TAG%/v*}"
+          version="${TAG##*/v}"
+          case "$distribution" in
+            audr)                    directory=adapters/core/python ;;
+            audr-adapter-nemo-relay) directory=adapters/nemo-relay/python ;;
+            audr-sink-chargebee)     directory=sinks/chargebee/python ;;
+            *) echo "::error::unknown distribution in tag $TAG"; exit 1 ;;
+          esac
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+((a|b|rc)[0-9]+)?$ ]]; then
+            echo "::error::tag $TAG does not name a release version"; exit 1
+          fi
+          {
+            echo "distribution=$distribution"
+            echo "version=$version"
+            echo "directory=$directory"
+          } >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Verify and build
+    runs-on: ubuntu-latest
+    needs: resolve
+    defaults:
+      run:
+        working-directory: ${{ needs.resolve.outputs.directory }}
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Check the tag is on main
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@e92bafb6253dcd438e0484186d7669ea7a8ca1cc # v6
+        with:
+          version: "0.12.18"
+          python-version: "3.12"
+          enable-cache: false
+
+      - name: Check version and changelog
+        env:
+          VERSION: ${{ needs.resolve.outputs.version }}
+        run: uv run --no-project python "$GITHUB_WORKSPACE/tools/check_release.py" . "$VERSION"
+
+      - name: Install
+        run: make install
+
+      - name: Verify
+        run: make verify
+
+      - name: Build
+        run: make build
+
+      - name: Check distributions
+        run: uvx twine==7.0.0 check --strict dist/*
+
+      - name: Upload distributions
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: dist
+          path: ${{ needs.resolve.outputs.directory }}/dist/
+          if-no-files-found: error
+
+  publish:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    needs: [resolve, build]
+    environment:
+      name: pypi-${{ needs.resolve.outputs.distribution }}
+      url: https://pypi.org/project/${{ needs.resolve.outputs.distribution }}/${{ needs.resolve.outputs.version }}/
+    permissions:
+      id-token: write
+    steps:
+      - name: Download distributions
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2

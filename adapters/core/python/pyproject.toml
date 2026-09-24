@@ -30,6 +30,7 @@ classifiers = [
 Homepage = "https://openaudr.dev"
 Issues = "https://github.com/openaudr/audr/issues"
 Source = "https://github.com/openaudr/audr/tree/main/adapters/core/python"
+Changelog = "https://github.com/openaudr/audr/blob/main/adapters/core/python/CHANGELOG.md"
 Specification = "https://openaudr.dev/spec/v1.0.0/"
 
 [dependency-groups]

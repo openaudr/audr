@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - LLM records carry `cost.total_cost` and `cost.currency` when Relay reports a
   provider-reported cost.
+- Package metadata links to this changelog, shown on PyPI as the Changelog URL.
 
 ### Changed
 

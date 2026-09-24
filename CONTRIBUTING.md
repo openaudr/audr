@@ -31,7 +31,7 @@ packages.
 git clone https://github.com/openaudr/audr.git
 cd audr
 make install     # tooling for the specification: jsonschema, PyYAML
-make check       # schema, examples, conformance fixtures, cross-references, staleness, docs
+make check       # schema, examples, conformance fixtures, cross-references, staleness, docs, tools
 make python      # lint and test every Python package
 make all         # check + python: everything CI runs
 ```
@@ -46,6 +46,7 @@ make all         # check + python: everything CI runs
 | `make fresh` | Fail if any generated file is stale |
 | `make links` | Check that every relative link in the repository resolves |
 | `make versions` | Fail if a distribution version is written into any Markdown file |
+| `make tools-test` | Run the tests for the scripts in `tools/` |
 | `make core-python` | `make verify` in `adapters/core/python` |
 | `make adapter-nemo-relay-python` | `make lint test` in `adapters/nemo-relay/python` |
 | `make sink-chargebee-python` | `make lint test` in `sinks/chargebee/python` |
@@ -139,6 +140,33 @@ make verify    # everything that package's CI runs
 Run `make verify` in the package before opening a pull request. Do not weaken or skip a
 lint, type-check or coverage gate to make a change pass.
 
+### Releasing a package
+
+Each package is versioned independently under [Semantic Versioning](https://semver.org/).
+A release is recorded by its tag, `<distribution>/vX.Y.Z`, and by the matching section of
+the package's `CHANGELOG.md`. GitHub Releases are reserved for the specification.
+
+1. Open a release pull request that sets `__version__` in `_version.py` and renames the
+   `[Unreleased]` section of `CHANGELOG.md` to `[X.Y.Z] - YYYY-MM-DD`. The version changes
+   only in a release pull request, so `main` never declares an unpublished version.
+2. Merge it once the package's verify workflow passes.
+3. A maintainer tags the merge commit and pushes the tag:
+
+   ```bash
+   git tag <distribution>/vX.Y.Z <merge-commit>
+   git push origin <distribution>/vX.Y.Z
+   ```
+
+4. The push starts [`publish-python.yml`](.github/workflows/publish-python.yml), which
+   confirms the tagged commit is on `main`, runs
+   `python tools/check_release.py <package-dir> X.Y.Z`, re-runs the package's
+   `make verify`, and builds the distributions. Publishing then waits for a maintainer to
+   approve the `pypi-<distribution>` deployment, and uploads to PyPI through Trusted
+   Publishing.
+
+Release tags can be created, moved or deleted only by maintainers. A published version is
+never re-uploaded; a defect is corrected by releasing a new version.
+
 ## Documentation
 
 Every fact has one home. A document states a fact if and only if it is that fact's home;
@@ -155,7 +183,7 @@ every other document links to it.
 | --- | --- |
 | What an adapter is; what a sink is | `adapters/README.md`; `sinks/README.md` |
 | The sink contract and delivery states | `adapters/core/README.md` |
-| Package naming, repository setup, the shared toolchain | This document |
+| Package naming, repository setup, the shared toolchain, releasing a package | This document |
 | Implementing a new adapter or sink | `adapters/CONTRIBUTING.md`; `sinks/CONTRIBUTING.md` |
 | How to work inside one package | That package's `AGENTS.md` |
 | Data-handling prohibitions | `SECURITY.md` |
