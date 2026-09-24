@@ -40,6 +40,8 @@ _METADATA_NAMESPACE = "audr"
 _OTEL_STATUS_KEY = "otel.status_code"
 _OTEL_STATUS_ERROR = "ERROR"
 _METERED_CATEGORIES = frozenset({"llm", "tool"})
+# Relay codecs whose `prompt_tokens` already excludes cache reads and writes.
+_EXCLUSIVE_PROMPT_APIS = frozenset({"anthropic_messages"})
 # AUDR restricts resource.provider to this alphabet; Relay scope names are free-form.
 _PROVIDER_ALLOWED = re.compile(r"[^a-z0-9-]+")
 
@@ -327,6 +329,10 @@ def _normalize_llm(event: Mapping[str, object], shared: _SharedFields) -> LlmOpe
         raise MappingFailure(EventSkipped("/category_profile/annotated_response/model"))
     cache_read = _optional_counter(usage, "cache_read_tokens")
     cache_write = _optional_counter(usage, "cache_write_tokens")
+    input_tokens = _optional_counter(usage, "prompt_tokens")
+    if not _reports_exclusive_prompt(annotation):
+        input_tokens = _exclusive_count(input_tokens, cache_read, cache_write)
+    output_tokens = _optional_counter(usage, "completion_tokens")
     return LlmOperation(
         scope_id=shared.scope_id,
         run_id=shared.run_id,
@@ -336,10 +342,8 @@ def _normalize_llm(event: Mapping[str, object], shared: _SharedFields) -> LlmOpe
         provider=_provider_from(event),
         attribution=shared.attribution,
         model=model,
-        input_tokens=_exclusive_count(
-            _optional_counter(usage, "prompt_tokens"), cache_read, cache_write
-        ),
-        output_tokens=_optional_counter(usage, "completion_tokens"),
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
         cache_read_tokens=cache_read,
         cache_write_tokens=cache_write,
     )
@@ -461,8 +465,13 @@ def _required_mapping(
     raise MappingFailure(EventSkipped(path) if skipped else EventMalformed(path))
 
 
+def _reports_exclusive_prompt(annotation: Mapping[str, object]) -> bool:
+    api_specific = annotation.get("api_specific")
+    return isinstance(api_specific, Mapping) and api_specific.get("api") in _EXCLUSIVE_PROMPT_APIS
+
+
 def _exclusive_count(total: int | None, *parts: int | None) -> int | None:
-    """Relay reports inclusive totals; AUDR counters exclude the separately reported parts."""
+    """Remove the separately reported parts from an inclusive total."""
     if total is None or all(part is None for part in parts):
         return total
     return max(0, total - sum(part or 0 for part in parts))
