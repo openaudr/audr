@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   release, as the specification defines them. Records previously carried `nemo-relay` and
   the installed Relay version.
 
+### Security
+
+- An unrecognised key under the `audr` scope metadata namespace is reported as
+  `/metadata/audr` instead of being included in the logged pointer.
+
 ## [0.1.0] - 2026-09-22
 
 ### Added

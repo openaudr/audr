@@ -73,7 +73,7 @@ def test_default_labels_survive_a_partial_override() -> None:
         ),
         pytest.param(
             {"audr": {"not_a_field": "x"}},
-            "/metadata/audr/not_a_field",
+            "/metadata/audr",
             id="unknown-field-in-the-namespace",
         ),
         pytest.param(

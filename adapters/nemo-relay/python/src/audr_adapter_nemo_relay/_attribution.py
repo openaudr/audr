@@ -97,7 +97,8 @@ def _attribution_pointer(error: ValidationError) -> str:
 
 def _first_field(error: ValidationError) -> str | None:
     loc = error.errors(include_url=False, include_input=False)[0]["loc"]
-    return str(loc[0]) if loc else None
+    name = str(loc[0]) if loc else None
+    return name if name in _ATTRIBUTION_FIELDS else None
 
 
 def _attribution_to_dict(attribution: Attribution) -> dict[str, object]:
