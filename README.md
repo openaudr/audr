@@ -38,6 +38,41 @@ attribution that the records join.
 }
 ```
 
+## How a run flows across components
+
+A single metered operation can pass through several components before it's
+billable. Each participating component — harness, router, provider — MAY
+independently emit its own AUDR record for that operation; records are never
+deduplicated against each other, only merged, so each keeps its own
+`record_id`. A sink assembles the records that share the same merge key,
+`(run.run_id, run.span_id)`, into one view of the operation. See
+[SPEC.md §1.2](spec/SPEC.md#12-architecture),
+[§1.4](spec/SPEC.md#14-record-processing-model), and the
+[Merge key definition](spec/SPEC.md#2-definitions) for the normative
+description.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant App as Application
+    participant Harness as Agent Harness
+    participant Router as Router / AI Gateway
+    participant Provider as Provider
+    participant Sink as Sink
+
+    App->>Harness: Start run (run_id: 01K4N8B0M2C5F7H9J1L3N6P8QR)
+    Harness->>Router: Request generation (span_id: model-call-1)
+    Router->>Provider: Forward request
+    Provider-->>Router: Result + native usage/cost
+    Provider--)Sink: AUDR record (component: provider)
+    Router--)Sink: AUDR record (component: router)
+    Router-->>Harness: Result
+    Harness--)Sink: AUDR record (component: harness)
+    Harness-->>App: Final response
+
+    Note over Sink: Merges the 3 records by shared<br/>(run_id, span_id) into one operation view
+```
+
 ## Start here
 
 | Path | Contains |
