@@ -1,5 +1,5 @@
 {
-  "name": "audr",
+  "name": "@openaudr/audr",
   "version": "0.1.0",
   "description": "Vendor-neutral SDK for emitting AUDR (Agent Usage Detail Record) v1.0.0 records.",
   "license": "Apache-2.0",

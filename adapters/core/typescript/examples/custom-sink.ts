@@ -2,8 +2,8 @@
  * A minimal custom `Sink` that prints each record's `record_id`, checked against the same
  * contract every sink in the repository passes.
  */
-import { type AudrRecord, BatchResult, type Sink } from 'audr';
-import { assertSinkContract } from 'audr/testing';
+import { type AudrRecord, BatchResult, type Sink } from '@openaudr/audr';
+import { assertSinkContract } from '@openaudr/audr/testing';
 
 class PrintSink implements Sink {
   #closed = false;

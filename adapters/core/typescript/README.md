@@ -1,7 +1,7 @@
 # audr
 
-[![npm](https://img.shields.io/npm/v/audr?include_prereleases)](https://www.npmjs.com/package/audr)
-[![Node versions](https://img.shields.io/node/v/audr)](https://www.npmjs.com/package/audr)
+[![npm](https://img.shields.io/npm/v/@openaudr/audr?include_prereleases)](https://www.npmjs.com/package/@openaudr/audr)
+[![Node versions](https://img.shields.io/node/v/@openaudr/audr)](https://www.npmjs.com/package/@openaudr/audr)
 
 > **Status: alpha.** The record model tracks AUDR v1.0.0 and is stable; the TypeScript API
 > may change in minor releases before 1.0.
@@ -15,7 +15,7 @@ declarations.
 ## Install
 
 ```bash
-npm install audr
+npm install @openaudr/audr
 ```
 
 Requires Node.js 22.12 or later. The root entry point uses no Node-specific APIs.
@@ -23,8 +23,8 @@ Requires Node.js 22.12 or later. The root entry point uses no Node-specific APIs
 ## Quickstart
 
 ```ts
-import { Client, createRecord } from 'audr';
-import { FileSink } from 'audr/file';
+import { Client, createRecord } from '@openaudr/audr';
+import { FileSink } from '@openaudr/audr/file';
 
 const record = createRecord({
   timing: { duration_ms: 812 }, // event_time defaults to now
@@ -98,7 +98,7 @@ that has already been parsed, use `parseRecord()`, and use `validate()` to get a
 issues without an exception:
 
 ```ts
-import { decodeRecord, ValidationError } from 'audr';
+import { decodeRecord, ValidationError } from '@openaudr/audr';
 
 // `payload` is the JSON text of one record, as received.
 
@@ -121,7 +121,7 @@ A sink is any object with `deliver(batch)` and `close()`. It reports each batch'
 rather than throwing:
 
 ```ts
-import { type AudrRecord, BatchResult, type Sink } from 'audr';
+import { type AudrRecord, BatchResult, type Sink } from '@openaudr/audr';
 
 class PrintSink implements Sink {
   #closed = false;

@@ -176,7 +176,7 @@ several registries.
 | Language | Version declared in | Publish workflow | Registry and deployment environment |
 | --- | --- | --- | --- |
 | Python | `src/<package>/_version.py` | [`publish-python.yml`](.github/workflows/publish-python.yml) | PyPI, `pypi-<distribution>` |
-| TypeScript | `package.json` and `src/version.ts` | [`publish-typescript.yml`](.github/workflows/publish-typescript.yml) | npm, `npm-<distribution>` |
+| TypeScript | `package.json` and `src/version.ts` | [`publish-typescript.yml`](.github/workflows/publish-typescript.yml) | npm, `npm-<name>`, where `<name>` omits the npm scope |
 
 1. Open a release pull request that sets the version and renames the `[Unreleased]`
    section of `CHANGELOG.md` to `[X.Y.Z] - YYYY-MM-DD`. The version changes only in a

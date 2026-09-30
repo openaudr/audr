@@ -2,7 +2,7 @@
  * Parse a JSON-encoded AUDR record, handling `ValidationError`. The payload deliberately
  * omits `resource.provider` to exercise the error path.
  */
-import { decodeRecord, SPEC_VERSION, ValidationError } from 'audr';
+import { decodeRecord, SPEC_VERSION, ValidationError } from '@openaudr/audr';
 
 const payload = JSON.stringify({
   spec_version: SPEC_VERSION,

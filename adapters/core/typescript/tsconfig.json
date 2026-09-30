@@ -27,9 +27,9 @@
     // Node resolves that through the package's own `exports` after a build; the compiler
     // needs the mapping to check them without one.
     "paths": {
-      "audr": ["./src/index.ts"],
-      "audr/file": ["./src/file-sink.ts"],
-      "audr/testing": ["./src/testing.ts"]
+      "@openaudr/audr": ["./src/index.ts"],
+      "@openaudr/audr/file": ["./src/file-sink.ts"],
+      "@openaudr/audr/testing": ["./src/testing.ts"]
     },
 
     "noEmit": true

@@ -8,7 +8,7 @@ directly uses this package alone.
 | Language | Distribution | Package guide |
 | --- | --- | --- |
 | [Python](python/) | [![PyPI](https://img.shields.io/pypi/v/audr?include_prereleases&label=audr)](https://pypi.org/project/audr/) | [`python/README.md`](python/README.md) |
-| [TypeScript](typescript/) | [![npm](https://img.shields.io/npm/v/audr?include_prereleases&label=audr)](https://www.npmjs.com/package/audr) | [`typescript/README.md`](typescript/README.md) |
+| [TypeScript](typescript/) | [![npm](https://img.shields.io/npm/v/@openaudr/audr?include_prereleases&label=%40openaudr%2Faudr)](https://www.npmjs.com/package/@openaudr/audr) | [`typescript/README.md`](typescript/README.md) |
 
 ## How the parts fit
 

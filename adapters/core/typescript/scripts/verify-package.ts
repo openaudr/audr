@@ -9,18 +9,21 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const root = join(import.meta.dirname, '..');
-const { dependencies = {} } = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
+const { name, dependencies = {} } = JSON.parse(
+  readFileSync(join(root, 'package.json'), 'utf8'),
+) as {
+  name: string;
   dependencies?: Record<string, string>;
 };
-const expected = ['audr', ...Object.keys(dependencies)].sort();
+const expected = [name, ...Object.keys(dependencies)].sort();
 const project = mkdtempSync(join(tmpdir(), 'audr-verify-'));
 const run = (command: string, args: string[]): string =>
   execFileSync(command, args, { cwd: project, encoding: 'utf8' });
 
 const ESM_SMOKE = `
-import { Client, createRecord, VERSION } from 'audr';
-import { FileSink } from 'audr/file';
-import { MemorySink, makeRecord } from 'audr/testing';
+import { Client, createRecord, VERSION } from '${name}';
+import { FileSink } from '${name}/file';
+import { MemorySink, makeRecord } from '${name}/testing';
 
 const sink = new MemorySink();
 const client = new Client(sink, { emitter: { component: 'harness', name: 'verify', version: VERSION } });
@@ -32,7 +35,7 @@ if (sink.records.length !== 1 || typeof FileSink !== 'function') throw new Error
 `;
 
 const CJS_SMOKE = `
-const { validate, VERSION } = require('audr');
+const { validate, VERSION } = require('${name}');
 if (validate({}).length === 0 || typeof VERSION !== 'string') throw new Error('smoke failed');
 `;
 
@@ -44,8 +47,15 @@ try {
   writeFileSync(join(project, 'package.json'), '{ "private": true, "type": "module" }\n');
   run('npm', ['install', '--silent', '--no-audit', '--no-fund', join(project, tarball)]);
 
-  const installed = readdirSync(join(project, 'node_modules'))
-    .filter((name) => !name.startsWith('.'))
+  // A scoped package installs as node_modules/@scope/name.
+  const modules = join(project, 'node_modules');
+  const installed = readdirSync(modules)
+    .filter((entry) => !entry.startsWith('.'))
+    .flatMap((entry) =>
+      entry.startsWith('@')
+        ? readdirSync(join(modules, entry)).map((child) => `${entry}/${child}`)
+        : [entry],
+    )
     .sort();
   if (installed.join() !== expected.join()) {
     throw new Error(`expected ${expected.join(', ')}, found: ${installed.join(', ')}`);

@@ -50,7 +50,7 @@ export default defineConfig(
   },
   {
     // The root entry point runs in any modern JavaScript runtime; Node-only code lives
-    // behind the `audr/file` and `audr/testing` subpaths.
+    // behind the `@openaudr/audr/file` and `@openaudr/audr/testing` subpaths.
     files: ['src/**/*.ts'],
     ignores: ['src/file-sink.ts', 'src/testing.ts'],
     rules: {

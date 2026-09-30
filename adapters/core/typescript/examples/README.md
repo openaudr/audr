@@ -1,6 +1,6 @@
 # Examples
 
-Runnable examples against the public `audr` API. From `adapters/core/typescript`:
+Runnable examples against the public `@openaudr/audr` API. From `adapters/core/typescript`:
 
 ```bash
 make examples   # builds the package, then runs each example with Node's type stripping
@@ -11,7 +11,7 @@ make examples   # builds the package, then runs each example with Node's type st
 - `decode-json.ts` parses a JSON payload with `decodeRecord`, handling the
   `ValidationError` raised by a deliberately broken (missing `resource.provider`) record.
 - `custom-sink.ts` implements a minimal `PrintSink` and checks it against
-  `assertSinkContract` from `audr/testing`.
+  `assertSinkContract` from `@openaudr/audr/testing`.
 
 Every example runs offline, against the local filesystem. Each imports the package by its
 published name, so it exercises the built `dist/` exactly as a consumer would.

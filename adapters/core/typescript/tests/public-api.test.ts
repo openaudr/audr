@@ -29,11 +29,11 @@ it('pins the root exports', () => {
   ]);
 });
 
-it('pins the audr/file exports', () => {
+it('pins the @openaudr/audr/file exports', () => {
   expect(Object.keys(file)).toEqual(['FileSink']);
 });
 
-it('pins the audr/testing exports', () => {
+it('pins the @openaudr/audr/testing exports', () => {
   expect(Object.keys(testing).sort()).toEqual(['MemorySink', 'assertSinkContract', 'makeRecord']);
 });
 

@@ -5,8 +5,8 @@
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { Client, createRecord } from 'audr';
-import { FileSink } from 'audr/file';
+import { Client, createRecord } from '@openaudr/audr';
+import { FileSink } from '@openaudr/audr/file';
 
 const record = createRecord({
   timing: { duration_ms: 812 }, // event_time defaults to now

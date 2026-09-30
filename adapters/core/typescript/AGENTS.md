@@ -8,7 +8,7 @@ changes to the package itself.
 
 ## What this is
 
-`adapters/core/typescript` is the `audr` npm package: the TypeScript implementation of the
+`adapters/core/typescript` is the `@openaudr/audr` npm package: the TypeScript implementation of the
 Agent Usage Detail Record (AUDR) standard, behaviourally equivalent to the Python
 reference in [`../python/`](../python/). It is destination-neutral: a sink plugs into this
 package, never the reverse, and this package must not depend on a particular destination
@@ -36,7 +36,7 @@ or runtime.
 ## Rules
 
 1. `src/index.ts`, `src/file-sink.ts` and `src/testing.ts` are the three entry points
-   (`audr`, `audr/file`, `audr/testing`), and `tests/public-api.test.ts` pins their
+   (`@openaudr/audr`, `@openaudr/audr/file`, `@openaudr/audr/testing`), and `tests/public-api.test.ts` pins their
    runtime exports. Adding an export is a public API change; make it deliberately and
    update the test. Keep the surface small.
 2. The one runtime dependency is `uuid`, which has none of its own. Add another only by
