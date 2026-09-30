@@ -69,6 +69,7 @@ Replays from `onFailure` are therefore idempotent when the consumer de-duplicate
 ## Delivery callbacks
 
 ```ts
+// `sink`, `metrics` and `replayQueue` stand for the application's own objects.
 const client = new Client(sink, {
   onDelivered: (records) => metrics.count('audr.sent', records.length),
   onFailure: ({ record, disposition, reason, retryable }) => {
@@ -98,6 +99,8 @@ issues without an exception:
 
 ```ts
 import { decodeRecord, ValidationError } from 'audr';
+
+// `payload` is the JSON text of one record, as received.
 
 try {
   const record = decodeRecord(payload);

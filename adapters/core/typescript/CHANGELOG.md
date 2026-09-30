@@ -13,5 +13,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   schema and cross-field validation, JSON encoding and decoding, the batching delivery
   pipeline behind `Client`, the sink contract, `FileSink` (`audr/file`), and the sink test
   harness (`audr/testing`). Structural validation and the record types are generated from
-  the AUDR JSON Schema at build time, and `uuidv7` is built on `uuid`, the one runtime
+  the AUDR JSON Schema and committed, and `uuidv7` is built on `uuid`, the one runtime
   dependency. `Client` logs nothing unless given a `logger`.
