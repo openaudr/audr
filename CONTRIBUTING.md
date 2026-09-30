@@ -165,26 +165,36 @@ The `make install / lint / test / build / verify` targets mean the same as for P
 ### Releasing a package
 
 Each package is versioned independently under [Semantic Versioning](https://semver.org/).
-A release is recorded by its tag, `<distribution>/vX.Y.Z`, and by the matching section of
-the package's `CHANGELOG.md`. GitHub Releases are reserved for the specification.
+A release is recorded by its tag and by the matching section of the package's
+`CHANGELOG.md`. GitHub Releases are reserved for the specification.
 
-1. Open a release pull request that sets `__version__` in `_version.py` and renames the
-   `[Unreleased]` section of `CHANGELOG.md` to `[X.Y.Z] - YYYY-MM-DD`. The version changes
-   only in a release pull request, so `main` never declares an unpublished version.
+A release tag is the package directory followed by `/vX.Y.Z`, for example
+`adapters/core/python/v1.2.0` or `adapters/core/typescript/v1.2.0`. The directory, not the
+distribution name, identifies the package, because one distribution name can exist in
+several registries.
+
+| Language | Version declared in | Publish workflow | Registry and deployment environment |
+| --- | --- | --- | --- |
+| Python | `src/<package>/_version.py` | [`publish-python.yml`](.github/workflows/publish-python.yml) | PyPI, `pypi-<distribution>` |
+| TypeScript | `package.json` and `src/version.ts` | [`publish-typescript.yml`](.github/workflows/publish-typescript.yml) | npm, `npm-<distribution>` |
+
+1. Open a release pull request that sets the version and renames the `[Unreleased]`
+   section of `CHANGELOG.md` to `[X.Y.Z] - YYYY-MM-DD`. The version changes only in a
+   release pull request, so `main` never declares an unpublished version.
 2. Merge it once the package's verify workflow passes.
 3. A maintainer tags the merge commit and pushes the tag:
 
    ```bash
-   git tag <distribution>/vX.Y.Z <merge-commit>
-   git push origin <distribution>/vX.Y.Z
+   git tag <package-dir>/vX.Y.Z <merge-commit>
+   git push origin <package-dir>/vX.Y.Z
    ```
 
-4. The push starts [`publish-python.yml`](.github/workflows/publish-python.yml), which
-   confirms the tagged commit is on `main`, runs
-   `python tools/check_release.py <package-dir> X.Y.Z`, re-runs the package's
-   `make verify`, and builds the distributions. Publishing then waits for a maintainer to
-   approve the `pypi-<distribution>` deployment, and uploads to PyPI through Trusted
-   Publishing.
+4. The push starts the language's publish workflow, which confirms the tagged commit is on
+   `main`, runs `python tools/check_release.py <package-dir> X.Y.Z`, re-runs the package's
+   `make verify`, and builds the distribution. Publishing then waits for a maintainer to
+   approve the deployment environment, and uploads to the registry through Trusted
+   Publishing. npm releases carry provenance, and a prerelease such as `1.3.0-rc.1` is
+   published under the `next` dist-tag rather than `latest`.
 
 Release tags can be created, moved or deleted only by maintainers. A published version is
 never re-uploaded; a defect is corrected by releasing a new version.
