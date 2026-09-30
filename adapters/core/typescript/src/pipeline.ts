@@ -10,6 +10,7 @@ import {
   type SubmitResult,
 } from './results.js';
 import { type BatchResult, type Sink } from './sink.js';
+import { isObject } from './validate.js';
 
 /** The longest delay `setTimeout` honours; a longer one fires at once. */
 export const MAX_TIMER_MS = 2 ** 31 - 1;
@@ -105,8 +106,8 @@ export class Pipeline {
   }
 
   /**
-   * Deliver what fits in `timeoutMs`, abort and account for the rest, wait for pending
-   * callbacks within the same bound, then close an owned sink. Idempotent.
+   * Deliver what fits in `timeoutMs`, abort and account for the rest, then wait for pending
+   * callbacks and close an owned sink, both within the same bound. Idempotent.
    */
   stop(timeoutMs: number): Promise<void> {
     this.#stopping ??= this.#stop(timeoutMs);
@@ -124,10 +125,13 @@ export class Pipeline {
       this.#abandonOutstanding();
       await this.#settleCallbacks(Math.max(0, deadline - Date.now()));
       if (this.#options.ownsSink) {
-        try {
-          await this.#sink.close();
-        } catch (error) {
-          this.#options.logger.error(`audr: sink close failed (${errorName(error)})`);
+        const closed = Promise.resolve()
+          .then(() => this.#sink.close())
+          .catch((error: unknown) => {
+            this.#options.logger.error(`audr: sink close failed (${errorName(error)})`);
+          });
+        if (!(await settlesWithin(closed, Math.max(0, deadline - Date.now())))) {
+          this.#options.logger.warn('audr: sink close did not settle within the shutdown bound');
         }
       }
     }
@@ -183,7 +187,7 @@ export class Pipeline {
     let thrown: string | undefined;
     try {
       const result = await this.#sink.deliver(records, { signal: this.#abort.signal });
-      if (batch.some((item) => item.state === 'in_flight')) {
+      if (isObject(result) && batch.some((item) => item.state === 'in_flight')) {
         this.#batches += 1;
         this.#apply(batch, result);
       }

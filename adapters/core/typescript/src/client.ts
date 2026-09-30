@@ -164,7 +164,8 @@ export class Client implements AsyncDisposable {
 
   /**
    * Stop accepting records, deliver what fits in `timeoutMs` (default 30000), then close
-   * the sink. Records still queued at the bound are reported to `onFailure`. Idempotent.
+   * the sink within the same bound. Records still queued at the bound are reported to
+   * `onFailure`. Idempotent.
    */
   async shutdown(timeoutMs: number = DEFAULT_TIMEOUT_MS): Promise<void> {
     checkTimeout(timeoutMs);
