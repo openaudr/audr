@@ -1,0 +1,130 @@
+name: Publish TypeScript package
+
+# A tag <package-directory>/v<version>, such as adapters/core/typescript/v0.1.0, on a commit
+# of main publishes that package to npm through Trusted Publishing, with provenance. The tag
+# and the package's CHANGELOG.md section are the release record; no GitHub Release is created.
+
+on:
+  push:
+    tags:
+      - "*/*/typescript/v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-typescript-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    name: Resolve tag
+    runs-on: ubuntu-latest
+    outputs:
+      distribution: ${{ steps.resolve.outputs.distribution }}
+      version: ${{ steps.resolve.outputs.version }}
+      directory: ${{ steps.resolve.outputs.directory }}
+      dist_tag: ${{ steps.resolve.outputs.dist_tag }}
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Map tag to package
+        id: resolve
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          directory="${TAG%/v*}"
+          version="${TAG##*/v}"
+          if [[ ! -f "$directory/package.json" ]]; then
+            echo "::error::tag $TAG does not name a TypeScript package directory"; exit 1
+          fi
+          distribution="$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["name"])' "$directory/package.json")"
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta|rc)\.[0-9]+)?$ ]]; then
+            echo "::error::tag $TAG does not name a release version"; exit 1
+          fi
+          # npm points `latest` at every version it is given, so a prerelease goes to `next`.
+          dist_tag=latest
+          [[ "$version" == *-* ]] && dist_tag=next
+          {
+            echo "distribution=$distribution"
+            echo "version=$version"
+            echo "directory=$directory"
+            echo "dist_tag=$dist_tag"
+          } >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Verify and pack
+    runs-on: ubuntu-latest
+    needs: resolve
+    defaults:
+      run:
+        working-directory: ${{ needs.resolve.outputs.directory }}
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Check the tag is on main
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+
+      # No dependency cache: a release is built from a clean install.
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+
+      - name: Check version and changelog
+        env:
+          VERSION: ${{ needs.resolve.outputs.version }}
+        run: python3 "$GITHUB_WORKSPACE/tools/check_release.py" . "$VERSION"
+
+      - name: Install
+        run: make install
+
+      - name: Verify
+        run: make verify
+
+      - name: Pack
+        run: npm pack
+
+      - name: Upload tarball
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: tarball
+          path: ${{ needs.resolve.outputs.directory }}/*.tgz
+          if-no-files-found: error
+
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    needs: [resolve, build]
+    environment:
+      name: npm-${{ needs.resolve.outputs.distribution }}
+      url: https://www.npmjs.com/package/${{ needs.resolve.outputs.distribution }}/v/${{ needs.resolve.outputs.version }}
+    permissions:
+      id-token: write
+    steps:
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      # Trusted Publishing requires npm 11.5.1 or later.
+      - name: Install npm
+        run: npm install --global npm@11.19.1
+
+      - name: Download tarball
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: tarball
+
+      - name: Publish
+        env:
+          DIST_TAG: ${{ needs.resolve.outputs.dist_tag }}
+        run: npm publish ./*.tgz --tag "$DIST_TAG"
