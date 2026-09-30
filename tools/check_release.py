@@ -1,6 +1,6 @@
 """Fail unless a package is ready to be released at a given version.
 
-A release tag ``<distribution>/v<version>`` is valid only when the package's
+A release tag ``<package-directory>/v<version>`` is valid only when the package's
 ``_version.py`` (the file named by ``[tool.hatch.version].path``) declares that version
 and its ``CHANGELOG.md`` holds a dated section for it, ``## [<version>] - YYYY-MM-DD``.
 

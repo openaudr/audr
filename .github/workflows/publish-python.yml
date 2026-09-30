@@ -1,16 +1,13 @@
 name: Publish Python package
 
-# A tag <distribution>/v<version> on a commit of main publishes that distribution to
-# PyPI through Trusted Publishing. The tag and the package's CHANGELOG.md section are the
-# release record; no GitHub Release is created.
+# A tag <package-directory>/v<version>, such as adapters/core/python/v0.2.0, on a commit of
+# main publishes that package to PyPI through Trusted Publishing. The tag and the package's
+# CHANGELOG.md section are the release record; no GitHub Release is created.
 
 on:
   push:
     tags:
-      - "audr/v*"
-      - "audr-adapter-litellm/v*"
-      - "audr-adapter-nemo-relay/v*"
-      - "audr-sink-chargebee/v*"
+      - "*/*/python/v*"
 
 permissions:
   contents: read
@@ -28,20 +25,22 @@ jobs:
       version: ${{ steps.resolve.outputs.version }}
       directory: ${{ steps.resolve.outputs.directory }}
     steps:
+      - name: Checkout project
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
       - name: Map tag to package
         id: resolve
         env:
           TAG: ${{ github.ref_name }}
         run: |
-          distribution="${TAG%/v*}"
+          directory="${TAG%/v*}"
           version="${TAG##*/v}"
-          case "$distribution" in
-            audr)                    directory=adapters/core/python ;;
-            audr-adapter-litellm)    directory=adapters/litellm/python ;;
-            audr-adapter-nemo-relay) directory=adapters/nemo-relay/python ;;
-            audr-sink-chargebee)     directory=sinks/chargebee/python ;;
-            *) echo "::error::unknown distribution in tag $TAG"; exit 1 ;;
-          esac
+          if [[ ! -f "$directory/pyproject.toml" ]]; then
+            echo "::error::tag $TAG does not name a Python package directory"; exit 1
+          fi
+          distribution="$(python3 -c 'import sys, tomllib; print(tomllib.load(open(sys.argv[1], "rb"))["project"]["name"])' "$directory/pyproject.toml")"
           if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+((a|b|rc)[0-9]+)?$ ]]; then
             echo "::error::tag $TAG does not name a release version"; exit 1
           fi
