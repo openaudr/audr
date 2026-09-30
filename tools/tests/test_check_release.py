@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import pathlib
 import subprocess
 import sys
@@ -83,6 +84,47 @@ class CheckReleaseTest(unittest.TestCase):
         result = self.run_check("1.2.0")
         self.assertEqual(result.returncode, 1)
         self.assertIn("no __version__ assignment found", result.stderr)
+
+
+class CheckReleasePackageJsonTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.package = pathlib.Path(self._tmp.name)
+
+    def write(self, version: str, changelog: str) -> None:
+        (self.package / "package.json").write_text(
+            json.dumps({"name": "audr-sink-example", "version": version})
+        )
+        (self.package / "CHANGELOG.md").write_text(changelog)
+
+    def run_check(self, version: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [sys.executable, str(SCRIPT), str(self.package), version],
+            capture_output=True, text=True, check=False,
+        )
+
+    def test_matching_version_and_dated_section_passes(self) -> None:
+        self.write("1.2.0", "## [1.2.0] - 2026-09-24\n")
+        result = self.run_check("1.2.0")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("ready to release 1.2.0", result.stdout)
+
+    def test_pre_release_version_passes(self) -> None:
+        self.write("1.2.0-rc.1", "## [1.2.0-rc.1] - 2026-09-24\n")
+        self.assertEqual(self.run_check("1.2.0-rc.1").returncode, 0)
+
+    def test_version_mismatch_names_package_json(self) -> None:
+        self.write("1.1.0", "## [1.2.0] - 2026-09-24\n")
+        result = self.run_check("1.2.0")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("package.json declares 1.1.0, the tag names 1.2.0", result.stderr)
+
+    def test_missing_section_fails(self) -> None:
+        self.write("1.2.0", "## [Unreleased]\n")
+        result = self.run_check("1.2.0")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("has no dated section for 1.2.0", result.stderr)
 
 
 if __name__ == "__main__":

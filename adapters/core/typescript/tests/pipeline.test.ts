@@ -164,6 +164,16 @@ describe('sink outcomes', () => {
     expect(logger.lines).toEqual(['audr: 1 record(s) unknown, the sink returned no valid result']);
   });
 
+  it('accounts a batch unknown without counting it when the sink resolves a non-object', async () => {
+    const sink = new MemorySink();
+    sink.deliver = () => Promise.resolve(undefined as unknown as BatchResult);
+    const { client, logger } = setup(sink);
+    client.record(makeRecord());
+    await client.flush();
+    expect(client.stats).toMatchObject({ unknown: 1, batches: 0 });
+    expect(logger.lines).toEqual(['audr: 1 record(s) unknown, the sink returned no valid result']);
+  });
+
   it('survives callbacks that throw', async () => {
     const { client, logger } = setup(new MemorySink({ reject: () => 'no' }), {
       onFailure: () => {
@@ -276,5 +286,30 @@ describe('shutdown', () => {
     await stopped;
     expect(signal?.aborted).toBe(true);
     expect(client.stats).toMatchObject({ unknown: 1 });
+  });
+
+  it('stops waiting for the sink to close at its bound', async () => {
+    const sink = new MemorySink();
+    sink.close = () => new Promise<void>(() => undefined);
+    const { client, logger } = setup(sink);
+    let stopped = false;
+    void client.shutdown(500).then(() => (stopped = true));
+    await vi.advanceTimersByTimeAsync(499);
+    expect(stopped).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(stopped).toBe(true);
+    expect(logger.lines).toEqual(['audr: sink close did not settle within the shutdown bound']);
+  });
+
+  it('logs a sink close that fails after the bound', async () => {
+    const sink = new MemorySink();
+    sink.close = () =>
+      new Promise<void>((_, reject) => setTimeout(reject, 1000, new Error('secret-value')));
+    const { client, logger } = setup(sink);
+    await Promise.all([client.shutdown(500), vi.advanceTimersByTimeAsync(1000)]);
+    expect(logger.lines).toEqual([
+      'audr: sink close did not settle within the shutdown bound',
+      'audr: sink close failed (Error)',
+    ]);
   });
 });
