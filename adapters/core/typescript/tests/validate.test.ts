@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isErrorCode } from '../src/errors.js';
+import { errorName, isErrorCode } from '../src/errors.js';
 import { type AudrRecord, validate } from '../src/index.js';
 import { makeRecord } from '../src/testing.js';
 
@@ -27,6 +27,22 @@ describe('isErrorCode', () => {
   it('recognises the codes and nothing else', () => {
     expect(['REQUIRED', 'INVALID_STRUCTURE', 'NOT_JSON'].every(isErrorCode)).toBe(true);
     expect(['Invalid input', 'toString', '__proto__'].some(isErrorCode)).toBe(false);
+  });
+});
+
+describe('errorName', () => {
+  it('names an error by its class and never throws', () => {
+    const named = (name: unknown): Error =>
+      Object.defineProperty(new Error('secret-value'), 'name', { value: name });
+    const unreadable = Object.defineProperty(new Error('secret-value'), 'name', {
+      get() {
+        throw new TypeError('name');
+      },
+    });
+    expect(errorName(new RangeError('secret-value'))).toBe('RangeError');
+    expect(errorName('secret-value')).toBe('string');
+    expect(errorName(named(Symbol('name')))).toBe('unknown');
+    expect(errorName(unreadable)).toBe('unknown');
   });
 });
 

@@ -65,7 +65,16 @@ export class ValidationError extends AudrError {
   }
 }
 
-/** An error's class name, never its message: a message may carry record values. */
+/**
+ * An error's class name, never its message: a message may carry record values. Never throws,
+ * because it runs while an error is being handled.
+ */
 export function errorName(error: unknown): string {
-  return error instanceof Error ? error.name : typeof error;
+  try {
+    if (!(error instanceof Error)) return typeof error;
+    const name: unknown = error.name;
+    return typeof name === 'string' ? name : 'unknown';
+  } catch {
+    return 'unknown';
+  }
 }

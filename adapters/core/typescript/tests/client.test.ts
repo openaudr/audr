@@ -244,6 +244,61 @@ describe('Client.record', () => {
     expect(logger.lines).toContain('audr: onFailure callback threw (TypeError)');
   });
 
+  describe('when onFailure resubmits the record', () => {
+    function resubmitting(sink: Sink, options: ClientOptions = {}) {
+      const failures: FailedRecord[] = [];
+      const nested: string[] = [];
+      const audr: Client = client(sink, {
+        ...options,
+        onFailure: (failure) => {
+          failures.push(failure);
+          nested.push(audr.record(failure.record).outcome);
+        },
+      });
+      return { audr, failures, nested };
+    }
+
+    it('does not recurse for a record that is still invalid', () => {
+      const { audr, failures, nested } = resubmitting(new MemorySink());
+      expect(audr.record(makeRecord({ attribution: {} })).outcome).toBe('rejected_invalid');
+      expect(failures.map(({ reason }) => reason)).toEqual(['invalid']);
+      expect(nested).toEqual(['rejected_invalid']);
+    });
+
+    it('does not recurse while the queue is full', () => {
+      const { audr, failures, nested } = resubmitting(new MemorySink(), { maxQueueSize: 1 });
+      audr.record(makeRecord());
+      expect(audr.record(makeRecord()).outcome).toBe('dropped_queue_full');
+      expect(failures.map(({ reason }) => reason)).toEqual(['queue_full']);
+      expect(nested).toEqual(['dropped_queue_full']);
+      expect(audr.stats).toMatchObject({ submitted: 3, dropped: 2, queueDepth: 1 });
+    });
+
+    it('does not recurse when a replay from a failed batch finds the queue full', async () => {
+      const sink = new MemorySink({ failWith: 'permanent_failure' });
+      const { audr, failures, nested } = resubmitting(sink, { maxQueueSize: 1 });
+      audr.record(makeRecord());
+      await audr.flush();
+      expect(failures.map(({ reason }) => reason)).toEqual(['sink_failure']);
+      expect(nested).toEqual(['dropped_queue_full']);
+    });
+
+    it('queues a corrected record', async () => {
+      const sink = new MemorySink();
+      const nested: string[] = [];
+      const audr: Client = client(sink, {
+        onFailure: ({ record }) => {
+          const attribution = { ...record.attribution, environment: 'test' } as const;
+          nested.push(audr.record({ ...record, attribution }).outcome);
+        },
+      });
+      expect(audr.record(makeRecord({ attribution: {} })).outcome).toBe('rejected_invalid');
+      await audr.flush();
+      expect(nested).toEqual(['queued']);
+      expect(sink.records.map((record) => record.attribution.environment)).toEqual(['test']);
+    });
+  });
+
   it('drops records after shutdown without counting them', async () => {
     const audr = client(new MemorySink());
     await audr.shutdown();

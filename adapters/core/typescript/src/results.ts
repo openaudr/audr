@@ -38,7 +38,9 @@ export interface FailedRecord {
 
 /**
  * Called for every record that ends `dropped` or `unknown`. A returned promise is not
- * awaited on the delivery path; `shutdown()` waits for it within its bound.
+ * awaited on the delivery path; `shutdown()` waits for it within its bound. It is never
+ * re-entered: a record it submits that fails at once is reported only by the `SubmitResult`
+ * that `record()` returns to it.
  */
 export type FailureCallback =
   ((failure: FailedRecord) => void) | ((failure: FailedRecord) => Promise<void>);

@@ -85,7 +85,9 @@ Every record admitted through `client.record()` ends in exactly one terminal sta
 sink rejected or could not confirm go to `onFailure`. Both callbacks run synchronously on
 the delivery path, so keep them fast. Either may return a promise: delivery does not wait
 for it, but `shutdown()` does, within its bound. The client catches any error
-they throw or reject with.
+they throw or reject with. `onFailure` is never re-entered: when it resubmits a record that
+fails again at once (still invalid, or the queue is full), that failure is reported only by
+the `SubmitResult` returned to the callback, so a replay cannot recurse.
 `client.stats` returns a `DeliveryStats` snapshot of the counters.
 
 The client logs nothing by default. To receive its diagnostics, pass a `logger` with `warn`

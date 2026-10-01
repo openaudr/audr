@@ -52,6 +52,8 @@ export class Pipeline {
   readonly #abort = new AbortController();
   /** Promises returned by callbacks that have not settled yet; each resolves, never rejects. */
   readonly #callbacks = new Set<Promise<void>>();
+  /** Whether `onFailure` is running synchronously. */
+  #notifying = false;
   #submitted = 0;
   #sent = 0;
   #dropped = 0;
@@ -314,8 +316,12 @@ export class Pipeline {
     detail?: string,
   ): void {
     const { onFailure } = this.#options;
-    if (onFailure === undefined) return;
+    // A record the callback resubmits can fail again at once; re-entering the callback for it
+    // would recurse without bound. The callback sees that failure in the `SubmitResult`.
+    if (onFailure === undefined || this.#notifying) return;
+    this.#notifying = true;
     this.#invoke('onFailure', () => onFailure({ record, disposition, reason, retryable, detail }));
+    this.#notifying = false;
   }
 
   #notifyDelivered(batch: readonly InFlight[]): void {
@@ -325,7 +331,7 @@ export class Pipeline {
     this.#invoke('onDelivered', () => onDelivered(sent));
   }
 
-  /** Run a callback without awaiting it, logging whatever it throws or rejects with. */
+  /** Run a callback without awaiting it, logging whatever it throws or rejects with. Never throws. */
   #invoke(name: 'onFailure' | 'onDelivered', callback: () => unknown): void {
     const report = (error: unknown): void => {
       this.#options.logger.warn(`audr: ${name} callback threw (${errorName(error)})`);

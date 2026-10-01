@@ -24,6 +24,17 @@ function setup<S extends Sink>(sink: S, options: ClientOptions = {}) {
   return { sink, client, failures, delivered, logger };
 }
 
+/** An `Error` whose `name` throws when read. */
+function unreadableError(): Error {
+  return Object.create(Error.prototype, {
+    name: {
+      get() {
+        throw new TypeError('name');
+      },
+    },
+  }) as Error;
+}
+
 beforeEach(() => {
   vi.useFakeTimers();
 });
@@ -154,6 +165,17 @@ describe('sink outcomes', () => {
     expect(logger.lines).toEqual(['audr: 1 record(s) unknown, the sink threw TypeError']);
   });
 
+  it('names an error it cannot read as unknown', async () => {
+    const sink = new MemorySink();
+    sink.deliver = () => Promise.reject(unreadableError());
+    const { client, failures, logger } = setup(sink);
+    client.record(makeRecord());
+    await client.flush();
+    expect(client.stats).toMatchObject({ unknown: 1, queueDepth: 0 });
+    expect(failures).toMatchObject([{ disposition: 'unknown', reason: 'inconclusive' }]);
+    expect(logger.lines).toEqual(['audr: 1 record(s) unknown, the sink threw unknown']);
+  });
+
   it('accounts a batch unknown when the sink returns something that is not a result', async () => {
     const sink = new MemorySink();
     sink.deliver = () => Promise.resolve({ outcome: 'maybe' } as unknown as BatchResult);
@@ -216,6 +238,32 @@ describe('sink outcomes', () => {
     await accepting.client.flush();
     await settle();
     expect(accepting.logger.lines).toEqual(['audr: onDelivered callback threw (SyntaxError)']);
+  });
+
+  it('survives callbacks that throw or reject with an error it cannot read', async () => {
+    const throwing = setup(new MemorySink({ reject: () => 'no' }), {
+      onFailure: () => {
+        throw unreadableError();
+      },
+    });
+    expect(throwing.client.record(makeRecord({ attribution: {} })).outcome).toBe(
+      'rejected_invalid',
+    );
+    throwing.client.record(makeRecord());
+    await throwing.client.flush();
+    expect(throwing.logger.lines).toEqual([
+      'audr: record rejected, 1 validation issue(s)',
+      'audr: onFailure callback threw (unknown)',
+      'audr: onFailure callback threw (unknown)',
+    ]);
+
+    const rejecting = setup(new MemorySink(), {
+      onDelivered: () => Promise.reject(unreadableError()),
+    });
+    rejecting.client.record(makeRecord());
+    await rejecting.client.flush();
+    await settle();
+    expect(rejecting.logger.lines).toEqual(['audr: onDelivered callback threw (unknown)']);
   });
 
   it('keeps every submitted record in exactly one terminal state', async () => {
