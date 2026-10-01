@@ -1,10 +1,10 @@
 {
-  "name": "@openaudr/adapter-vercel-ai",
+  "name": "@openaudr/audr-adapter-vercel-ai",
   "version": "0.1.0",
   "description": "Meter Vercel AI SDK model calls, tool executions, embeddings and reranks as AUDR (Agent Usage Detail Record) v1.0.0 records.",
   "license": "Apache-2.0",
   "author": "The AUDR contributors",
-  "homepage": "https://openaudr.dev",
+  "homepage": "https://github.com/openaudr/audr/tree/main/adapters/vercel-ai/typescript#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/openaudr/audr.git",

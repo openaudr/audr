@@ -258,7 +258,7 @@ describe('spawned agents join the parent run', () => {
     expect(records).toHaveLength(1);
     expect(records[0]!.run.parent_span_id).toBeUndefined();
     expect(h.logger.warnings).toEqual([
-      '@openaudr/adapter-vercel-ai: ATTRIBUTION_UNRESOLVED (operation=ai.generateText)',
+      '@openaudr/audr-adapter-vercel-ai: ATTRIBUTION_UNRESOLVED (operation=ai.generateText)',
     ]);
   });
 });

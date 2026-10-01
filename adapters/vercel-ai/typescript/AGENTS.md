@@ -8,7 +8,7 @@ covers changes to the package itself.
 
 ## What this is
 
-`adapters/vercel-ai/typescript` is the `@openaudr/adapter-vercel-ai` npm package: a Vercel
+`adapters/vercel-ai/typescript` is the `@openaudr/audr-adapter-vercel-ai` npm package: a Vercel
 AI SDK 7 `Telemetry` integration that turns provider model calls, client-side tool
 executions, embedding calls and rerank calls into attributed `AUDR` records for an
 `@openaudr/audr` `Client` the host application owns.
@@ -23,6 +23,7 @@ executions, embedding calls and rerank calls into attributed `AUDR` records for 
 | `src/runs.ts` | `CallTracker`, the one module-level `AsyncLocalStorage` of active tool spans each tracker filters by owner, per-call state and unique tool span allocation |
 | `src/mapping.ts` | Pure functions: token arithmetic, provider slugs, span ids, run type, supported operations |
 | `src/diagnostics.ts` | `DiagnosticCode`, the message format, `errorName`, the silent default logger |
+| `docs/reference.md` | The full reference: options, record fields, provider slugs, diagnostics, bounds |
 | `tests/` | The Vitest suite |
 | `examples/` | Runnable examples on mock models; no credentials or network calls |
 
@@ -51,8 +52,11 @@ executions, embedding calls and rerank calls into attributed `AUDR` records for 
 6. Diagnostics go through `Diagnostics` with a `DiagnosticCode` and the fixed field set in
    `src/diagnostics.ts`. Add a code for every new diagnostic. The `operation` field is
    always the AI SDK `operationId`. Never log a record value, an id, a model name, a tool
-   name or an error message; error class names only.
-7. Never write `cost`, `run.outcome`, `run.trace_id`, `emitter` or `totalTokens`.
+   name or an error message; error class names only. A new code gets a row in the
+   diagnostics table of `docs/reference.md`.
+7. A behaviour change updates its one home: `README.md` for installation, usage and
+   attribution, `docs/reference.md` for everything else. Neither repeats the other.
+8. Never write `cost`, `run.outcome`, `run.trace_id`, `emitter` or `totalTokens`.
    `input_tokens` excludes cache reads and writes; `output_tokens` excludes reasoning.
 
 ## Toolchain

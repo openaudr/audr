@@ -28,7 +28,7 @@
     // needs the mapping to check them without one. `@openaudr/audr` resolves through
     // node_modules.
     "paths": {
-      "@openaudr/adapter-vercel-ai": ["./src/index.ts"]
+      "@openaudr/audr-adapter-vercel-ai": ["./src/index.ts"]
     },
 
     "noEmit": true

@@ -325,7 +325,7 @@ describe('attribution at onStart', () => {
     t.onEmbedEnd(embedEvent('call-00000001', 'call-embed0001'));
     expect(await h.records()).toEqual([]);
     expect(h.logger.warnings).toEqual([
-      '@openaudr/adapter-vercel-ai: ATTRIBUTION_UNRESOLVED (operation=ai.embed)',
+      '@openaudr/audr-adapter-vercel-ai: ATTRIBUTION_UNRESOLVED (operation=ai.embed)',
     ]);
   });
 
@@ -419,7 +419,7 @@ describe('hooks never break generation', () => {
       t.onLanguageModelCallEnd(modelEnd('call-00000001'));
     }).not.toThrow();
     expect(logger.error).toHaveBeenCalledWith(
-      '@openaudr/adapter-vercel-ai: HOOK_FAILED (hook=onLanguageModelCallEnd, error=TypeError)',
+      '@openaudr/audr-adapter-vercel-ai: HOOK_FAILED (hook=onLanguageModelCallEnd, error=TypeError)',
     );
   });
 
@@ -433,7 +433,7 @@ describe('hooks never break generation', () => {
     expect(await h.records()).toEqual([]);
     expect(h.logger.errors).toEqual([]);
     expect(h.logger.warnings).toEqual([
-      '@openaudr/adapter-vercel-ai: MAP_RESOURCE_FAILED (operation=ai.generateText, error=string)',
+      '@openaudr/audr-adapter-vercel-ai: MAP_RESOURCE_FAILED (operation=ai.generateText, error=string)',
     ]);
   });
 
@@ -499,7 +499,7 @@ describe('hooks never break generation', () => {
     };
     await expect(t.executeTool(options)).resolves.toBe(42);
     expect(h.logger.errors).toEqual([
-      '@openaudr/adapter-vercel-ai: HOOK_FAILED (hook=executeTool, error=RangeError)',
+      '@openaudr/audr-adapter-vercel-ai: HOOK_FAILED (hook=executeTool, error=RangeError)',
     ]);
   });
 
@@ -521,7 +521,7 @@ describe('rejected records are reported without values', () => {
     t.onLanguageModelCallEnd(modelEnd('call-00000001'));
     expect(await h.records()).toEqual([]);
     expect(h.logger.warnings).toEqual([
-      '@openaudr/adapter-vercel-ai: RECORD_NOT_QUEUED (outcome=rejected_invalid, operation=ai.generateText, issues=REQUIRED@/attribution/account_id)',
+      '@openaudr/audr-adapter-vercel-ai: RECORD_NOT_QUEUED (outcome=rejected_invalid, operation=ai.generateText, issues=REQUIRED@/attribution/account_id)',
     ]);
   });
 
@@ -532,7 +532,7 @@ describe('rejected records are reported without values', () => {
     await h.client.shutdown();
     t.onToolExecutionEnd(toolEnd('call-00000001', 'tc'));
     expect(h.logger.warnings).toEqual([
-      '@openaudr/adapter-vercel-ai: RECORD_NOT_QUEUED (outcome=dropped_not_running, operation=ai.generateText)',
+      '@openaudr/audr-adapter-vercel-ai: RECORD_NOT_QUEUED (outcome=dropped_not_running, operation=ai.generateText)',
     ]);
   });
 });
@@ -554,7 +554,7 @@ describe('provider slug', () => {
     (t[hook] as (event: unknown) => void)(events[hook]);
     expect(await h.records()).toEqual([]);
     expect(h.logger.warnings).toEqual([
-      `@openaudr/adapter-vercel-ai: PROVIDER_UNMAPPED (operation=${operationId})`,
+      `@openaudr/audr-adapter-vercel-ai: PROVIDER_UNMAPPED (operation=${operationId})`,
     ]);
   });
 
@@ -565,7 +565,7 @@ describe('provider slug', () => {
     t.onLanguageModelCallEnd(modelEnd('call-00000001'));
     expect(await h.records()).toEqual([]);
     expect(h.logger.warnings).toEqual([
-      '@openaudr/adapter-vercel-ai: PROVIDER_UNMAPPED (operation=ai.generateText)',
+      '@openaudr/audr-adapter-vercel-ai: PROVIDER_UNMAPPED (operation=ai.generateText)',
     ]);
   });
 });
@@ -580,8 +580,8 @@ describe('unsupported operations', () => {
     t.onLanguageModelCallEnd(modelEnd('call-00000001'));
     expect(await h.records()).toEqual([]);
     expect(h.logger.warnings).toEqual([
-      '@openaudr/adapter-vercel-ai: OPERATION_UNSUPPORTED (operation=ai.generateObject)',
-      '@openaudr/adapter-vercel-ai: OPERATION_UNSUPPORTED (operation=ai.streamObject)',
+      '@openaudr/audr-adapter-vercel-ai: OPERATION_UNSUPPORTED (operation=ai.generateObject)',
+      '@openaudr/audr-adapter-vercel-ai: OPERATION_UNSUPPORTED (operation=ai.streamObject)',
     ]);
   });
 });

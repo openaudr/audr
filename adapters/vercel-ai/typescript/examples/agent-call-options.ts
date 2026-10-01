@@ -6,7 +6,7 @@
  */
 import { ToolLoopAgent } from 'ai';
 import { MockLanguageModelV4 } from 'ai/test';
-import { audrTelemetry } from '@openaudr/adapter-vercel-ai';
+import { audrTelemetry } from '@openaudr/audr-adapter-vercel-ai';
 import { Client } from '@openaudr/audr';
 import { MemorySink } from '@openaudr/audr/testing';
 import { z } from 'zod';

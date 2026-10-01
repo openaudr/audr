@@ -23,10 +23,10 @@ export interface DiagnosticFields {
   readonly issues?: string | undefined;
 }
 
-const PREFIX = '@openaudr/adapter-vercel-ai';
+const PREFIX = '@openaudr/audr-adapter-vercel-ai';
 const FIELD_ORDER = ['hook', 'outcome', 'operation', 'issues', 'error'] as const;
 
-/** `@openaudr/adapter-vercel-ai: <CODE> (<key>=<value>, ...)`. */
+/** `@openaudr/audr-adapter-vercel-ai: <CODE> (<key>=<value>, ...)`. */
 export function formatDiagnostic(code: DiagnosticCode, fields: DiagnosticFields): string {
   const parts: string[] = [];
   for (const key of FIELD_ORDER) {

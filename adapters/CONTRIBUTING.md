@@ -71,8 +71,8 @@ type-only rule with ESLint's `@typescript-eslint/no-restricted-imports` and
 
 Directory `adapters/<target>/<language>/`. A Python distribution is `audr-adapter-<target>`
 with the import package `audr_adapter_<target>`; a TypeScript package is
-`@openaudr/adapter-<target>`, in the same npm scope as the core `@openaudr/audr`. A Python
-package contains:
+`@openaudr/audr-adapter-<target>`. The [naming rules](../CONTRIBUTING.md#naming) apply to
+both. A Python package contains:
 
 | Path | Purpose |
 | --- | --- |
