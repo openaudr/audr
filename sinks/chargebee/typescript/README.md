@@ -137,8 +137,9 @@ const sink = new ChargebeeSink({
 
 Retries use full-jitter exponential backoff and honour a `Retry-After` header, capped at
 `maxBackoffMs`. Pass `fetch` to replace the global `fetch`, for example with one backed by
-an undici `Agent` for connection-pool tuning, and `logger` to redirect the sink's
-diagnostics from `console`; diagnostics never contain a record value or a credential.
+an undici `Agent` for connection-pool tuning. The sink logs nothing by default; pass
+`logger: console`, or any logger with `warn` and `error`, to receive its diagnostics, which
+never contain a record value or a credential.
 
 `flattenRecord(record, { separator })` is exported, so you can inspect the properties a
 record becomes before sending it.

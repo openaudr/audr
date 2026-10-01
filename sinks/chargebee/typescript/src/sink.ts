@@ -20,12 +20,13 @@ import { VERSION } from './version.js';
 const SEPARATOR = /^_+$/;
 const USER_AGENT = `audr-ingestion-typescript/${VERSION}`;
 const ERROR_CODE_FIELDS = ['api_error_code', 'error_code', 'code'] as const;
+const SILENT: Logger = { warn: () => undefined, error: () => undefined };
 
 export interface ChargebeeSinkOptions extends CredentialOptions, TransportOptions {
   readonly retry?: RetryOptions | undefined;
   /** Joins flattened property names: one or more underscores. Default `__`. */
   readonly separator?: string | undefined;
-  /** Receives value-free diagnostics. Default `console`. */
+  /** Receives value-free diagnostics. Default: none, the sink logs nothing. */
   readonly logger?: Logger | undefined;
 }
 
@@ -66,7 +67,7 @@ export class ChargebeeSink implements Sink {
     this.#separator = separator;
     this.#retry = new RetryPolicy(options.retry);
     this.#transport = new Transport(options);
-    this.#logger = safe(options.logger ?? console);
+    this.#logger = options.logger ? safe(options.logger) : SILENT;
   }
 
   async deliver(batch: readonly AudrRecord[]): Promise<BatchResult> {
