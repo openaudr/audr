@@ -22,4 +22,5 @@
 # The TypeScript packages.
 /adapters/core/typescript/        @openaudr/audr-maintainers
 /adapters/vercel-ai/typescript/   @openaudr/audr-maintainers
+/adapters/mastra/typescript/      @openaudr/audr-maintainers
 /sinks/chargebee/typescript/      @openaudr/audr-maintainers

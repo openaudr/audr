@@ -1,0 +1,80 @@
+{
+  "name": "@openaudr/audr-adapter-mastra",
+  "version": "0.1.0",
+  "description": "Meter Mastra model generations and tool calls as AUDR (Agent Usage Detail Record) v1.0.0 records.",
+  "license": "Apache-2.0",
+  "author": "The AUDR contributors",
+  "homepage": "https://github.com/openaudr/audr/tree/main/adapters/mastra/typescript#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/openaudr/audr.git",
+    "directory": "adapters/mastra/typescript"
+  },
+  "bugs": {
+    "url": "https://github.com/openaudr/audr/issues"
+  },
+  "keywords": [
+    "audr",
+    "mastra",
+    "observability",
+    "metering",
+    "billing",
+    "agent",
+    "usage"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . && prettier --check .",
+    "format": "eslint --fix . && prettier --write .",
+    "test": "vitest run --coverage",
+    "check:package": "publint --strict && attw --pack . --profile esm-only",
+    "prepack": "npm run build"
+  },
+  "peerDependencies": {
+    "@mastra/core": "^1.62.0",
+    "@mastra/observability": "^1.17.2",
+    "@openaudr/audr": "^0.1.0"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@eslint/js": "^10.0.1",
+    "@mastra/core": "1.62.0",
+    "@mastra/observability": "1.17.2",
+    "@openaudr/audr": "^0.1.0",
+    "@types/node": "^22.19.0",
+    "@vitest/coverage-v8": "^5.0.0",
+    "ai": "6.0.283",
+    "eslint": "^10.10.0",
+    "prettier": "^3.9.6",
+    "publint": "^0.3.24",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.70.0",
+    "vitest": "^5.0.0",
+    "zod": "^4.6.4"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

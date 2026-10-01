@@ -27,6 +27,7 @@ identity and attribution that records from different systems join.
 | `adapters/litellm/python/` | [`adapters/litellm/python/AGENTS.md`](adapters/litellm/python/AGENTS.md) |
 | `adapters/nemo-relay/python/` | [`adapters/nemo-relay/python/AGENTS.md`](adapters/nemo-relay/python/AGENTS.md) |
 | `adapters/vercel-ai/typescript/` | [`adapters/vercel-ai/typescript/AGENTS.md`](adapters/vercel-ai/typescript/AGENTS.md) |
+| `adapters/mastra/typescript/` | [`adapters/mastra/typescript/AGENTS.md`](adapters/mastra/typescript/AGENTS.md) |
 | `sinks/` | [`sinks/AGENTS.md`](sinks/AGENTS.md) |
 | `sinks/chargebee/python/` | [`sinks/chargebee/python/AGENTS.md`](sinks/chargebee/python/AGENTS.md) |
 | `sinks/chargebee/typescript/` | [`sinks/chargebee/typescript/AGENTS.md`](sinks/chargebee/typescript/AGENTS.md) |

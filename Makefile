@@ -1,6 +1,6 @@
 .PHONY: help spec check schema examples conformance lint fresh links versions tools-test install clean all
 .PHONY: python core-python adapter-litellm-python adapter-nemo-relay-python sink-chargebee-python
-.PHONY: typescript core-typescript adapter-vercel-ai-typescript sink-chargebee-typescript
+.PHONY: typescript core-typescript adapter-vercel-ai-typescript adapter-mastra-typescript sink-chargebee-typescript
 
 PYTHON ?= python3
 
@@ -63,10 +63,13 @@ core-typescript: ## Verify the core TypeScript SDK (adapters/core/typescript)
 adapter-vercel-ai-typescript: ## Verify the Vercel AI TypeScript adapter
 	@$(MAKE) -C adapters/vercel-ai/typescript install verify
 
+adapter-mastra-typescript: ## Verify the Mastra TypeScript adapter
+	@$(MAKE) -C adapters/mastra/typescript install verify
+
 sink-chargebee-typescript: ## Verify the Chargebee TypeScript sink (sinks/chargebee/typescript)
 	@$(MAKE) -C sinks/chargebee/typescript install verify
 
-typescript: core-typescript adapter-vercel-ai-typescript sink-chargebee-typescript ## Verify every TypeScript package
+typescript: core-typescript adapter-vercel-ai-typescript adapter-mastra-typescript sink-chargebee-typescript ## Verify every TypeScript package
 
 all: check python typescript ## Everything CI runs, across the repository
 

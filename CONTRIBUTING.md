@@ -54,6 +54,7 @@ make all         # check + python + typescript: everything CI runs
 | `make sink-chargebee-python` | `make lint test` in `sinks/chargebee/python` |
 | `make core-typescript` | `make install verify` in `adapters/core/typescript` |
 | `make adapter-vercel-ai-typescript` | `make install verify` in `adapters/vercel-ai/typescript` |
+| `make adapter-mastra-typescript` | `make install verify` in `adapters/mastra/typescript` |
 | `make sink-chargebee-typescript` | `make install verify` in `sinks/chargebee/typescript` |
 
 ## Where a change belongs
