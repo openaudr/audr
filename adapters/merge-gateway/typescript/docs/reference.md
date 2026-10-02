@@ -185,11 +185,13 @@ terminal frame when every call must be metered.
 | `reasoning_tokens` | `reasoning_output_tokens` |
 | `requests` | Always `1` |
 
-Gateway reports a counter it cannot count as `null`. A `null` cache counter omits
-`input_tokens`, because AUDR's `input_tokens` must exclude cache reads. A `null` reasoning
-counter writes no `reasoning_tokens`, and `output_tokens` is then the whole completion. A
-counter Gateway does not include did not apply and counts as zero. `total_tokens` is never
-copied. An `embedding` record carries `input_tokens` from `prompt_tokens`.
+Gateway reports a counter it cannot count as `null`. A `null` cache-read counter omits
+`input_tokens`, because AUDR's `input_tokens` must exclude cache reads. A `null` cache-write
+counter keeps those tokens in `input_tokens`, because Gateway bills unreported writes at the
+input rate. A `null` reasoning counter writes no `reasoning_tokens`, and `output_tokens` is
+then the whole completion. A counter Gateway does not include did not apply and counts as
+zero. `total_tokens` is never copied. An `embedding` record carries `input_tokens` from
+`prompt_tokens`.
 
 ### Cost
 
@@ -297,8 +299,9 @@ never read, because both are writable and may carry prompt or record values.
 - The `models`, `tags` and `customers` resources, which are forwarded unmetered.
 - Gateway endpoints `merge-gateway-sdk` does not expose: chat completions, messages,
   images, audio, video, decisions and batches. Inline image output requested through
-  `responses.create()` is metered as a response. Gateway's OpenAI, Anthropic and AI SDK
-  surfaces are metered by the adapters for those SDKs.
+  `responses.create()` is metered as a response. Gateway's AI SDK surface is metered by
+  [`@openaudr/audr-adapter-vercel-ai`](https://github.com/openaudr/audr/tree/main/adapters/vercel-ai/typescript#readme);
+  its OpenAI and Anthropic surfaces are not metered.
 - Server-tool charges such as web search, which Gateway leaves out of `usage.cost`, and the
   served `service_tier`, which has no AUDR field.
 

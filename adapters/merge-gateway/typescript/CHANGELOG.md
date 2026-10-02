@@ -5,11 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.0] - 2026-10-02
 
 ### Added
 
-- Initial release: `instrumentMergeGateway()`, a non-mutating facade over a
+- Initial release, published as `@openaudr/audr-adapter-merge-gateway`:
+  `instrumentMergeGateway()`, a non-mutating facade over a
   `merge-gateway-sdk` `MergeGateway` that submits one AUDR record per
   `responses.create()` (`generation`, from the `response.done` frame when streamed) and
   `embeddings.create()` (`embedding`) to a host-owned `@openaudr/audr` `Client`, passing

@@ -4,7 +4,7 @@ Guidance for working in this package. Rules for every adapter are in
 [`adapters/AGENTS.md`](../../AGENTS.md). Setup, the shared TypeScript toolchain and the
 contribution process are in the top-level [`CONTRIBUTING.md`](../../../CONTRIBUTING.md).
 To integrate this adapter into an application, see [`README.md`](README.md); this file
-covers changes to the package itself. The agreed hook and record shape are in
+covers changes to the package itself. The adapter is tracked in
 [openaudr/audr#20](https://github.com/openaudr/audr/issues/20).
 
 ## What this is
@@ -69,8 +69,10 @@ scopes attribution and an optional host run over every call an instrumented clie
    id, a model name, a mutable error name or an error message; fixed error categories only.
 9. `emitter` is always the adapter as a `router`. `cost` is `total_cost` in `USD` from
    `usage.cost` only, never a `cost.llm` breakdown. `input_tokens` excludes cache reads and
-   writes; `output_tokens` excludes reasoning. A `null` cache counter omits `input_tokens`,
-   because the schema requires it to exclude cache reads. A `null` reasoning counter leaves
+   writes; `output_tokens` excludes reasoning. A `null` cache-read counter omits
+   `input_tokens`, because the schema requires it to exclude cache reads. A `null`
+   cache-write counter keeps those tokens in `input_tokens`, because Gateway bills
+   unreported writes at the input rate. A `null` reasoning counter leaves
    `output_tokens` whole, because the schema excludes reasoning only when `reasoning_tokens`
    is present. `resource.modality` comes from requested `modalities`, defaulting to `text`.
    Never write `total_tokens`, `run.outcome` (the harness owns it), `run.trace_id` (it is a

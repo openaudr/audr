@@ -34,7 +34,13 @@ describe('token arithmetic', () => {
     ).toMatchObject({ input_tokens: 0, output_tokens: 0 });
   });
 
-  it('omits input_tokens when Gateway cannot report a cache counter', () => {
+  it('omits input_tokens when Gateway cannot report cache reads', () => {
+    expect(
+      responseUsage({ input_tokens: 41, output_tokens: 7, cache_read_input_tokens: null }),
+    ).toEqual({ output_tokens: 7, requests: 1 });
+  });
+
+  it('keeps unreported cache writes in input_tokens', () => {
     expect(
       responseUsage({
         input_tokens: 41,
@@ -42,7 +48,7 @@ describe('token arithmetic', () => {
         cache_read_input_tokens: 5,
         cache_creation_input_tokens: null,
       }),
-    ).toEqual({ output_tokens: 7, cache_read_tokens: 5, requests: 1 });
+    ).toEqual({ input_tokens: 36, output_tokens: 7, cache_read_tokens: 5, requests: 1 });
   });
 
   it('keeps the whole completion as output_tokens when reasoning is unreported', () => {
