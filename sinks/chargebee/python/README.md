@@ -8,8 +8,8 @@ from an `audr.Client` to a Chargebee site's usage-ingest batch endpoint, for Cha
 Usage-Based Billing. Each record becomes one usage event, routed on
 `attribution.subscription_id` and de-duplicated on `record_id`.
 
-> **Status: alpha.** The record model tracks AUDR v1.0.0 and is stable; the Python API
-> may change in minor releases before 1.0.
+> **Status: alpha.** The record model tracks AUDR v1.0.0; until 1.0.0, a minor release may
+> change the public API.
 
 ## Setup
 
