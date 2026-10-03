@@ -37,8 +37,8 @@ for Usage-Based Billing. It implements the sink contract defined in
 3. `record_id` is Chargebee's `deduplication_id`, and `timing.event_time` in milliseconds
    is `usage_timestamp`. A replay keyed on `record_id` is idempotent.
 4. Flatten and forward every field of the record, including `attribution.labels` and
-   `x_*` extensions. Keep property names reversible; the separator is one or more
-   underscores.
+   `x_*` extensions. Keep property names reversible and identical to the TypeScript sink;
+   the separator defaults to `__` and is one or more underscores.
 5. A change to the status-to-outcome mapping in `_sink.py` must be reflected in the README
    table in the same change. When a `207` failure cannot be matched to a record, mark
    every non-rejected record in the batch `unknown`. Retries are bounded by `RetryPolicy`.

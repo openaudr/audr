@@ -16,7 +16,7 @@ from audr import AUDR, BatchResult, ConfigurationError, RejectedRecord
 from audr_sink_chargebee._credentials import resolve_credentials
 from audr_sink_chargebee._event import UsageEvent
 from audr_sink_chargebee._event_validation import InvalidUsageEventError
-from audr_sink_chargebee._flatten import flatten_audr
+from audr_sink_chargebee._flatten import DEFAULT_SEPARATOR, flatten_audr
 from audr_sink_chargebee._retry import FailureClass, RetryPolicy
 from audr_sink_chargebee._transport import (
     HttpTransportConfig,
@@ -59,7 +59,7 @@ class ChargebeeSink:
         ingest_url: str | None = None,
         retry: RetryPolicy | None = None,
         http: HttpTransportConfig | None = None,
-        separator: str = "_",
+        separator: str = DEFAULT_SEPARATOR,
         transport: httpx.AsyncBaseTransport | None = None,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     ) -> None:

@@ -2,8 +2,8 @@
 
 Chargebee's ingest API accepts only scalar property values, so nested AUDR objects are
 flattened here, in the sink, rather than in the AUDR model layer. Nested objects
-become ``parent_child`` keys; arrays and the caller-keyed ``labels`` map are stored as
-canonical JSON under a terminal ``_json`` key so the destination only ever sees scalars.
+become ``parent__child`` keys; arrays and the caller-keyed ``labels`` map are stored as
+canonical JSON under a terminal ``__json`` key so the destination only ever sees scalars.
 """
 
 from __future__ import annotations
@@ -21,16 +21,16 @@ _JSON_CONTAINER_KEYS = frozenset({"labels"})
 PropertyValue: TypeAlias = str | int | float | bool | None
 
 
-_DEFAULT_SEPARATOR = "_"
+DEFAULT_SEPARATOR = "__"
 
 
-def flatten_audr(record: AUDR, *, separator: str = _DEFAULT_SEPARATOR) -> dict[str, PropertyValue]:
+def flatten_audr(record: AUDR, *, separator: str = DEFAULT_SEPARATOR) -> dict[str, PropertyValue]:
     """Flatten every field of an AUDR record into Chargebee scalar properties."""
     return flatten(record.to_dict(), separator=separator)
 
 
 def flatten(
-    nested: Mapping[str, object], *, separator: str = _DEFAULT_SEPARATOR
+    nested: Mapping[str, object], *, separator: str = DEFAULT_SEPARATOR
 ) -> dict[str, PropertyValue]:
     """Flatten a nested mapping to Chargebee scalar properties."""
     if not isinstance(nested, Mapping):
