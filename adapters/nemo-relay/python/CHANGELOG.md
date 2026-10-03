@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.3.0] - 2026-10-03
+
+### Added
+
+- `examples/agent_scope.py` meters an LLM call and a tool call on canned results, without
+  network access or provider keys; CI runs it.
+- `docs/reference.md` gathers options, attribution, record fields, errors, diagnostics and
+  operational bounds into one page.
+
+### Changed
+
+- Scope `labels` merge with `attribution_defaults.labels` key by key, the scope's value
+  winning for a shared key. A scope that set any label previously replaced the default
+  labels entirely. A merged map above the 20-label limit skips the record.
+- The README follows the layout shared by the other AUDR packages. The reference pages
+  `docs/attribution.md`, `docs/errors.md`, `docs/operations.md` and
+  `docs/record-mapping.md` are now sections of `docs/reference.md`.
+
 ## [0.2.0] - 2026-09-24
 
 ### Added

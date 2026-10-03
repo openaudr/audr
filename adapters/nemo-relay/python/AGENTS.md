@@ -23,8 +23,10 @@ attributed `AUDR` records to an `audr.Client` the host application owns.
 | `src/audr_adapter_nemo_relay/_config.py` | `NeMoRelayConfig` and the `ConfigDiagnostic` codes Relay's protocol requires |
 | `src/audr_adapter_nemo_relay/_errors.py` | Exceptions with stable codes and value-free messages |
 | `tests/` | The suite; `test_runtime.py` carries the `nemo_relay`-marked tests that need the real runtime |
+| `examples/agent_scope.py` | An LLM and a tool call on canned results; `make examples` and CI run it |
 | `examples/nemo_relay_chat.py` | A terminal chat that makes billable network calls; not run in CI |
-| `docs/` | The reference the README links to: errors, attribution resolution, record mapping, operational bounds |
+| `scripts/verify_distribution.py` | Installs the built wheel in a clean environment, with and without the runtime extra |
+| `docs/reference.md` | The reference the README links to: options, attribution, record fields, errors, diagnostics, bounds |
 
 ## Rules
 

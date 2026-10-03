@@ -59,6 +59,44 @@ def test_default_labels_survive_a_partial_override() -> None:
     assert attribution.account_id == "b"
 
 
+_LABELLED_DEFAULTS = Attribution(
+    environment="production", account_id="a", labels={"region": "us", "team": "core"}
+)
+
+
+def test_metadata_labels_merge_with_default_labels_by_key() -> None:
+    attribution, issue = resolve_attribution(
+        defaults=_LABELLED_DEFAULTS,
+        metadata={"audr": {"labels": {"team": "billing", "feature": "chat"}}},
+    )
+
+    assert issue is None
+    assert attribution is not None
+    assert attribution.labels == {"region": "us", "team": "billing", "feature": "chat"}
+
+
+@pytest.mark.parametrize("labels", [None, {}])
+def test_empty_metadata_labels_keep_default_labels(labels: object) -> None:
+    attribution, issue = resolve_attribution(
+        defaults=_LABELLED_DEFAULTS, metadata={"audr": {"labels": labels}}
+    )
+
+    assert issue is None
+    assert attribution is not None
+    assert attribution.labels == {"region": "us", "team": "core"}
+
+
+def test_merged_labels_over_the_limit_name_the_labels_field() -> None:
+    labels = {f"key_{index}": "value" for index in range(19)}
+
+    attribution, issue = resolve_attribution(
+        defaults=_LABELLED_DEFAULTS, metadata={"audr": {"labels": labels}}
+    )
+
+    assert attribution is None
+    assert issue == "/attribution/labels"
+
+
 @pytest.mark.parametrize(
     ("metadata", "pointer"),
     [

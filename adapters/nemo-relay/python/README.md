@@ -1,162 +1,149 @@
 # audr-adapter-nemo-relay
 
 [![PyPI](https://img.shields.io/pypi/v/audr-adapter-nemo-relay?include_prereleases)](https://pypi.org/project/audr-adapter-nemo-relay/)
+[![Python versions](https://img.shields.io/pypi/pyversions/audr-adapter-nemo-relay)](https://pypi.org/project/audr-adapter-nemo-relay/)
 
-> **Status: experimental.** Its public names may change in minor releases until it
-> graduates.
+The **AUDR plugin** for [NVIDIA NeMo Relay](https://pypi.org/project/nemo-relay/) turns
+every completed Relay LLM call and tool execution into one
+[AUDR](https://openaudr.dev/spec/v1.0.0/) record for an `audr.Client` your application
+owns. It reads usage, identifiers and timings only: never prompts, responses, tool
+arguments or tool results.
 
-This adapter observes completed Relay 0.8 LLM and tool scopes and hands attributed
-records to an existing `audr.Client`. The host application owns the
-client and its sink, including construction, startup and shutdown.
+> **Status: alpha.** The record model tracks AUDR v1.0.0; until 1.0.0, a minor release may
+> change the public API.
 
-## Install
+## Setup
 
 ```bash
 pip install "audr-adapter-nemo-relay[runtime]"
 ```
 
-The extra supports `nemo-relay>=0.8,<0.9`. `plugin.validate(...)` reports an unsupported
-release, and activation requires a supported one to be installed. NeMo Relay is imported
-at activation, so importing this package leaves it out of the process.
+Requires Python 3.11 or later and `nemo-relay` 0.8 within 0.8.x, which the `runtime` extra
+installs. Relay is imported at activation, so importing this package alone leaves it out of
+the process.
 
-A runnable [NeMo Relay terminal chat example](https://github.com/openaudr/audr/blob/main/adapters/nemo-relay/python/examples/nemo_relay_chat.py) shows
-plugin configuration, scoped attribution, an OpenAI-compatible model call, handoff drain,
-and shutdown in one file. The `example` extra installs everything it imports; the file
-itself lives in the repository rather than in the distribution:
+## Usage
 
-```bash
-pip install "audr-adapter-nemo-relay[example]"
-curl -O https://raw.githubusercontent.com/openaudr/audr/main/adapters/nemo-relay/python/examples/nemo_relay_chat.py
-export OPENAI_API_KEY="..."
-python nemo_relay_chat.py
-```
-
-The example makes billable network requests and appends usage records to
-`nemo-relay-usage.jsonl` by default.
-
-## Activate and shut down
+Register the plugin once, then run Relay-managed work inside the plugin context. Every LLM
+call made with a response codec, and every tool execution, is then metered:
 
 ```python
 import asyncio
 
-from nemo_relay import plugin as relay_plugin
-
+import nemo_relay
 from audr import Attribution, Client, FileSink
-from audr_adapter_nemo_relay import (
-    PLUGIN_KIND,
-    NeMoRelayConfig,
-    NeMoRelayPlugin,
-)
+from nemo_relay import plugin as relay_plugin
+from audr_adapter_nemo_relay import PLUGIN_KIND, NeMoRelayConfig, NeMoRelayPlugin
 
-component_config = NeMoRelayConfig(
-    attribution_defaults=Attribution(
-        environment="production",
-        account_id="account_123",
-    ),
-)
-relay_config = relay_plugin.PluginConfig(
-    components=[
-        relay_plugin.ComponentSpec(
-            kind=PLUGIN_KIND,
-            config=component_config.to_dict(),
-        )
-    ]
-)
+
+async def call_model(request: nemo_relay.LLMRequest) -> nemo_relay.JsonValue:
+    # Call your provider here; this returns a canned OpenAI Chat Completions response.
+    return {
+        "model": "gpt-4o-mini",
+        "choices": [{"message": {"role": "assistant", "content": "It shipped."}}],
+        "usage": {"prompt_tokens": 12, "completion_tokens": 7},
+    }
 
 
 async def main() -> None:
-    sink = FileSink("usage-events.jsonl")  # any Sink: FileSink, a Chargebee sink, your own
-    client = Client(sink)
-    # Construct on the running loop that owns the client, or pass loop= explicitly.
-    usage_plugin = NeMoRelayPlugin(client=client)
-
-    relay_plugin.register(PLUGIN_KIND, usage_plugin)
-    try:
-        async with relay_plugin.plugin(relay_config):
-            # Run Relay-managed LLM and tool operations here.
-            ...
-        # Relay's context has flushed its callbacks and removed its registrations.
-        await usage_plugin.drain(timeout=5)
-        await client.shutdown()
-    finally:
-        relay_plugin.deregister(PLUGIN_KIND)
+    async with Client(FileSink("audr.jsonl")) as client:
+        usage_plugin = NeMoRelayPlugin(client=client)  # on the loop that owns the client
+        config = NeMoRelayConfig(attribution_defaults=Attribution(environment="production"))
+        relay_config = relay_plugin.PluginConfig(
+            components=[relay_plugin.ComponentSpec(kind=PLUGIN_KIND, config=config.to_dict())]
+        )
+        relay_plugin.register(PLUGIN_KIND, usage_plugin)
+        try:
+            async with relay_plugin.plugin(relay_config):
+                with nemo_relay.scope.scope(
+                    "support-agent",
+                    nemo_relay.ScopeType.Agent,
+                    metadata={"audr": {"account_id": "acct_42", "subscription_id": "sub_7"}},
+                ):
+                    request = nemo_relay.LLMRequest(
+                        {},
+                        {
+                            "model": "gpt-4o-mini",
+                            "messages": [{"role": "user", "content": "Where is order 42?"}],
+                        },
+                    )
+                    await nemo_relay.llm.execute(
+                        "openai",
+                        request,
+                        call_model,
+                        model_name="gpt-4o-mini",
+                        response_codec=nemo_relay.codecs.OpenAIChatCodec(),
+                    )
+            await usage_plugin.drain(timeout=5)
+        finally:
+            relay_plugin.deregister(PLUGIN_KIND)
 
 
 asyncio.run(main())
 ```
 
-The shutdown order is significant, and each step depends on the previous one finishing:
+Leaving the `async with` block drains the client's queue and closes its sink. A runnable
+version with a canned model response, without network access or provider keys, is
+[`examples/agent_scope.py`](https://github.com/openaudr/audr/blob/main/adapters/nemo-relay/python/examples/agent_scope.py).
+[`examples/nemo_relay_chat.py`](https://github.com/openaudr/audr/blob/main/adapters/nemo-relay/python/examples/nemo_relay_chat.py)
+is an interactive terminal chat against an OpenAI-compatible endpoint; install the
+`example` extra to run it.
 
-1. Stop producing Relay-managed work.
-2. Exit Relay's plugin context so its subscriber queue is flushed and cleared.
-3. Await `usage_plugin.drain()` so every accepted cross-thread handoff reaches
-   `client.record()`.
-4. Shut down the client so its own delivery queue drains and its sink closes.
-
-Only `deregister` belongs in `finally`. Draining or shutting down after a failed
-activation would work on a client that never received anything, and `drain()` after
-`close()` raises `NeMoRelayActivationError` rather than silently discarding handoffs.
-
-Relay runs plugin registration and subscriber callbacks on its own worker threads.
-`NeMoRelayPlugin` captures the client's event loop at construction and requires a running
-loop, so build it inside the async function that owns the client or pass `loop=`
-explicitly. That loop must be running when Relay activates the component.
-
-`drain(timeout=...)` raises `TimeoutError` if its handoffs cannot complete in time.
-One instance accepts one component activation: two would install two subscribers over
-the same process-wide event stream and double-count every operation.
+> [!IMPORTANT]
+> Shut down in order: exit Relay's plugin context, await `usage_plugin.drain()`, then shut
+> down the client. Only `deregister` belongs in `finally`. One plugin instance accepts one
+> activation; a second would subscribe to the same process-wide event stream and count every
+> operation twice.
 
 ## Attribution
 
-Put AUDR attribution on the **root** Relay scope start under the `audr`
-namespace:
+Attribution is resolved when a root scope starts, from its `metadata["audr"]` merged field
+by field over `attribution_defaults`. The scope wins, and `labels` merge by key:
 
 ```python
-from nemo_relay import ScopeType, scope
+import nemo_relay
 
-with scope.scope(
+with nemo_relay.scope.scope(
     "support-agent",
-    ScopeType.Agent,
+    nemo_relay.ScopeType.Agent,
     metadata={
         "audr": {
-            "environment": "production",
-            "account_id": "account_123",
-            "subscription_id": "subscription_123",
-            "user_id": "user_123",
-            "labels": {"region": "us", "project": "support"},
+            "account_id": "acct_42",
+            "subscription_id": "sub_7",
+            "user_id": "u_8f14e45f",  # pseudonymous, never an email or a name
+            "labels": {"feature": "support-chat"},
         }
     },
 ):
-    ...
+    ...  # Relay-managed LLM and tool calls
 ```
 
-Supported fields are `environment`, `user_id`, `account_id`, `subscription_id`, and
-`labels`. Extra allocation dimensions belong in `labels`. A valid `environment` is
-required before anything is submitted, and AUDR additionally requires `account_id`
-when `environment` is `production`. `subscription_id` is not required by this
-integration or by core AUDR; a destination that needs one to route or bill usage
-(for example, the Chargebee sink) rejects records that arrive without it.
+- `environment`, `user_id`, `account_id`, `subscription_id` and `labels` are read.
+  Child scopes inherit the snapshot taken when their root started.
+- A scope with no `environment`, or a `production` scope with no `account_id`, is skipped
+  with a warning rather than billed to a guess. Omit `environment` from
+  `attribution_defaults` to require it on every root scope.
+- The [reference](https://github.com/openaudr/audr/blob/main/adapters/nemo-relay/python/docs/reference.md#attribution)
+  states how evicted or completed ancestors are handled.
 
-Scope start metadata wins over `attribution_defaults` field by field, and child scopes
-inherit the snapshot taken at their parent's start;
-[attribution resolution](https://github.com/openaudr/audr/blob/main/adapters/nemo-relay/python/docs/attribution.md) states the full rules, including how
-to require per-scope attribution and never bill to a fallback.
+## Records
 
-Do not place credentials in Relay metadata. The plugin reads no prompts, model responses,
-tool arguments, or tool results.
+| Relay operation | `resource.operation` | `usage` |
+| --- | --- | --- |
+| Each `nemo_relay.llm.execute` call with a response codec | `generation` | `llm` tokens, `requests: 1` |
+| Each `nemo_relay.tools.execute` call | `tool_execution` | `tool: { type: 'invocation', call_count: 1 }` |
 
-## Reference
+Cache tokens are counted apart from `input_tokens`, and a provider-reported cost becomes
+`cost.total_cost`. Not metered: LLM calls without a response codec, whose end events carry
+no normalized usage.
 
-Behaviour consulted once the plugin is running, in the repository:
+## Documentation
 
-- [Errors](https://github.com/openaudr/audr/blob/main/adapters/nemo-relay/python/docs/errors.md) — every exception this package raises and what produces it.
-- [Attribution resolution](https://github.com/openaudr/audr/blob/main/adapters/nemo-relay/python/docs/attribution.md) — how scope metadata, inheritance and defaults combine.
-- [Record mapping](https://github.com/openaudr/audr/blob/main/adapters/nemo-relay/python/docs/record-mapping.md) — how Relay LLM and tool events become AUDR fields, including response codecs and token accounting.
-- [Operational warnings and bounds](https://github.com/openaudr/audr/blob/main/adapters/nemo-relay/python/docs/operations.md) — the warnings the plugin emits, and the handoff and scope limits.
+- [Reference](https://github.com/openaudr/audr/blob/main/adapters/nemo-relay/python/docs/reference.md): options, attribution, record fields, errors, diagnostics, operational bounds
+- [Examples](https://github.com/openaudr/audr/tree/main/adapters/nemo-relay/python/examples): `agent_scope.py` runs on a canned response, without network access
+- [Changelog](https://github.com/openaudr/audr/blob/main/adapters/nemo-relay/python/CHANGELOG.md)
+- [AUDR specification](https://openaudr.dev/spec/v1.0.0/), which defines every record field
 
-## Contributing
+## License
 
-Contributions are welcome — see
-[`CONTRIBUTING.md`](https://github.com/openaudr/audr/blob/main/CONTRIBUTING.md).
-
-Licensed under Apache-2.0.
+Apache-2.0. Contributions follow [`CONTRIBUTING.md`](https://github.com/openaudr/audr/blob/main/CONTRIBUTING.md).

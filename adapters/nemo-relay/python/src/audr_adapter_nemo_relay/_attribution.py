@@ -25,6 +25,8 @@ def resolve_attribution(
 ) -> tuple[Attribution | None, str | None]:
     """Merge root ``audr`` metadata over static defaults.
 
+    Metadata wins field by field, and ``labels`` merge by key.
+
     Returns the billable attribution, or a JSON Pointer naming what stopped it
     from resolving. ``subscription_id`` is not required here: that is a
     Chargebee sink rule, not a core AUDR one.
@@ -43,6 +45,11 @@ def resolve_attribution(
 
     merged = _attribution_to_dict(defaults)
     merged.update({key: overrides[key] for key in _ATTRIBUTION_FIELDS if key in overrides})
+    labels = {**(defaults.labels or {}), **(supplied.labels or {})}
+    if labels:
+        merged["labels"] = labels
+    else:
+        merged.pop("labels", None)
     try:
         attribution = Attribution.model_validate(merged)
     except ValidationError as error:

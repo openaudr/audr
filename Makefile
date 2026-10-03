@@ -49,8 +49,8 @@ core-python: ## Verify the core Python SDK (adapters/core/python)
 adapter-litellm-python: ## Verify the LiteLLM Python adapter
 	@$(MAKE) -C adapters/litellm/python verify
 
-adapter-nemo-relay-python: ## Lint and test the NeMo Relay Python adapter
-	@$(MAKE) -C adapters/nemo-relay/python lint test
+adapter-nemo-relay-python: ## Verify the NeMo Relay Python adapter
+	@$(MAKE) -C adapters/nemo-relay/python verify
 
 sink-chargebee-python: ## Verify the Chargebee Python sink
 	@$(MAKE) -C sinks/chargebee/python verify

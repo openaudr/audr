@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "audr-adapter-nemo-relay"
 dynamic = ["version"]
-description = "NVIDIA NeMo Relay adapter for AUDR (experimental)"
+description = "NVIDIA NeMo Relay adapter for AUDR"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "Apache-2.0"
@@ -80,7 +80,7 @@ select = ["E", "F", "I", "UP", "B", "RUF"]
 [tool.mypy]
 strict = true
 plugins = ["pydantic.mypy"]
-files = ["src", "tests"]
+files = ["src", "tests", "scripts", "examples"]
 python_version = "3.11"
 # `tests` has no `__init__.py`, so the base directories are named rather than guessed;
 # without this `tests/helpers.py` resolves as both `helpers` and `tests.helpers`.
@@ -89,6 +89,11 @@ mypy_path = "src:."
 
 [[tool.mypy.overrides]]
 module = ["nemo_relay", "nemo_relay.*"]
+ignore_missing_imports = true
+
+# httpx comes from the `example` extra, which the development environment omits.
+[[tool.mypy.overrides]]
+module = ["httpx"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
