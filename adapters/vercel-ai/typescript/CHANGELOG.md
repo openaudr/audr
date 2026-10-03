@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.1.1] - 2026-10-03
+
+### Added
+
+- `scripts/verify-package.ts` installs the packed adapter with the packed core and the AI
+  SDK into an empty project and meters one model call; `make isolation` and CI run it.
+
+### Changed
+
+- The README status line and documentation links match the other AUDR packages.
+
 ## [0.1.0] - 2026-10-01
 
 ### Added

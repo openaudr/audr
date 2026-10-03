@@ -99,7 +99,7 @@ package:
   equal.
 
 ```bash
-make install     # install dependencies from the lockfile
+make install     # build the linked core, then install dependencies from the lockfile
 make lint        # eslint, prettier --check and tsc --noEmit
 make test        # vitest with the 90% coverage gate
 make examples    # build, then run every example against dist/

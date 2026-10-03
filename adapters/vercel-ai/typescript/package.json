@@ -1,6 +1,6 @@
 {
   "name": "@openaudr/audr-adapter-vercel-ai",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Meter Vercel AI SDK model calls, tool executions, embeddings and reranks as AUDR (Agent Usage Detail Record) v1.0.0 records.",
   "license": "Apache-2.0",
   "author": "The AUDR contributors",

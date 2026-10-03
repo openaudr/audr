@@ -9,7 +9,8 @@ provider model call, client-side tool execution, embedding call and rerank call 
 application owns. It reads usage, identifiers and timings only: never prompts, completions,
 tool inputs, tool outputs or error messages.
 
-> **Status: experimental.** Until 1.0.0, a minor release may change the public API.
+> **Status: alpha.** The record model tracks AUDR v1.0.0; until 1.0.0, a minor release may
+> change the public API.
 
 ## Setup
 
@@ -115,6 +116,7 @@ speech, transcription, video and realtime models.
 
 - [Reference](https://github.com/openaudr/audr/blob/main/adapters/vercel-ai/typescript/docs/reference.md): options, record fields and identifiers, provider slugs, diagnostics, operational bounds
 - [Examples](https://github.com/openaudr/audr/tree/main/adapters/vercel-ai/typescript/examples): runnable on mock models, without network access
+- [Changelog](https://github.com/openaudr/audr/blob/main/adapters/vercel-ai/typescript/CHANGELOG.md)
 - [AUDR specification](https://openaudr.dev/spec/v1.0.0/), which defines every record field
 
 ## License

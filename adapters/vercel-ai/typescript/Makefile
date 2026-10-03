@@ -23,6 +23,7 @@ examples: build
 	node examples/sub-agent.ts
 isolation: build
 	$(NPM) run check:package
+	node scripts/verify-package.ts
 verify: lint test examples isolation
 clean:
 	rm -rf dist coverage node_modules *.tgz

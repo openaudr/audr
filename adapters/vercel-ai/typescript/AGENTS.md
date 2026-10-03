@@ -26,6 +26,7 @@ executions, embedding calls and rerank calls into attributed `AUDR` records for 
 | `docs/reference.md` | The full reference: options, record fields, provider slugs, diagnostics, bounds |
 | `tests/` | The Vitest suite |
 | `examples/` | Runnable examples on mock models; no credentials or network calls |
+| `scripts/verify-package.ts` | The isolation check `make isolation` runs against the packed tarballs |
 
 ## Rules
 
@@ -75,13 +76,15 @@ package:
   equal.
 
 ```bash
-make install     # npm ci
+make install     # build the linked core, then npm ci
 make lint        # eslint, prettier --check and tsc --noEmit
 make test        # vitest with the 90% coverage gate
 make examples    # build, then run every example against dist/
-make isolation   # build, then publint --strict and attw
+make isolation   # build, publint --strict and attw, then scripts/verify-package.ts
 make verify      # lint + test + examples + isolation
 ```
 
-`make isolation` does not run the core's `scripts/verify-package.ts`: this package's peer
-dependencies are intended.
+`scripts/verify-package.ts` installs the packed adapter and core with the AI SDK into an
+empty project and meters one model call through `import` and `require`. Unlike the core's
+check, it does not require an exact installed set, because this package's peer dependencies
+are intended.
