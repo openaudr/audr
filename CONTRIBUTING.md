@@ -196,9 +196,11 @@ several registries.
 4. The push starts the language's publish workflow, which confirms the tagged commit is on
    `main`, runs `python tools/check_release.py <package-dir> X.Y.Z`, re-runs the package's
    `make verify`, and builds the distribution. Publishing then waits for a maintainer to
-   approve the deployment environment, and uploads to the registry through Trusted
-   Publishing. npm releases carry provenance, and a prerelease such as `1.3.0-rc.1` is
-   published under the `next` dist-tag rather than `latest`.
+   approve the deployment environment. A Python package is uploaded to PyPI through Trusted
+   Publishing. A TypeScript package is published to npm with provenance, through Trusted
+   Publishing when the package has a trusted publisher and otherwise with the `NPM_TOKEN`
+   secret of its deployment environment. A prerelease such as `1.3.0-rc.1` is published
+   under the `next` dist-tag rather than `latest`.
 
 Release tags can be created, moved or deleted only by maintainers. A published version is
 never re-uploaded; a defect is corrected by releasing a new version.

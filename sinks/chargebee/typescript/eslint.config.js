@@ -28,7 +28,7 @@ export default defineConfig(
     },
   },
   {
-    files: ['scripts/**/*.ts'],
+    files: ['examples/**/*.ts', 'scripts/**/*.ts'],
     rules: { 'no-console': 'off' },
   },
   {

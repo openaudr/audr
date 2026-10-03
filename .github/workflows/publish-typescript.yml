@@ -1,8 +1,9 @@
 name: Publish TypeScript package
 
 # A tag <package-directory>/v<version>, such as adapters/core/typescript/v0.1.0, on a commit
-# of main publishes that package to npm through Trusted Publishing, with provenance. The tag
-# and the package's CHANGELOG.md section are the release record; no GitHub Release is created.
+# of main publishes that package to npm, with provenance, once a maintainer approves the
+# deployment environment. The tag and the package's CHANGELOG.md section are the release
+# record; no GitHub Release is created.
 
 on:
   push:
@@ -126,7 +127,10 @@ jobs:
         with:
           name: tarball
 
+      # npm authenticates through Trusted Publishing when the package has a trusted
+      # publisher, and otherwise with the environment's NPM_TOKEN.
       - name: Publish
         env:
           DIST_TAG: ${{ needs.resolve.outputs.dist_tag }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish ./*.tgz --tag "$DIST_TAG"

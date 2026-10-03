@@ -27,6 +27,8 @@ matches the behaviour of the Python sink in [`../python/`](../python/).
 | `src/event.ts` | The ingest event shape and its validation |
 | `src/credentials.ts` | `site` / `apiKey` / ingest URL resolution from options and environment |
 | `scripts/verify-package.ts` | The isolation check `make isolation` runs against the packed tarballs |
+| `examples/deliver.ts` | A delivery against a stand-in `fetch`; `make examples` and CI run it |
+| `docs/reference.md` | The reference the README links to: options, flattening, responses, retries, diagnostics |
 | `tests/` | The Vitest suite; `setup.ts` blocks the global `fetch` and clears the `CHARGEBEE_*` variables for every test |
 
 ## Rules

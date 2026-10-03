@@ -23,7 +23,14 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
 
+    // Examples import the package by name, exactly as an application does. At run time
+    // Node resolves that through the package's own `exports` after a build; the compiler
+    // needs the mapping to check them without one.
+    "paths": {
+      "@openaudr/audr-sink-chargebee": ["./src/index.ts"]
+    },
+
     "noEmit": true
   },
-  "include": ["src", "tests", "scripts", "*.config.ts"]
+  "include": ["src", "tests", "examples", "scripts", "*.config.ts"]
 }

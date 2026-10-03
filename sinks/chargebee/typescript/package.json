@@ -1,6 +1,6 @@
 {
   "name": "@openaudr/audr-sink-chargebee",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Chargebee sink for AUDR: deliver usage records to Chargebee Usage-Based Billing.",
   "license": "Apache-2.0",
   "author": "The AUDR contributors",
