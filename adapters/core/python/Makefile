@@ -1,4 +1,4 @@
-.PHONY: install models models-check test lint format typecheck conformance build isolation verify clean
+.PHONY: install models models-check test lint format typecheck conformance examples build isolation verify clean
 UV ?= uv
 install:
 	$(UV) sync --locked --group dev
@@ -19,10 +19,14 @@ format:
 	$(UV) run ruff check --fix .
 typecheck:
 	$(UV) run mypy
+examples:
+	$(UV) run python examples/write_to_file.py
+	$(UV) run python examples/from_json.py
+	$(UV) run python examples/custom_sink.py
 build:
 	rm -rf dist && $(UV) build
 isolation: build
 	$(UV) run python scripts/verify_distribution.py
-verify: lint models-check test isolation
+verify: lint models-check test examples isolation
 clean:
 	rm -rf dist .venv .pytest_cache .ruff_cache .mypy_cache .coverage

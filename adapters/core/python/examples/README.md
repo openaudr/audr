@@ -15,4 +15,5 @@ uv run python examples/custom_sink.py
 - `custom_sink.py` implements a minimal `PrintSink` and checks it against
   `audr.testing.assert_sink_contract`.
 
-Every example runs offline, against the local filesystem.
+Every example runs offline, against the local filesystem. `make examples` runs all three,
+and CI runs them on every supported Python version.

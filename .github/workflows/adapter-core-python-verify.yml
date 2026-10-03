@@ -58,6 +58,9 @@ jobs:
       - name: Tests
         run: make test
 
+      - name: Examples
+        run: make examples
+
   package:
     name: Build and isolation
     runs-on: ubuntu-latest

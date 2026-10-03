@@ -3,21 +3,24 @@
 [![PyPI](https://img.shields.io/pypi/v/audr?include_prereleases)](https://pypi.org/project/audr/)
 [![Python versions](https://img.shields.io/pypi/pyversions/audr)](https://pypi.org/project/audr/)
 
-> **Status: alpha.** The record model tracks AUDR v1.0.0 and is stable; the Python API
-> may change in minor releases before 1.0.
+The **core Python SDK** for [AUDR](https://openaudr.dev/spec/v1.0.0/) (Agent Usage Detail
+Record) builds records, validates them against the published schema, and delivers them to
+any `Sink`, such as a file, a queue or a metering backend, through a bounded, batching
+async pipeline. Adapters and sinks build on it, and an application can emit records with
+this package alone.
 
-Vendor-neutral Python SDK for emitting [AUDR](https://openaudr.dev/spec/v1.0.0/) (Agent Usage
-Detail Record) v1.0.0 records: build records, validate them against the published schema, and
-deliver them to any `Sink` (a file, a queue, a metering backend) through a bounded, batching
-async pipeline.
+> **Status: alpha.** The record model tracks AUDR v1.0.0; until 1.0.0, a minor release may
+> change the public API.
 
-## Install
+## Setup
 
 ```bash
 pip install audr
 ```
 
-## Quickstart
+Requires Python 3.11 or later.
+
+## Usage
 
 ```python
 import asyncio
@@ -51,37 +54,56 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-`FileSink` flushes once per batch. When a write fails part-way, the batch is reported
-retryable and the lines already written remain in the file. Replays from `on_failure` are
-therefore idempotent when the consumer de-duplicates on `record_id`.
+`client.record()` validates and queues the record and returns at once; a background worker
+batches records and hands each batch to the sink. Leaving the `async with` block drains the
+queue and closes the sink. Runnable versions, including a custom sink, are in
+[`examples/`](https://github.com/openaudr/audr/tree/main/adapters/core/python/examples).
 
-Pass `on_delivered` to `Client` for a synchronous, per-batch acknowledgement of the
-records a sink accepted. It fires once per accepted batch, carrying the records that were
-sent; records the sink rejected or reported unknown are reported to `on_failure` instead.
-Both callbacks run synchronously on the delivery path, so keep them fast. The client
-catches and logs any exception a callback raises.
+> [!IMPORTANT]
+> Delivery problems never raise from `client.record()`. Check the returned `SubmitResult`,
+> pass `on_failure` to `Client` to receive every record that was not delivered, and read
+> `client.stats` for totals.
 
-## Parsing JSON input
+## Validation
 
-Records arriving as JSON are parsed and validated by `from_json()`:
+Records arriving as JSON are parsed and validated by `AUDR.from_json()`, which raises
+`audr.ValidationError` carrying one issue per problem:
 
 ```python
+import audr
+
+payload = '{"spec_version": "1.0.0", "resource": {"type": "model"}}'
 try:
     record = audr.AUDR.from_json(payload)
-except audr.ValidationError as err:
-    for issue in err.issues:
-        log.warning("bad AUDR record", code=issue.code, path=issue.path)
+except audr.ValidationError as error:
+    for issue in error.issues:
+        print(issue.code, issue.path)  # for example: REQUIRED /timing
 ```
 
-## Specification
+Each issue carries a stable `ErrorCode` and a JSON-pointer `path`, never the offending
+value, so issues are safe to log. `record.validate()` returns the same issues for a record
+built in code.
 
-This SDK implements [AUDR v1.0.0](https://openaudr.dev/spec/v1.0.0/). The
-[schema, prose rules and conformance fixtures](https://github.com/openaudr/audr/tree/main/spec)
-define the standard this package is tested against.
+## Delivery
 
-## Contributing
+| `BatchResult` from the sink | Each record becomes |
+| --- | --- |
+| `ACCEPTED` | `sent`, except records the sink names as `rejected` (`dropped`) or `unknown` |
+| `RETRYABLE_FAILURE`, `PERMANENT_FAILURE`, `CLOSED` | `dropped` |
 
-Contributions are welcome — see
-[`CONTRIBUTING.md`](https://github.com/openaudr/audr/blob/main/CONTRIBUTING.md).
+Every record admitted through `client.record()` ends in exactly one of `sent`, `dropped`
+or `unknown`. An `unknown` record may or may not have arrived, so a consumer that
+de-duplicates on `record_id` can replay it safely. The pipeline never retries; retrying is
+the sink's responsibility. `FileSink` flushes once per batch, and when a write fails part
+way, the batch is reported retryable while the lines already written remain in the file.
 
-Licensed under Apache-2.0.
+## Documentation
+
+- [Reference](https://github.com/openaudr/audr/blob/main/adapters/core/python/docs/reference.md): client options, submission outcomes, callbacks, the sink contract, validation codes, testing helpers
+- [Examples](https://github.com/openaudr/audr/tree/main/adapters/core/python/examples): runnable offline, against the local filesystem
+- [Changelog](https://github.com/openaudr/audr/blob/main/adapters/core/python/CHANGELOG.md)
+- [AUDR specification](https://openaudr.dev/spec/v1.0.0/), which defines every record field
+
+## License
+
+Apache-2.0. Contributions follow [`CONTRIBUTING.md`](https://github.com/openaudr/audr/blob/main/CONTRIBUTING.md).

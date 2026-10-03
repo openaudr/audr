@@ -22,7 +22,8 @@ and this package must not depend on a particular destination or runtime.
 | `src/audr/client.py`, `src/audr/_pipeline.py` | The bounded, batching async delivery pipeline behind `Client` |
 | `src/audr/testing.py` | `MemorySink`, `make_record`, and `assert_sink_contract`: a harness for testing sinks |
 | `tests/` | The pytest suite for this distribution |
-| `examples/` | Runnable examples; no credentials or network calls required |
+| `examples/` | Runnable examples; no credentials or network calls required; `make examples` and CI run them |
+| `docs/reference.md` | The API reference the README links to; update it with any public behaviour change |
 | `scripts/gen_models.py` | Generates `src/audr/record/_schema.py` from the spec |
 | `scripts/verify_distribution.py` | The isolation check `make isolation` runs against the built wheel |
 | `../../../spec/` | The normative schema and prose; not packaged into the wheel |

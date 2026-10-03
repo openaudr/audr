@@ -7,9 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-03
+
 ### Added
 
 - Package metadata links to this changelog, shown on PyPI as the Changelog URL.
+- `docs/reference.md` documents client options, submission outcomes, failure reasons, the
+  sink contract, `FileSink`, validation codes, testing helpers and loggers.
+
+### Changed
+
+- The README follows the layout shared by the other AUDR packages, and every snippet in it
+  runs as written.
+- CI runs the examples on every supported Python version.
 
 ## [0.1.0] - 2026-09-22
 
