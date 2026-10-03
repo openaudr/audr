@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package metadata links to this changelog, shown on PyPI as the Changelog URL.
 - `docs/reference.md` documents every option, the flattening rules, response outcomes,
   retries, transport settings and log messages.
+- `examples/deliver.py`, a runnable delivery example that uses a mock ingest endpoint.
 
 ### Changed
 

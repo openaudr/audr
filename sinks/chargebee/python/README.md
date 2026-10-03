@@ -108,6 +108,7 @@ enforced.
 ## Documentation
 
 - [Reference](https://github.com/openaudr/audr/blob/main/sinks/chargebee/python/docs/reference.md): options, flattening, responses, retries, diagnostics
+- [Examples](https://github.com/openaudr/audr/tree/main/sinks/chargebee/python/examples): runnable against a mock ingest endpoint, without network access
 - [Changelog](https://github.com/openaudr/audr/blob/main/sinks/chargebee/python/CHANGELOG.md)
 - [AUDR specification](https://openaudr.dev/spec/v1.0.0/), which defines every record field
 

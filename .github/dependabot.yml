@@ -1,0 +1,49 @@
+# Weekly grouped updates keep lockfiles and pinned actions current. The cooldown leaves
+# a new release a few days to be yanked before it is proposed.
+version: 2
+updates:
+  - package-ecosystem: uv
+    directories:
+      - /adapters/core/python
+      - /adapters/litellm/python
+      - /adapters/nemo-relay/python
+      - /sinks/chargebee/python
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 3
+    groups:
+      python:
+        patterns: ["*"]
+    commit-message:
+      prefix: build
+      include: scope
+
+  - package-ecosystem: npm
+    directories:
+      - /adapters/core/typescript
+      - /adapters/merge-gateway/typescript
+      - /adapters/vercel-ai/typescript
+      - /sinks/chargebee/typescript
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 3
+    groups:
+      typescript:
+        patterns: ["*"]
+    commit-message:
+      prefix: build
+      include: scope
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 3
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: ci

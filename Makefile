@@ -52,8 +52,8 @@ adapter-litellm-python: ## Lint and test the LiteLLM Python adapter
 adapter-nemo-relay-python: ## Lint and test the NeMo Relay Python adapter
 	@$(MAKE) -C adapters/nemo-relay/python lint test
 
-sink-chargebee-python: ## Lint and test the Chargebee Python sink
-	@$(MAKE) -C sinks/chargebee/python lint test
+sink-chargebee-python: ## Verify the Chargebee Python sink
+	@$(MAKE) -C sinks/chargebee/python verify
 
 python: core-python adapter-litellm-python adapter-nemo-relay-python sink-chargebee-python ## Verify every Python package
 

@@ -1,4 +1,4 @@
-.PHONY: install test lint format typecheck build isolation verify clean
+.PHONY: install test lint format typecheck examples build isolation verify clean
 UV ?= uv
 install:
 	$(UV) sync --locked --group dev
@@ -13,10 +13,12 @@ format:
 	$(UV) run ruff check --fix .
 typecheck:
 	$(UV) run mypy
+examples:
+	$(UV) run python examples/deliver.py
 build:
 	rm -rf dist && $(UV) build
 isolation: build
 	$(UV) run python scripts/verify_distribution.py
-verify: lint test isolation
+verify: lint test examples isolation
 clean:
 	rm -rf dist .venv .pytest_cache .ruff_cache .mypy_cache .coverage

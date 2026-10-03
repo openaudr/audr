@@ -51,7 +51,7 @@ make all         # check + python + typescript: everything CI runs
 | `make core-python` | `make verify` in `adapters/core/python` |
 | `make adapter-litellm-python` | `make lint test` in `adapters/litellm/python` |
 | `make adapter-nemo-relay-python` | `make lint test` in `adapters/nemo-relay/python` |
-| `make sink-chargebee-python` | `make lint test` in `sinks/chargebee/python` |
+| `make sink-chargebee-python` | `make verify` in `sinks/chargebee/python` |
 | `make core-typescript` | `make install verify` in `adapters/core/typescript` |
 | `make adapter-merge-gateway-typescript` | `make install verify` in `adapters/merge-gateway/typescript` |
 | `make adapter-vercel-ai-typescript` | `make install verify` in `adapters/vercel-ai/typescript` |

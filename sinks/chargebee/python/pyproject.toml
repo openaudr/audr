@@ -69,7 +69,7 @@ select = ["E", "F", "I", "UP", "B", "RUF"]
 
 [tool.mypy]
 strict = true
-files = ["src", "scripts", "tests"]
+files = ["src", "scripts", "tests", "examples"]
 python_version = "3.11"
 # `tests` has no `__init__.py`, so the base directories are named rather than guessed.
 explicit_package_bases = true
