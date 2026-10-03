@@ -27,6 +27,7 @@ scopes attribution and an optional host run over every call an instrumented clie
 | `docs/reference.md` | The full reference: options, agent runs, Merge tracing, streams, record fields, diagnostics, bounds |
 | `tests/` | The Vitest suite, run against the real SDK with `fetch` stubbed; one file per behaviour area, named for it |
 | `examples/` | Runnable examples with `fetch` answered locally; no credentials or network calls |
+| `scripts/verify-package.ts` | The isolation check `make isolation` runs against the packed tarballs |
 
 ## Rules
 
@@ -102,9 +103,11 @@ make install     # install dependencies from the lockfile
 make lint        # eslint, prettier --check and tsc --noEmit
 make test        # vitest with the 90% coverage gate
 make examples    # build, then run every example against dist/
-make isolation   # build, then publint --strict and attw
+make isolation   # build, publint --strict and attw, then scripts/verify-package.ts
 make verify      # lint + test + examples + isolation
 ```
 
-`make isolation` does not run the core's `scripts/verify-package.ts`: this package's peer
-dependencies are intended.
+`scripts/verify-package.ts` installs the packed adapter and core with the Gateway SDK into an
+empty project and meters one call through `import` and `require`. Unlike the core's check,
+it does not require an exact installed set, because this package's peer dependencies are
+intended.
