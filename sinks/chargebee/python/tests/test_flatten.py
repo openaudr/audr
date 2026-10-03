@@ -18,14 +18,14 @@ from audr_sink_chargebee._event_validation import InvalidUsageEventError
 from audr_sink_chargebee._flatten import flatten, flatten_audr
 
 
-def test_nested_objects_become_underscore_joined_scalars() -> None:
+def test_nested_objects_become_double_underscore_joined_scalars() -> None:
     flattened = flatten({"a": {"b": {"c": 1}}, "d": "x"})
 
-    assert flattened == {"a_b_c": 1, "d": "x"}
+    assert flattened == {"a__b__c": 1, "d": "x"}
 
 
 def test_the_separator_is_configurable() -> None:
-    assert flatten({"a": {"b": 1}}, separator="__") == {"a__b": 1}
+    assert flatten({"a": {"b": 1}}, separator="_") == {"a_b": 1}
 
 
 @pytest.mark.parametrize("value", [1, 1.5, "text", True, False, None], ids=str)
@@ -36,11 +36,11 @@ def test_json_scalars_pass_through_unchanged(value: object) -> None:
 def test_a_list_is_stored_as_canonical_json_under_a_json_suffix() -> None:
     flattened = flatten({"items": [3, 1, 2]})
 
-    assert flattened == {"items_json": "[3,1,2]"}
+    assert flattened == {"items__json": "[3,1,2]"}
 
 
 def test_a_tuple_is_treated_as_a_list() -> None:
-    assert flatten({"items": (1, 2)}) == {"items_json": "[1,2]"}
+    assert flatten({"items": (1, 2)}) == {"items__json": "[1,2]"}
 
 
 def test_labels_are_kept_whole_as_json_rather_than_flattened() -> None:
@@ -48,8 +48,8 @@ def test_labels_are_kept_whole_as_json_rather_than_flattened() -> None:
     property names the destination has never seen."""
     flattened = flatten({"labels": {"z": "last", "a": "first"}})
 
-    assert list(flattened) == ["labels_json"]
-    assert flattened["labels_json"] == '{"a":"first","z":"last"}'  # keys sorted
+    assert list(flattened) == ["labels__json"]
+    assert flattened["labels__json"] == '{"a":"first","z":"last"}'  # keys sorted
 
 
 def test_canonical_json_is_stable_across_input_ordering() -> None:
@@ -62,7 +62,7 @@ def test_canonical_json_is_stable_across_input_ordering() -> None:
 def test_non_ascii_label_values_are_not_escaped() -> None:
     flattened = flatten({"labels": {"team": "Ümlaut"}})
 
-    assert flattened["labels_json"] == '{"team":"Ümlaut"}'
+    assert flattened["labels__json"] == '{"team":"Ümlaut"}'
 
 
 def test_an_empty_nested_object_contributes_no_properties() -> None:
@@ -139,7 +139,7 @@ def test_record_labels_round_trip_through_the_json_container() -> None:
 
     flattened = flatten_audr(record)
 
-    assert json.loads(str(flattened["attribution_labels_json"])) == labels
+    assert json.loads(str(flattened["attribution__labels__json"])) == labels
 
 
 def test_absent_optional_fields_produce_no_properties() -> None:
@@ -149,5 +149,5 @@ def test_absent_optional_fields_produce_no_properties() -> None:
         make_record(attribution=Attribution(environment="test", subscription_id="s"))
     )
 
-    assert "attribution_account_id" not in flattened
-    assert "attribution_labels_json" not in flattened
+    assert "attribution__account_id" not in flattened
+    assert "attribution__labels__json" not in flattened

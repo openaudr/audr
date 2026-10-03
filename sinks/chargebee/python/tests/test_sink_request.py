@@ -80,9 +80,9 @@ async def test_chargebee_sink_flattens_audr_fields_into_properties() -> None:
 
     assert record.usage.llm is not None
     [event] = json.loads(requests[0].content)["events"]
-    assert event["properties"]["usage_llm_input_tokens"] == record.usage.llm.input_tokens
-    assert event["properties"]["resource_name"] == record.resource.name
-    assert event["properties"]["resource_type"] == "model"
+    assert event["properties"]["usage__llm__input_tokens"] == record.usage.llm.input_tokens
+    assert event["properties"]["resource__name"] == record.resource.name
+    assert event["properties"]["resource__type"] == "model"
     await sink.close()
 
 
@@ -99,7 +99,7 @@ async def test_chargebee_sink_threads_the_configured_separator_into_properties()
     sink = ChargebeeSink(
         ingest_url="https://acme.ingest.chargebee.com",
         api_key="test_key",
-        separator="__",
+        separator="_",
         transport=httpx.MockTransport(record_request),
     )
     record = _record()
@@ -108,8 +108,8 @@ async def test_chargebee_sink_threads_the_configured_separator_into_properties()
 
     assert record.usage.llm is not None
     [event] = json.loads(requests[0].content)["events"]
-    assert event["properties"]["usage__llm__input_tokens"] == record.usage.llm.input_tokens
-    assert "usage_llm_input_tokens" not in event["properties"]
+    assert event["properties"]["usage_llm_input_tokens"] == record.usage.llm.input_tokens
+    assert "usage__llm__input_tokens" not in event["properties"]
     await sink.close()
 
 
