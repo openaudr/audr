@@ -59,7 +59,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
     "@eslint/js": "^10.0.1",
-    "@openaudr/audr": "^0.1.0",
+    "@openaudr/audr": "file:../../core/typescript",
     "@types/node": "^22.19.0",
     "@vitest/coverage-v8": "^5.0.0",
     "eslint": "^10.10.0",

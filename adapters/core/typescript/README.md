@@ -1,18 +1,19 @@
-# audr
+# @openaudr/audr
 
 [![npm](https://img.shields.io/npm/v/@openaudr/audr?include_prereleases)](https://www.npmjs.com/package/@openaudr/audr)
 [![Node versions](https://img.shields.io/node/v/@openaudr/audr)](https://www.npmjs.com/package/@openaudr/audr)
 
-> **Status: alpha.** The record model tracks AUDR v1.0.0 and is stable; the TypeScript API
-> may change in minor releases before 1.0.
+The **core TypeScript SDK** for [AUDR](https://openaudr.dev/spec/v1.0.0/) (Agent Usage
+Detail Record) builds records, validates them against the published schema, and delivers
+them to any `Sink`, such as a file, a queue or a metering backend, through a bounded,
+batching async pipeline. Adapters and sinks build on it, and an application can emit
+records with this package alone. ESM with full type declarations and one small runtime
+dependency, `uuid`.
 
-Vendor-neutral TypeScript SDK for emitting [AUDR](https://openaudr.dev/spec/v1.0.0/) (Agent
-Usage Detail Record) v1.0.0 records: build records, validate them against the published
-schema, and deliver them to any `Sink` (a file, a queue, a metering backend) through a
-bounded, batching async pipeline. One small runtime dependency (`uuid`); ESM with full type
-declarations.
+> **Status: alpha.** The record model tracks AUDR v1.0.0; until 1.0.0, a minor release may
+> change the public API.
 
-## Install
+## Setup
 
 ```bash
 npm install @openaudr/audr
@@ -20,7 +21,7 @@ npm install @openaudr/audr
 
 Requires Node.js 22.12 or later. The root entry point uses no Node-specific APIs.
 
-## Quickstart
+## Usage
 
 ```ts
 import { Client, createRecord } from '@openaudr/audr';
@@ -50,111 +51,59 @@ await client.shutdown(); // drains the queue, then closes the sink
 console.log(client.stats);
 ```
 
-`Client` is `AsyncDisposable`, so on Node.js 24+ or in TypeScript compiled by `tsc`,
-`await using client = new Client(...)` shuts it down at the end of the scope.
-
 Records are plain objects in the wire format, typed by `AudrRecord`. `client.record()` is
-synchronous and never throws: it copies and validates the record, stamps the client's
-`emitter` when the record has none, and returns a `SubmitResult` whose `outcome` says
-whether the record was queued. Changing a record after passing it in does not change what
-is delivered. Records are delivered in batches of up to `batchMaxSize` (default 50), sent
-when a batch fills, after `lingerMs` (default 5000), or on `flush()` and `shutdown()`.
+synchronous: it copies and validates the record, stamps the client's `emitter` when the
+record has none, and queues it for a background worker that batches records for the sink.
+`Client` is `AsyncDisposable`, so `await using client = new Client(...)` shuts it down at
+the end of the scope. Runnable versions, including a custom sink, are in
+[`examples/`](https://github.com/openaudr/audr/tree/main/adapters/core/typescript/examples).
 
-`FileSink` writes one JSON line per record, with one write per batch. When a write fails,
-the batch is reported retryable, and any lines already written remain in the file. A batch
-holding a record `encodeRecord()` refuses is reported as a permanent failure and not written.
-Replays from `onFailure` are therefore idempotent when the consumer de-duplicates on
-`record_id`.
+> [!IMPORTANT]
+> `client.record()` never throws for a delivery problem. Check the returned `SubmitResult`,
+> pass `onFailure` to `Client` to receive every record that was not delivered, and read
+> `client.stats` for totals.
 
-## Delivery callbacks
+## Validation
 
-```ts
-// `sink`, `metrics` and `replayQueue` stand for the application's own objects.
-const client = new Client(sink, {
-  onDelivered: (records) => metrics.count('audr.sent', records.length),
-  onFailure: ({ record, disposition, reason, retryable }) => {
-    if (retryable) replayQueue.push(record); // disposition: 'dropped' | 'unknown'
-  },
-});
-```
-
-Every record admitted through `client.record()` ends in exactly one terminal state:
-`sent`, `dropped` or `unknown`. See the
-[delivery states](https://github.com/openaudr/audr/blob/main/adapters/core/README.md#delivery-states).
-`onDelivered` fires once per accepted batch with the records that were sent; records a
-sink rejected or could not confirm go to `onFailure`. Both callbacks run synchronously on
-the delivery path, so keep them fast. Either may return a promise: delivery does not wait
-for it, but `shutdown()` does, within its bound. The client catches any error
-they throw or reject with.
-`client.stats` returns a `DeliveryStats` snapshot of the counters.
-
-The client logs nothing by default. To receive its diagnostics, pass a `logger` with `warn`
-and `error` methods, such as `console`; messages never carry record values.
-
-## Parsing JSON input
-
-Records that arrive as JSON are parsed and validated by `decodeRecord()`. For an object
-that has already been parsed, use `parseRecord()`, and use `validate()` to get a list of
-issues without an exception:
+Records arriving as JSON are parsed and validated by `decodeRecord()`, which throws
+`ValidationError` carrying one issue per problem:
 
 ```ts
 import { decodeRecord, ValidationError } from '@openaudr/audr';
 
-// `payload` is the JSON text of one record, as received.
-
+const payload = '{"spec_version": "1.0.0", "resource": {"type": "model"}}';
 try {
-  const record = decodeRecord(payload);
+  decodeRecord(payload);
 } catch (error) {
   if (!(error instanceof ValidationError)) throw error;
-  for (const issue of error.issues) console.warn('bad AUDR record', issue.code, issue.path);
+  for (const issue of error.issues) console.warn(issue.code, issue.path); // REQUIRED /record_id, ...
 }
 ```
 
-A `ValidationIssue` carries a stable `code` and a JSON-pointer `path`, never a field value.
-`encodeRecord()` produces canonical JSON (keys sorted) for a record, and throws
-`ValidationError` for a number JSON cannot represent (`NaN` or `±Infinity`) and for an
-array or non-plain object such as a `Date`, which no AUDR record holds.
+Each issue carries a stable `code` and a JSON-pointer `path`, never the offending value, so
+issues are safe to log. `parseRecord()` validates an already parsed object, and
+`validate()` returns the issues without throwing.
 
-## Writing a sink
+## Delivery
 
-A sink is any object with `deliver(batch)` and `close()`. It reports each batch's outcome
-rather than throwing:
+| `BatchResult` from the sink | Each record becomes |
+| --- | --- |
+| `accepted` | `sent`, except records the sink names as `rejected` (`dropped`) or `unknown` |
+| `retryable_failure`, `permanent_failure`, `closed` | `dropped` |
 
-```ts
-import { type AudrRecord, BatchResult, type Sink } from '@openaudr/audr';
+Every record admitted through `client.record()` ends in exactly one of `sent`, `dropped`
+or `unknown`. An `unknown` record may or may not have arrived, so a consumer that
+de-duplicates on `record_id` can replay it safely. The pipeline never retries; retrying is
+the sink's responsibility. A sink is any object with `deliver(batch)` and `close()` that
+reports each batch's outcome rather than throwing.
 
-class PrintSink implements Sink {
-  #closed = false;
+## Documentation
 
-  async deliver(batch: readonly AudrRecord[]): Promise<BatchResult> {
-    if (this.#closed) return BatchResult.closed();
-    for (const record of batch) console.log(record.record_id);
-    return BatchResult.accepted();
-  }
+- [Reference](https://github.com/openaudr/audr/blob/main/adapters/core/typescript/docs/reference.md): client options, submission outcomes, callbacks, the sink contract, `FileSink`, validation codes, testing helpers
+- [Examples](https://github.com/openaudr/audr/tree/main/adapters/core/typescript/examples): runnable offline, against the local filesystem
+- [Changelog](https://github.com/openaudr/audr/blob/main/adapters/core/typescript/CHANGELOG.md)
+- [AUDR specification](https://openaudr.dev/spec/v1.0.0/), which defines every record field
 
-  async close(): Promise<void> {
-    this.#closed = true;
-  }
-}
-```
+## License
 
-`deliver()` also receives `{ signal }`, an `AbortSignal` that fires when `shutdown()` stops
-waiting for the delivery. By then its records are already accounted `unknown`, so pass the
-signal to `fetch()` or any other cancellable I/O and answer promptly.
-
-`audr/testing` provides `assertSinkContract()` to check a sink against the
-[sink contract](https://github.com/openaudr/audr/blob/main/adapters/core/README.md#the-sink-contract),
-together with `MemorySink` and `makeRecord()` for tests.
-
-## Specification
-
-This SDK implements [AUDR v1.0.0](https://openaudr.dev/spec/v1.0.0/). The
-[schema, prose rules and conformance fixtures](https://github.com/openaudr/audr/tree/main/spec)
-define the standard this package is tested against.
-
-## Contributing
-
-Contributions are welcome — see
-[`CONTRIBUTING.md`](https://github.com/openaudr/audr/blob/main/CONTRIBUTING.md).
-
-Licensed under Apache-2.0.
+Apache-2.0. Contributions follow [`CONTRIBUTING.md`](https://github.com/openaudr/audr/blob/main/CONTRIBUTING.md).

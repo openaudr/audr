@@ -28,7 +28,8 @@ or runtime.
 | `src/file-sink.ts` | `FileSink`, exported from `audr/file` (the only `node:fs` import) |
 | `src/testing.ts` | `MemorySink`, `makeRecord`, `assertSinkContract`, exported from `audr/testing` |
 | `tests/` | The Vitest suite, including `conformance.test.ts` and `schema.test.ts`, which holds the generated validator's bounds and the generated types to the schema |
-| `examples/` | Runnable examples; no credentials or network calls required |
+| `examples/` | Runnable examples; no credentials or network calls required; `make examples` and CI run them |
+| `docs/reference.md` | The API reference the README links to; update it with any public behaviour change |
 | `scripts/gen-schema.ts` | Generates `src/generated-schema.ts` and `src/generated-validator.ts` from the spec |
 | `scripts/verify-package.ts` | The isolation check `make isolation` runs against the packed tarball |
 | `../../../spec/`, `../../../conformance/` | The schema and shared fixtures the tests read; not packaged |

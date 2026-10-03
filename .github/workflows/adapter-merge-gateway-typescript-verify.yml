@@ -5,10 +5,12 @@ on:
     branches: [main]
     paths:
       - "adapters/merge-gateway/typescript/**"
+      - "adapters/core/typescript/**"
       - ".github/workflows/adapter-merge-gateway-typescript-verify.yml"
   pull_request:
     paths:
       - "adapters/merge-gateway/typescript/**"
+      - "adapters/core/typescript/**"
       - ".github/workflows/adapter-merge-gateway-typescript-verify.yml"
 
 permissions:
@@ -41,7 +43,9 @@ jobs:
         with:
           node-version: "${{ matrix.node }}"
           cache: npm
-          cache-dependency-path: adapters/merge-gateway/typescript/package-lock.json
+          cache-dependency-path: |
+            adapters/core/typescript/package-lock.json
+            adapters/merge-gateway/typescript/package-lock.json
 
       - name: Install
         run: make install
@@ -70,7 +74,9 @@ jobs:
         with:
           node-version: "24"
           cache: npm
-          cache-dependency-path: adapters/merge-gateway/typescript/package-lock.json
+          cache-dependency-path: |
+            adapters/core/typescript/package-lock.json
+            adapters/merge-gateway/typescript/package-lock.json
 
       - name: Install
         run: make install

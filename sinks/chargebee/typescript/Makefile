@@ -1,8 +1,8 @@
 .PHONY: install lint format typecheck test build examples isolation verify clean
 NPM ?= npm
 CORE := ../../../adapters/core/typescript
-# The core is linked from this repository until it is published, and resolves through its
-# built `dist/`, so it is installed and built first.
+# The core is linked from this repository, so a core change is tested against this package
+# before either is released. It resolves through its built `dist/`, so it is built first.
 install:
 	$(MAKE) -C $(CORE) install build
 	$(NPM) ci
