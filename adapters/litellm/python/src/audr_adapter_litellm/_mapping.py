@@ -303,6 +303,11 @@ def _resolve_attribution(
     values = defaults.model_dump(include=_ATTRIBUTION_FIELDS, exclude_none=True)
     if overrides is not None:
         values |= overrides.model_dump(include=_ATTRIBUTION_FIELDS, exclude_unset=True)
+        labels = {**(defaults.labels or {}), **(overrides.labels or {})}
+        if labels:
+            values["labels"] = labels
+        else:
+            values.pop("labels", None)
     try:
         attribution = Attribution.model_validate(values)
     except ValidationError:

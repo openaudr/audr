@@ -14,7 +14,8 @@ class LiteLLMConfig(BaseModel):
     """Validated settings for one callback instance.
 
     Attribution defaults may be partial because request metadata can complete
-    them. Values that can never be conformant are rejected at construction.
+    them: request values win field by field, and ``labels`` merge by key. Values
+    that can never be conformant are rejected at construction.
     """
 
     model_config = ConfigDict(frozen=True, extra="forbid")

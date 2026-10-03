@@ -46,8 +46,8 @@ tools-test: ## Test the repository tools
 core-python: ## Verify the core Python SDK (adapters/core/python)
 	@$(MAKE) -C adapters/core/python verify
 
-adapter-litellm-python: ## Lint and test the LiteLLM Python adapter
-	@$(MAKE) -C adapters/litellm/python lint test
+adapter-litellm-python: ## Verify the LiteLLM Python adapter
+	@$(MAKE) -C adapters/litellm/python verify
 
 adapter-nemo-relay-python: ## Lint and test the NeMo Relay Python adapter
 	@$(MAKE) -C adapters/nemo-relay/python lint test

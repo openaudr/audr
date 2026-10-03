@@ -1,9 +1,15 @@
-"""Record the metered result of a LiteLLM Router fallback chain."""
+"""Record the metered result of a LiteLLM Router fallback chain.
+
+`mock_testing_fallbacks` makes the primary deployment fail and `mock_response` answers
+from the fallback, so the example runs without network access or provider keys. The
+unmetered failed attempt produces no record; the fallback produces one.
+"""
 
 from __future__ import annotations
 
 import asyncio
-import os
+import tempfile
+from pathlib import Path
 
 import litellm
 from audr import Attribution, Client, FileSink
@@ -13,6 +19,7 @@ from audr_adapter_litellm import LiteLLMAudrCallback, LiteLLMConfig
 
 
 async def _wait_for_callback(client: Client, submitted_before: int) -> None:
+    """Wait for LiteLLM's non-blocking logging task to invoke the callback."""
     loop = asyncio.get_running_loop()
     deadline = loop.time() + 5
     while client.stats.submitted == submitted_before and loop.time() < deadline:
@@ -22,53 +29,52 @@ async def _wait_for_callback(client: Client, submitted_before: int) -> None:
 
 
 async def main() -> None:
-    primary_model = os.getenv("PRIMARY_MODEL", "openai/gpt-4o-mini")
-    fallback_model = os.getenv(
-        "FALLBACK_MODEL",
-        "anthropic/claude-3-5-haiku-20241022",
-    )
     router = Router(
         model_list=[
-            {"model_name": "primary", "litellm_params": {"model": primary_model}},
-            {"model_name": "fallback", "litellm_params": {"model": fallback_model}},
+            {
+                "model_name": "primary",
+                "litellm_params": {"model": "openai/gpt-4o-mini", "api_key": "mock-key"},
+            },
+            {
+                "model_name": "fallback",
+                "litellm_params": {"model": "anthropic/claude-haiku-4-5", "api_key": "mock-key"},
+            },
         ],
         fallbacks=[{"primary": ["fallback"]}],
         num_retries=0,
     )
+    path = Path(tempfile.gettempdir()) / "audr-litellm-router-example.jsonl"
+    path.unlink(missing_ok=True)
 
-    async with Client(FileSink("router-usage.jsonl")) as client:
+    async with Client(FileSink(path)) as client:
         callback = LiteLLMAudrCallback(
             client=client,
             config=LiteLLMConfig(
                 attribution_defaults=Attribution(
                     environment="production",
-                    account_id="account_123",
-                    subscription_id="subscription_123",
+                    account_id="acct_42",
+                    subscription_id="sub_7",
                 )
             ),
         )
         litellm.logging_callback_manager.add_litellm_callback(callback)
         try:
             submitted_before = client.stats.submitted
-            response = await router.acompletion(
+            await router.acompletion(
                 model="primary",
                 messages=[{"role": "user", "content": "Summarize AUDR in one sentence."}],
-                metadata={
-                    "audr": {
-                        "run": {
-                            "run_id": "router-example-run",
-                            "run_type": "agent_run",
-                        }
-                    }
-                },
+                mock_testing_fallbacks=True,
+                mock_response="AUDR is one usage record per metered agent operation.",
+                metadata={"audr": {"run": {"run_id": "router-run-1", "run_type": "agent_run"}}},
             )
             await _wait_for_callback(client, submitted_before)
-            print(response.choices[0].message.content)
         finally:
             litellm.logging_callback_manager.remove_callback_from_all_lists(callback)
             await callback.drain(timeout=5)
             callback.close()
             router.reset()  # type: ignore[no-untyped-call]
+
+    print(path.read_text())
 
 
 if __name__ == "__main__":

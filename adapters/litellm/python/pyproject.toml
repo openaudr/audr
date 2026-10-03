@@ -73,7 +73,7 @@ select = ["E", "F", "I", "UP", "B", "RUF"]
 [tool.mypy]
 strict = true
 plugins = ["pydantic.mypy"]
-files = ["src", "tests", "scripts"]
+files = ["src", "tests", "scripts", "examples"]
 python_version = "3.11"
 explicit_package_bases = true
 mypy_path = "src:."

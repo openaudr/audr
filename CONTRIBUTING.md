@@ -49,7 +49,7 @@ make all         # check + python + typescript: everything CI runs
 | `make versions` | Fail if a distribution version is written into any Markdown file |
 | `make tools-test` | Run the tests for the scripts in `tools/` |
 | `make core-python` | `make verify` in `adapters/core/python` |
-| `make adapter-litellm-python` | `make lint test` in `adapters/litellm/python` |
+| `make adapter-litellm-python` | `make verify` in `adapters/litellm/python` |
 | `make adapter-nemo-relay-python` | `make lint test` in `adapters/nemo-relay/python` |
 | `make sink-chargebee-python` | `make verify` in `sinks/chargebee/python` |
 | `make core-typescript` | `make install verify` in `adapters/core/typescript` |

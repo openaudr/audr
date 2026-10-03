@@ -216,6 +216,40 @@ def test_request_metadata_overrides_attribution_and_run_fields() -> None:
     assert record.resource.deployment == "AWS"
 
 
+def _labels_for(request_attribution: dict[str, object]) -> dict[str, str] | None:
+    kwargs = callback_kwargs(
+        litellm_params={"metadata": {"audr": {"attribution": request_attribution}}}
+    )
+    defaults = Attribution(environment="staging", labels={"region": "us", "team": "core"})
+    return ready(map_result(kwargs=kwargs, defaults=defaults)).record.attribution.labels
+
+
+def test_request_labels_merge_with_default_labels_by_key() -> None:
+    labels = _labels_for({"labels": {"team": "billing", "feature": "chat"}})
+
+    assert labels == {"region": "us", "team": "billing", "feature": "chat"}
+
+
+@pytest.mark.parametrize("request_labels", [None, {}])
+def test_empty_request_labels_keep_default_labels(request_labels: object) -> None:
+    assert _labels_for({"labels": request_labels}) == {"region": "us", "team": "core"}
+
+
+def test_request_without_labels_keeps_default_labels() -> None:
+    assert _labels_for({"account_id": "account_123"}) == {"region": "us", "team": "core"}
+
+
+def test_merged_labels_over_the_limit_are_skipped() -> None:
+    request_labels = {f"key_{index}": "value" for index in range(19)}
+
+    kwargs = callback_kwargs(
+        litellm_params={"metadata": {"audr": {"attribution": {"labels": request_labels}}}}
+    )
+    defaults = Attribution(environment="staging", labels={"region": "us", "team": "core"})
+
+    assert map_result(kwargs=kwargs, defaults=defaults) == RecordSkipped("/attribution")
+
+
 def test_incomplete_attribution_is_skipped() -> None:
     result = map_result(defaults=Attribution())
 
