@@ -22,11 +22,14 @@ Normative changes need an accepted issue first; see [CONTRIBUTING.md](../CONTRIB
 ## Checks
 
 - [ ] `make check` passes locally (spec, schema, conformance)
-- [ ] `make python` passes locally, if this touches a package under `adapters/` or `sinks/`
+- [ ] `make python` passes locally, if this touches a Python package under `adapters/` or `sinks/`
+- [ ] `make typescript` passes locally, if this touches a TypeScript package under `adapters/` or `sinks/`
 - [ ] Every generated file in this change was regenerated, never hand-edited
 
 <!--
 Generated files — never edit these directly:
-  spec/SPEC.md                                      (run `make spec`)
-  adapters/core/python/src/audr/record/_schema.py   (run `make models`)
+  spec/SPEC.md                                              (run `make spec`)
+  adapters/core/python/src/audr/record/_schema.py           (run `make models`)
+  adapters/core/typescript/src/generated-schema.ts          (run `make schema` there)
+  adapters/core/typescript/src/generated-validator.ts       (run `make schema` there)
 -->
