@@ -36,8 +36,9 @@ batch. The rules a sink must hold to:
 - **Hold credentials privately.** They are taken as constructor arguments, optionally
   backed by environment variables at the call site, and never appear in logs, errors or
   `repr()`.
-- **Keep record values out of diagnostics.** Log and error messages carry record
-  identifiers, field names and outcome codes, never field values.
+- **Keep record values out of diagnostics.** Log and error messages carry field names,
+  JSON-pointer paths and outcome codes. They MUST NOT contain record field values,
+  including record identifiers.
 
 `audr.testing.assert_sink_contract(sink)` exercises these rules. It runs in every sink's
 test suite; a sink that does not pass it is not accepted.
@@ -75,8 +76,9 @@ Directory `sinks/<target>/<language>/`, distribution `audr-sink-<target>`, impor
 | `AGENTS.md` | How to work inside this package |
 | `CHANGELOG.md`, `LICENSE`, `NOTICE` | Release history and licensing |
 
-Outside the package: a workflow `.github/workflows/sink-<target>-<language>-verify.yml`, a
-root `Makefile` target, a `CODEOWNERS` line, a row in the table in [`README.md`](README.md),
+Outside the package: a workflow `.github/workflows/sink-<target>-python-verify.yml` for
+Python, or a filter in `.github/workflows/typescript-verify.yml` for TypeScript, a root
+`Makefile` target, a `CODEOWNERS` line, a row in the table in [`README.md`](README.md),
 and a component `README.md` at `sinks/<target>/` indexing the languages.
 
 ## Data handling

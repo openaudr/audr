@@ -1,7 +1,10 @@
 .PHONY: install lint format typecheck schema schema-check test conformance build examples isolation verify clean
 NPM ?= npm
+ROOT := ../../..
+# Every TypeScript package installs from the repository's root lockfile, which links the
+# local core; the root target also builds the core, which dependents resolve through `dist/`.
 install:
-	$(NPM) ci
+	$(MAKE) -C $(ROOT) typescript-install
 lint:
 	$(NPM) run lint
 	$(NPM) run typecheck
@@ -25,7 +28,7 @@ examples: build
 	node examples/custom-sink.ts
 isolation: build
 	$(NPM) run check:package
-	node scripts/verify-package.ts
+	node $(ROOT)/tools/verify-npm-package.mjs .
 verify: lint schema-check test examples isolation
 clean:
-	rm -rf dist coverage node_modules *.tgz
+	rm -rf dist coverage *.tgz

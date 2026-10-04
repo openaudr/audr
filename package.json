@@ -1,0 +1,29 @@
+{
+  "name": "audr-typescript-workspace",
+  "private": true,
+  "engines": {
+    "node": ">=22.18"
+  },
+  "workspaces": [
+    "adapters/core/typescript",
+    "adapters/merge-gateway/typescript",
+    "adapters/vercel-ai/typescript",
+    "sinks/chargebee/typescript"
+  ],
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.19.0",
+    "@vitest/coverage-v8": "^5.0.0",
+    "eslint": "^10.10.0",
+    "eslint-plugin-import-x": "^4.17.1",
+    "prettier": "^3.9.6",
+    "publint": "^0.3.24",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.70.0",
+    "vitest": "^5.0.0"
+  },
+  "allowScripts": {
+    "unrs-resolver@1.12.2": true
+  }
+}

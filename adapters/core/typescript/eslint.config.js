@@ -1,6 +1,5 @@
-import js from '@eslint/js';
 import { defineConfig } from 'eslint/config';
-import tseslint from 'typescript-eslint';
+import { workspaceConfig } from '../../../eslint.base.mjs';
 
 const NODE_GLOBALS = [
   'Buffer',
@@ -15,39 +14,9 @@ const NODE_GLOBALS = [
 ];
 
 export default defineConfig(
-  {
-    ignores: [
-      'dist/**',
-      'coverage/**',
-      'node_modules/**',
-      'eslint.config.js',
-      // Ajv's standalone output; `make schema-check` keeps it current.
-      'src/generated-validator.ts',
-    ],
-  },
-  js.configs.recommended,
-  tseslint.configs.strictTypeChecked,
-  tseslint.configs.stylisticTypeChecked,
-  {
-    languageOptions: {
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
-    rules: {
-      '@typescript-eslint/explicit-module-boundary-types': 'error',
-      '@typescript-eslint/consistent-type-imports': ['error', { fixStyle: 'inline-type-imports' }],
-      '@typescript-eslint/switch-exhaustiveness-check': [
-        'error',
-        { requireDefaultForNonUnion: true },
-      ],
-      '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
-      '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
-      // The SDK writes diagnostics only through the caller's `logger`.
-      'no-console': 'error',
-    },
-  },
+  workspaceConfig(import.meta.dirname),
+  // Ajv's standalone output; `make schema-check` keeps it current.
+  { ignores: ['src/generated-validator.ts'] },
   {
     // The root entry point runs in any modern JavaScript runtime; Node-only code lives
     // behind the `@openaudr/audr/file` and `@openaudr/audr/testing` subpaths.
@@ -59,18 +28,6 @@ export default defineConfig(
         { patterns: [{ regex: '^node:', message: 'Node-only code belongs behind a subpath.' }] },
       ],
       'no-restricted-globals': ['error', ...NODE_GLOBALS],
-    },
-  },
-  {
-    files: ['examples/**/*.ts', 'scripts/**/*.ts'],
-    rules: { 'no-console': 'off' },
-  },
-  {
-    files: ['tests/**/*.ts', '*.config.ts'],
-    rules: {
-      'no-console': 'off',
-      '@typescript-eslint/no-non-null-assertion': 'off',
-      '@typescript-eslint/explicit-module-boundary-types': 'off',
     },
   },
 );

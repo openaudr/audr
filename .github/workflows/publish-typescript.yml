@@ -92,6 +92,12 @@ jobs:
       - name: Verify
         run: make verify
 
+      # CI tests a dependent against the workspace core, which may be ahead of the lowest
+      # published core its peer range admits.
+      - name: Verify against the core at its peer floor
+        if: needs.resolve.outputs.directory != 'adapters/core/typescript'
+        run: node "$GITHUB_WORKSPACE/tools/verify-npm-package.mjs" . --core-floor
+
       - name: Pack
         run: npm pack
 

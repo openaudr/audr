@@ -12,17 +12,6 @@ callback that observes metered SDK and Router model calls and hands attributed `
 records to an `audr.Client` the host application owns. The host owns callback
 registration, the client, its sink and their shutdown order.
 
-## Layout
-
-| Path | Owns |
-| --- | --- |
-| `src/audr_adapter_litellm/_callback.py` | `LiteLLMAudrCallback`, callback lifecycle and value-free diagnostics |
-| `src/audr_adapter_litellm/_bridge.py` | Bounded handoff from LiteLLM callbacks to the client's event loop |
-| `src/audr_adapter_litellm/_mapping.py` | Privacy-preserving callback-to-record mapping |
-| `src/audr_adapter_litellm/_config.py` | Attribution defaults and handoff bounds |
-| `src/audr_adapter_litellm/_errors.py` | Stable activation and run error codes |
-| `tests/test_runtime.py` | No-network SDK, streaming and Router fallback coverage |
-
 ## Working rules
 
 1. Emit only when LiteLLM exposes provider usage or cost. Skip cache hits and unmetered

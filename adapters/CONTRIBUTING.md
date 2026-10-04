@@ -64,7 +64,8 @@ order is: stop starting runtime calls, await the ones in flight, then
 The runtime and `@openaudr/audr` are peer dependencies, so the adapter uses the
 application's own copies, and the adapter imports only the runtime's types. Enforce the
 type-only rule with ESLint's `@typescript-eslint/no-restricted-imports` and
-`allowTypeImports`. Both are also development dependencies installed from npm. The
+`allowTypeImports`. Declare both as development dependencies. npm installs the runtime
+and links `@openaudr/audr` from the local workspace. The
 [Vercel AI adapter](vercel-ai/typescript/AGENTS.md) implements all of this.
 
 ## What a new adapter ships
@@ -89,13 +90,15 @@ A TypeScript package contains the same `tests/`, `README.md` (the npm page), `AG
 
 | Path | Purpose |
 | --- | --- |
-| `package.json`, `package-lock.json` | Package metadata and locked environment, on the shared toolchain |
+| `package.json` | Package metadata, on the shared toolchain; dependencies are locked in the repository's root `package-lock.json` |
 | `Makefile` | `install`, `lint`, `test`, `build`, `examples`, `isolation`, `verify` |
 | `src/`, with `src/version.ts` | The package; `tests/public-api.test.ts` pins its exports and keeps the version equal to `package.json` |
 | `examples/` | Runnable examples on mock models, run by `make examples` |
+| `scripts/package-smoke.mjs` | The smoke test `make isolation` runs against the installed tarball, through `tools/verify-npm-package.mjs` |
 
-Outside the package: a workflow `.github/workflows/adapter-<target>-<language>-verify.yml`,
-a root `Makefile` target, a `CODEOWNERS` line, a row in the table in [`README.md`](README.md),
+Outside the package: a workflow `.github/workflows/adapter-<target>-python-verify.yml` for
+Python, or a filter in `.github/workflows/typescript-verify.yml` for TypeScript, a root
+`Makefile` target, a `CODEOWNERS` line, a row in the table in [`README.md`](README.md),
 and a component `README.md` at `adapters/<target>/` indexing the languages.
 
 ## Before opening a pull request

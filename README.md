@@ -55,13 +55,9 @@ The schema's canonical URL is its `$id`:
 https://openaudr.dev/spec/v1.0.0/audr.schema.json
 ```
 
-Any JSON Schema Draft 2020-12 validator checks a record against it. In this
-repository, `make examples` validates every example in the specification.
-
-```bash
-make check     # schema, examples, conformance, cross-references, staleness, links, versions
-make spec      # regenerate spec/SPEC.md from the schema, the outline and the prose
-```
+Validate records with a JSON Schema Draft 2020-12 validator. Repository setup,
+verification and specification generation are documented in
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Emitting records
 

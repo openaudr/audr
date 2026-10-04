@@ -1,0 +1,164 @@
+name: Verify TypeScript packages
+
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - "adapters/*/typescript/**"
+      - "sinks/*/typescript/**"
+      - "spec/**"
+      - "conformance/**"
+      - ".github/workflows/typescript-verify.yml"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.base.json"
+      - "eslint.base.mjs"
+      - ".prettierrc.json"
+      - "Makefile"
+      - "tools/verify-npm-package.mjs"
+      - "tools/check-workspace-core.mjs"
+  pull_request:
+    paths: *paths
+
+permissions:
+  contents: read
+
+concurrency:
+  group: typescript-verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Changed packages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      packages: ${{ steps.filter.outputs.changes }}
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # One filter per package directory. Every package is tested against the workspace
+      # core, so each filter includes the core's.
+      - name: Match changed files to packages
+        id: filter
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          filters: |
+            adapters/core/typescript: &core
+              - "adapters/core/typescript/**"
+              - "spec/**"
+              - "conformance/**"
+              - ".github/workflows/typescript-verify.yml"
+              - "package.json"
+              - "package-lock.json"
+              - "tsconfig.base.json"
+              - "eslint.base.mjs"
+              - ".prettierrc.json"
+              - "Makefile"
+              - "tools/verify-npm-package.mjs"
+              - "tools/check-workspace-core.mjs"
+            adapters/merge-gateway/typescript:
+              - *core
+              - "adapters/merge-gateway/typescript/**"
+            adapters/vercel-ai/typescript:
+              - *core
+              - "adapters/vercel-ai/typescript/**"
+            sinks/chargebee/typescript:
+              - *core
+              - "sinks/chargebee/typescript/**"
+
+  root-lint:
+    name: Shared tooling format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Lint
+        run: make typescript-lint
+
+  test:
+    name: ${{ matrix.package }} on Node.js ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.packages != '[]'
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJSON(needs.changes.outputs.packages) }}
+        node: ["22", "24", "26"]
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "${{ matrix.node }}"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install
+        run: make install
+
+      - name: Lint
+        run: make lint
+
+      - name: Generated schema is current
+        if: matrix.package == 'adapters/core/typescript'
+        run: make schema-check
+
+      - name: Tests
+        run: make test
+
+      - name: Examples
+        run: make examples
+
+  package:
+    name: ${{ matrix.package }} build and isolation
+    runs-on: ubuntu-latest
+    needs: [changes, test]
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJSON(needs.changes.outputs.packages) }}
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install
+        run: make install
+
+      - name: Build and verify isolation
+        run: make isolation

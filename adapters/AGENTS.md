@@ -49,12 +49,13 @@ For a TypeScript adapter, the steps differ as follows. The Vercel AI adapter
    `core/typescript/` (`tsconfig*.json`, `eslint.config.js`, `vitest.config.ts`, the
    Prettier files, `LICENSE`, `NOTICE`). In `package.json`: name `@openaudr/audr-adapter-<target>`,
    ESM only, `engines.node` as the core, the runtime and `@openaudr/audr` as peer
-   dependencies and as development dependencies from npm.
+   dependencies and as development dependencies. npm installs the runtime and links
+   `@openaudr/audr` from the local workspace.
 3. **Implement** the hook and lifecycle, attribution, then mapping, with tests alongside.
    Import only the runtime's types.
-4. **Wire the repository:** `.github/workflows/adapter-<target>-typescript-verify.yml`
-   modelled on `adapter-vercel-ai-typescript-verify.yml`, a root `Makefile` target
-   `adapter-<target>-typescript` added to `typescript`, and the same `CODEOWNERS`,
-   `README.md` and component index entries.
+4. **Wire the repository:** a filter for the package directory in the `changes` job of
+   `.github/workflows/typescript-verify.yml`, the directory in the root `package.json`
+   `workspaces`, a root `Makefile` target `adapter-<target>-typescript` added to
+   `typescript`, and the same `CODEOWNERS`, `README.md` and component index entries.
 5. **Write the README** for npm, under the same rules, with an npm badge.
 6. **Verify:** `make verify` in the package, then `make all` at the root.

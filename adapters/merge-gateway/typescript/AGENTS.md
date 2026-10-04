@@ -15,19 +15,8 @@ non-mutating facade over a `merge-gateway-sdk` `MergeGateway` that turns every
 record for an `@openaudr/audr` `Client` the host application owns, plus `withAudr()`, which
 scopes attribution and an optional host run over every call an instrumented client makes.
 
-## Layout
-
-| Path | Owns |
-| --- | --- |
-| `src/index.ts` | The public exports, pinned by `tests/public-api.test.ts` |
-| `src/gateway.ts` | `instrumentMergeGateway`, the `Proxy` facade, requested modality, the metered stream and record building |
-| `src/attribution.ts` | `withAudr`, scope nesting, the attribution merge and the one process-wide `AsyncLocalStorage` |
-| `src/mapping.ts` | `GatewayResult`, the only response fields the adapter reads, and pure functions over it: token arithmetic, cost, run id length |
-| `src/diagnostics.ts` | `DiagnosticCode`, value-free formatting and fixed error categories |
-| `docs/reference.md` | The full reference: options, agent runs, Merge tracing, streams, record fields, diagnostics, bounds |
-| `tests/` | The Vitest suite, run against the real SDK with `fetch` stubbed; one file per behaviour area, named for it |
-| `examples/` | Runnable examples with `fetch` answered locally; no credentials or network calls |
-| `scripts/verify-package.ts` | The isolation check `make isolation` runs against the packed tarballs |
+Keep public exports covered by `tests/public-api.test.ts`. Tests and examples must run
+without credentials or network access; stub `fetch` for SDK calls.
 
 ## Rules
 
@@ -90,7 +79,8 @@ The shared toolchain is defined in the top-level
 package:
 
 - **Peer dependencies:** `merge-gateway-sdk` and `@openaudr/audr`, both also development
-  dependencies from npm. The dev dependency on `merge-gateway-sdk` is pinned exactly to the
+  dependencies. npm installs the runtime and links `@openaudr/audr` from the local
+  workspace. The dev dependency on `merge-gateway-sdk` is pinned exactly to the
   floor of the peer range, so CI runs the suite against the oldest release the package
   claims to support. Raise the two together. The 0.4 type declarations omit fields Gateway
   returns (`usage.cost`, the cache and reasoning counters, `vendor`), so `GatewayResult` in
@@ -99,15 +89,14 @@ package:
   equal.
 
 ```bash
-make install     # build the linked core, then install dependencies from the lockfile
+make install     # install every TypeScript package from the root lockfile, then build the core
 make lint        # eslint, prettier --check and tsc --noEmit
 make test        # vitest with the 90% coverage gate
 make examples    # build, then run every example against dist/
-make isolation   # build, publint --strict and attw, then scripts/verify-package.ts
+make isolation   # build, publint --strict and attw, then tools/verify-npm-package.mjs
 make verify      # lint + test + examples + isolation
 ```
 
-`scripts/verify-package.ts` installs the packed adapter and core with the Gateway SDK into an
-empty project and meters one call through `import` and `require`. Unlike the core's check,
-it does not require an exact installed set, because this package's peer dependencies are
-intended.
+`tools/verify-npm-package.mjs` installs the packed adapter and core with the Gateway SDK into an
+empty project and runs `scripts/package-smoke.mjs`, which meters one call. It does not
+require an exact installed set, because this package's peer dependencies are intended.

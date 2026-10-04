@@ -1,6 +1,6 @@
 .PHONY: help spec check schema examples conformance lint fresh links versions tools-test install clean all
 .PHONY: python core-python adapter-litellm-python adapter-nemo-relay-python sink-chargebee-python
-.PHONY: typescript core-typescript adapter-merge-gateway-typescript adapter-vercel-ai-typescript sink-chargebee-typescript
+.PHONY: typescript typescript-install typescript-lint core-typescript adapter-merge-gateway-typescript adapter-vercel-ai-typescript sink-chargebee-typescript
 
 PYTHON ?= python3
 
@@ -57,19 +57,27 @@ sink-chargebee-python: ## Verify the Chargebee Python sink
 
 python: core-python adapter-litellm-python adapter-nemo-relay-python sink-chargebee-python ## Verify every Python package
 
-core-typescript: ## Verify the core TypeScript SDK (adapters/core/typescript)
-	@$(MAKE) -C adapters/core/typescript install verify
+typescript-install: ## Install every TypeScript package from the root lockfile and build the core
+	npm ci
+	node tools/check-workspace-core.mjs
+	npm run build --workspace adapters/core/typescript
 
-adapter-merge-gateway-typescript: ## Verify the Merge Gateway TypeScript adapter
-	@$(MAKE) -C adapters/merge-gateway/typescript install verify
+typescript-lint: typescript-install ## Check the formatting of the shared TypeScript tooling at the repository root
+	npx prettier --check package.json tsconfig.base.json .prettierrc.json eslint.base.mjs tools/*.mjs
 
-adapter-vercel-ai-typescript: ## Verify the Vercel AI TypeScript adapter
-	@$(MAKE) -C adapters/vercel-ai/typescript install verify
+core-typescript: typescript-install ## Verify the core TypeScript SDK (adapters/core/typescript)
+	@$(MAKE) -C adapters/core/typescript verify
 
-sink-chargebee-typescript: ## Verify the Chargebee TypeScript sink (sinks/chargebee/typescript)
-	@$(MAKE) -C sinks/chargebee/typescript install verify
+adapter-merge-gateway-typescript: typescript-install ## Verify the Merge Gateway TypeScript adapter
+	@$(MAKE) -C adapters/merge-gateway/typescript verify
 
-typescript: core-typescript adapter-merge-gateway-typescript adapter-vercel-ai-typescript sink-chargebee-typescript ## Verify every TypeScript package
+adapter-vercel-ai-typescript: typescript-install ## Verify the Vercel AI TypeScript adapter
+	@$(MAKE) -C adapters/vercel-ai/typescript verify
+
+sink-chargebee-typescript: typescript-install ## Verify the Chargebee TypeScript sink (sinks/chargebee/typescript)
+	@$(MAKE) -C sinks/chargebee/typescript verify
+
+typescript: typescript-lint core-typescript adapter-merge-gateway-typescript adapter-vercel-ai-typescript sink-chargebee-typescript ## Verify every TypeScript package
 
 all: check python typescript ## Everything CI runs, across the repository
 

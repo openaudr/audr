@@ -14,25 +14,9 @@ reference in [`../python/`](../python/). It is destination-neutral: a sink plugs
 package, never the reverse, and this package must not depend on a particular destination
 or runtime.
 
-## Layout
-
-| Path | Owns |
-| --- | --- |
-| `src/generated-schema.ts` | Generated: the record types, rendered by quicktype, and `SPEC_VERSION` |
-| `src/generated-validator.ts` | Generated: the JSON Schema compiled by Ajv into standalone code |
-| `src/record.ts` | `AudrRecord`, `RecordInput` and `createRecord`, over the generated types |
-| `src/validate.ts` | Schema failures mapped to AUDR error codes, and the rules the specification states only in prose |
-| `src/codec.ts`, `src/errors.ts` | `parseRecord` / `decodeRecord` / `encodeRecord`, error codes and error classes |
-| `src/sink.ts` | The sink contract: `Sink`, `BatchResult`, `RejectedRecord` |
-| `src/client.ts`, `src/pipeline.ts`, `src/results.ts` | The bounded, batching delivery pipeline behind `Client` |
-| `src/file-sink.ts` | `FileSink`, exported from `audr/file` (the only `node:fs` import) |
-| `src/testing.ts` | `MemorySink`, `makeRecord`, `assertSinkContract`, exported from `audr/testing` |
-| `tests/` | The Vitest suite, including `conformance.test.ts` and `schema.test.ts`, which holds the generated validator's bounds and the generated types to the schema |
-| `examples/` | Runnable examples; no credentials or network calls required; `make examples` and CI run them |
-| `docs/reference.md` | The API reference the README links to; update it with any public behaviour change |
-| `scripts/gen-schema.ts` | Generates `src/generated-schema.ts` and `src/generated-validator.ts` from the spec |
-| `scripts/verify-package.ts` | The isolation check `make isolation` runs against the packed tarball |
-| `../../../spec/`, `../../../conformance/` | The schema and shared fixtures the tests read; not packaged |
+Update [`docs/reference.md`](docs/reference.md) when public behaviour changes.
+Follow the generation rules below when changing schema-derived files. Examples must
+run without credentials or network access.
 
 ## Rules
 
@@ -45,8 +29,8 @@ or runtime.
    point imports nothing from `node:` so it runs in any modern JavaScript runtime.
    Node-only code lives behind a subpath export; ESLint rejects `node:` imports and Node
    globals elsewhere in `src/`. `make isolation` packs the tarball and checks that it
-   installs exactly the declared dependencies and loads through both `import` and
-   `require`.
+   installs exactly the declared dependencies, runs its smoke test, and loads through both
+   `import` and `require`.
 3. Records are plain objects in the wire format (snake_case). API options and results are
    camelCase. Do not add record classes or a mapping layer.
 4. `record()` is the only entry point to the delivery pipeline. It is synchronous, never

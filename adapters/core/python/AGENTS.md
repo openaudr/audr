@@ -13,21 +13,9 @@ the Agent Usage Detail Record (AUDR) standard, and the package every adapter and
 depends on. It is destination-neutral: a sink plugs into this package, never the reverse,
 and this package must not depend on a particular destination or runtime.
 
-## Layout
-
-| Path | Owns |
-| --- | --- |
-| `src/audr/record/` | The AUDR Pydantic models, encoding, and validation |
-| `src/audr/sinks/` | The sink contract (`Sink`, `BatchResult`, `BatchOutcome`) and the one bundled implementation, `FileSink` |
-| `src/audr/client.py`, `src/audr/_pipeline.py` | The bounded, batching async delivery pipeline behind `Client` |
-| `src/audr/testing.py` | `MemorySink`, `make_record`, and `assert_sink_contract`: a harness for testing sinks |
-| `tests/` | The pytest suite for this distribution |
-| `examples/` | Runnable examples; no credentials or network calls required; `make examples` and CI run them |
-| `docs/reference.md` | The API reference the README links to; update it with any public behaviour change |
-| `scripts/gen_models.py` | Generates `src/audr/record/_schema.py` from the spec |
-| `scripts/verify_distribution.py` | The isolation check `make isolation` runs against the built wheel |
-| `../../../spec/` | The normative schema and prose; not packaged into the wheel |
-| `../../../conformance/` | Shared fixtures `tests/test_conformance.py` runs |
+Update [`docs/reference.md`](docs/reference.md) when public behaviour changes.
+Follow the generation rules below when changing schema-derived files. Examples must
+run without credentials or network access.
 
 ## Rules
 
@@ -70,5 +58,5 @@ make models          # regenerate src/audr/record/_schema.py from spec/
 make models-check    # fail if the generated models drift from spec/
 make conformance     # the shared fixtures only (tests/test_conformance.py)
 make isolation       # build, then verify the wheel installs and runs with no extra deps
-make verify          # lint + models-check + test + isolation
+make verify          # lint + models-check + test + examples + isolation
 ```

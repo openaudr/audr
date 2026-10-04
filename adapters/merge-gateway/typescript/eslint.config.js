@@ -1,6 +1,5 @@
-import js from '@eslint/js';
 import { defineConfig } from 'eslint/config';
-import tseslint from 'typescript-eslint';
+import { workspaceConfig } from '../../../eslint.base.mjs';
 
 const NODE_GLOBALS = [
   'Buffer',
@@ -21,30 +20,7 @@ const TYPES_ONLY = {
 };
 
 export default defineConfig(
-  { ignores: ['dist/**', 'coverage/**', 'node_modules/**', 'eslint.config.js'] },
-  js.configs.recommended,
-  tseslint.configs.strictTypeChecked,
-  tseslint.configs.stylisticTypeChecked,
-  {
-    languageOptions: {
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
-    rules: {
-      '@typescript-eslint/explicit-module-boundary-types': 'error',
-      '@typescript-eslint/consistent-type-imports': ['error', { fixStyle: 'inline-type-imports' }],
-      '@typescript-eslint/switch-exhaustiveness-check': [
-        'error',
-        { requireDefaultForNonUnion: true },
-      ],
-      '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
-      '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
-      // The adapter writes diagnostics only through the caller's `logger`.
-      'no-console': 'error',
-    },
-  },
+  workspaceConfig(import.meta.dirname),
   {
     // The package runs wherever the Merge Gateway SDK does. `merge-gateway-sdk` is an
     // optional peer dependency, so only its types may be imported; the one Node API used is
@@ -81,18 +57,6 @@ export default defineConfig(
           ],
         },
       ],
-    },
-  },
-  {
-    files: ['examples/**/*.ts', 'scripts/**/*.ts'],
-    rules: { 'no-console': 'off' },
-  },
-  {
-    files: ['tests/**/*.ts', '*.config.ts'],
-    rules: {
-      'no-console': 'off',
-      '@typescript-eslint/no-non-null-assertion': 'off',
-      '@typescript-eslint/explicit-module-boundary-types': 'off',
     },
   },
 );

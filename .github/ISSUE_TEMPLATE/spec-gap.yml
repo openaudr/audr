@@ -5,9 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        This is the most useful issue you can open. Tell us specifically where
-        it breaks — a real provider, a real cost model, a real query you cannot
-        answer.
+        Describe the provider, billing model and query that AUDR cannot represent.
   - type: textarea
     id: operation
     attributes:

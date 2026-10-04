@@ -13,20 +13,8 @@ AI SDK 7 `Telemetry` integration that turns provider model calls, client-side to
 executions, embedding calls and rerank calls into attributed `AUDR` records for an
 `@openaudr/audr` `Client` the host application owns.
 
-## Layout
-
-| Path | Owns |
-| --- | --- |
-| `src/index.ts` | The public exports, pinned by `tests/public-api.test.ts` |
-| `src/telemetry.ts` | `audrTelemetry`, option validation, and every `Telemetry` hook |
-| `src/attribution.ts` | The `runtimeContext.audr` reader and the merge over defaults |
-| `src/runs.ts` | `CallTracker`, the one module-level `AsyncLocalStorage` of active tool spans each tracker filters by owner, per-call state and unique tool span allocation |
-| `src/mapping.ts` | Pure functions: token arithmetic, provider slugs, span ids, run type, supported operations |
-| `src/diagnostics.ts` | `DiagnosticCode`, the message format, `errorName`, the silent default logger |
-| `docs/reference.md` | The full reference: options, record fields, provider slugs, diagnostics, bounds |
-| `tests/` | The Vitest suite |
-| `examples/` | Runnable examples on mock models; no credentials or network calls |
-| `scripts/verify-package.ts` | The isolation check `make isolation` runs against the packed tarballs |
+Keep public exports covered by `tests/public-api.test.ts`. Examples must use mock
+models and run without credentials or network access.
 
 ## Rules
 
@@ -66,8 +54,9 @@ The shared toolchain is defined in the top-level
 [`CONTRIBUTING.md`](../../../CONTRIBUTING.md#shared-typescript-toolchain). Specific to this
 package:
 
-- **Peer dependencies:** `ai` and `@openaudr/audr`, both also development dependencies
-  from npm. The dev dependency on `ai` is pinned exactly to the floor of the `ai` peer
+- **Peer dependencies:** `ai` and `@openaudr/audr`, both also development dependencies.
+  npm installs the runtime and links `@openaudr/audr` from the local workspace.
+  The dev dependency on `ai` is pinned exactly to the floor of the `ai` peer
   range, so CI runs the suite against the oldest release the package claims to support.
   Raise the two together, and only when the adapter needs a newer `ai`. The floor is where
   `embed`, `embedMany` and `rerank` gained `runtimeContext`; earlier 7.x releases drop
@@ -76,15 +65,14 @@ package:
   equal.
 
 ```bash
-make install     # build the linked core, then npm ci
+make install     # install every TypeScript package from the root lockfile, then build the core
 make lint        # eslint, prettier --check and tsc --noEmit
 make test        # vitest with the 90% coverage gate
 make examples    # build, then run every example against dist/
-make isolation   # build, publint --strict and attw, then scripts/verify-package.ts
+make isolation   # build, publint --strict and attw, then tools/verify-npm-package.mjs
 make verify      # lint + test + examples + isolation
 ```
 
-`scripts/verify-package.ts` installs the packed adapter and core with the AI SDK into an
-empty project and meters one model call through `import` and `require`. Unlike the core's
-check, it does not require an exact installed set, because this package's peer dependencies
-are intended.
+`tools/verify-npm-package.mjs` installs the packed adapter and core with the AI SDK into an
+empty project and runs `scripts/package-smoke.mjs`, which meters one call. It does not
+require an exact installed set, because this package's peer dependencies are intended.

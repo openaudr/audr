@@ -20,11 +20,8 @@ updates:
       include: scope
 
   - package-ecosystem: npm
-    directories:
-      - /adapters/core/typescript
-      - /adapters/merge-gateway/typescript
-      - /adapters/vercel-ai/typescript
-      - /sinks/chargebee/typescript
+    # One root lockfile covers every TypeScript workspace package.
+    directory: /
     schedule:
       interval: weekly
     cooldown:

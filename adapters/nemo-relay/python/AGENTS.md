@@ -12,21 +12,9 @@ covers changes to the package itself.
 NVIDIA NeMo Relay plugin that observes completed Relay LLM and tool scopes and hands
 attributed `AUDR` records to an `audr.Client` the host application owns.
 
-## Layout
-
-| Path | Owns |
-| --- | --- |
-| `src/audr_adapter_nemo_relay/_plugin.py` | `NeMoRelayPlugin`: Relay's plugin protocol, activation, `drain()`, lifecycle errors |
-| `src/audr_adapter_nemo_relay/_bridge.py` | The thread-safe handoff from Relay's subscriber worker onto the client's event loop |
-| `src/audr_adapter_nemo_relay/_attribution.py` | Attribution resolution across scope trees, with defaults |
-| `src/audr_adapter_nemo_relay/_mapping.py` | Mapping from Relay events to records |
-| `src/audr_adapter_nemo_relay/_config.py` | `NeMoRelayConfig` and the `ConfigDiagnostic` codes Relay's protocol requires |
-| `src/audr_adapter_nemo_relay/_errors.py` | Exceptions with stable codes and value-free messages |
-| `tests/` | The suite; `test_runtime.py` carries the `nemo_relay`-marked tests that need the real runtime |
-| `examples/agent_scope.py` | An LLM and a tool call on canned results; `make examples` and CI run it |
-| `examples/nemo_relay_chat.py` | A terminal chat that makes billable network calls; not run in CI |
-| `scripts/verify_distribution.py` | Installs the built wheel in a clean environment, with and without the runtime extra |
-| `docs/reference.md` | The reference the README links to: options, attribution, record fields, errors, diagnostics, bounds |
+Update [`docs/reference.md`](docs/reference.md) when public behaviour changes.
+`make examples` runs `examples/agent_scope.py` with canned results.
+`examples/nemo_relay_chat.py` makes billable network calls and must not run in CI.
 
 ## Rules
 
@@ -69,5 +57,5 @@ package:
   uv run pytest -m nemo_relay
   ```
 
-`make verify` is `lint test build`. This package has no `isolation` target; its
-dependency on `audr` is intended.
+`make verify` runs lint, tests, offline examples and wheel isolation checks.
+`make isolation` verifies installation with and without the runtime extra.

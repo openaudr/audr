@@ -43,6 +43,6 @@ issue agrees the routing key and the de-duplication key; if none exists, stop an
 6. **Verify:** `make verify` in the package, then `make all` at the root.
 
 A TypeScript sink follows the same steps in `sinks/<target>/typescript/`, modelled on
-`chargebee/typescript/`: `audr` as a peer dependency, `assertSinkContract` from
-`audr/testing`, a workflow modelled on `sink-chargebee-typescript-verify.yml`, and a root
+`chargebee/typescript/`: `@openaudr/audr` as a peer dependency, `assertSinkContract` from
+`@openaudr/audr/testing`, a filter in the `changes` job of `typescript-verify.yml`, and a root
 `Makefile` target `sink-<target>-typescript` added to `typescript`.

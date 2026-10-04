@@ -114,10 +114,15 @@ the two kinds; their `CONTRIBUTING.md` files describe how to build one.
 A package is named `audr-<kind>-<target>` (for example `audr-sink-chargebee`,
 `audr-adapter-nemo-relay`), kind before target, so tooling, `CODEOWNERS`, and alphabetical
 listings group every sink together and every adapter together. The import package is the
-distribution name with hyphens replaced by underscores. Its CI workflow is
-`.github/workflows/<kind>-<target>-<language>-verify.yml`. The core is the one exception:
+distribution name with hyphens replaced by underscores. The core is the one exception:
 `audr`, not `audr-adapter-core`. On npm every package is published under the `@openaudr`
 scope, for example `@openaudr/audr` and `@openaudr/audr-sink-chargebee`.
+
+A Python package's CI workflow is `.github/workflows/<kind>-<target>-python-verify.yml`.
+Every TypeScript package is verified by `.github/workflows/typescript-verify.yml`, which
+tests packages affected by the changed files. Changes to the core, specification,
+conformance fixtures, or shared TypeScript tooling select every TypeScript package. Each
+package is one filter in its `changes` job.
 
 ### Shared Python toolchain
 
@@ -149,22 +154,34 @@ lint, type-check or coverage gate to make a change pass.
 
 ### Shared TypeScript toolchain
 
-TypeScript packages follow the same rules: a standalone project per directory, the same
-`Makefile` targets, and one toolchain shared by every package:
+TypeScript packages are npm workspaces of the repository root. One root `package.json` and
+`package-lock.json` install every TypeScript package and link the local core; each package
+keeps its own manifest, tests, `Makefile` targets and release cadence. Every package shares
+one toolchain:
 
 | Concern | Choice |
 | --- | --- |
 | Runtime | Node.js 22.12 or later for users; 22.18 or later to develop (examples run with type stripping) |
 | Module format | ESM only, `"type": "module"`; `exports` map with one entry per public subpath |
 | Build | `tsc` to `dist/` with declarations; no bundler; version in `package.json` |
-| Environment | `npm`, with `package-lock.json` committed |
-| Formatter and linter | Prettier, `printWidth` 100; ESLint with typescript-eslint `strictTypeChecked` |
-| Types | `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes` |
+| Environment | `npm` workspaces, with one root `package-lock.json` committed; shared dev tooling is declared in the root `package.json` |
+| Formatter and linter | Prettier, `printWidth` 100; ESLint with typescript-eslint `strictTypeChecked`, and `import-x/no-extraneous-dependencies`, which limits runtime imports to dependencies and peer dependencies; the shared settings live in the root `eslint.base.mjs` |
+| Types | `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, set once in the root `tsconfig.base.json` |
 | Tests | Vitest with v8 coverage gated at 90% |
-| Package checks | `publint --strict` and `attw`, plus an install-from-tarball isolation check |
+| Package checks | `publint --strict` and `attw`, plus `tools/verify-npm-package.mjs`, which installs the packed package into an empty project and runs its `scripts/package-smoke.mjs` |
 
-The `make install / lint / test / build / verify` targets mean the same as for Python;
-`make install` runs `npm ci`.
+The `make install / lint / test / build / verify` targets mean the same as for Python.
+`make install` runs `npm ci` at the repository root and builds the core, which the other
+packages resolve through its `dist/`.
+
+A package built on the core declares `@openaudr/audr` as a peer dependency and as a dev
+dependency with the same range, which npm satisfies by linking the local workspace. A core
+release outside that range must widen both ranges in the same pull request. Otherwise npm
+installs the published core for that package, and `make install` fails rather than test it
+against a core other than the local one. Before a dependent is published, the release
+workflow also runs `node tools/verify-npm-package.mjs <package-dir> --core-floor`, which
+installs it with the published core at the lowest version its range allows; a dependent
+that needs a newer core raises the lower bound of both ranges.
 
 ### Releasing a package
 
@@ -181,6 +198,10 @@ several registries.
 | --- | --- | --- | --- |
 | Python | `src/<package>/_version.py` | [`publish-python.yml`](.github/workflows/publish-python.yml) | PyPI, `pypi-<distribution>` |
 | TypeScript | `package.json` and `src/version.ts` | [`publish-typescript.yml`](.github/workflows/publish-typescript.yml) | npm, `npm-<name>`, where `<name>` omits the npm scope |
+
+A TypeScript version is set with
+`npm version X.Y.Z --no-git-tag-version --workspace <package-dir>`, which also updates the
+root lockfile, and `src/version.ts` is updated to match.
 
 1. Open a release pull request that sets the version and renames the `[Unreleased]`
    section of `CHANGELOG.md` to `[X.Y.Z] - YYYY-MM-DD`. The version changes only in a
@@ -207,8 +228,8 @@ never re-uploaded; a defect is corrected by releasing a new version.
 
 ## Documentation
 
-Every fact has one home. A document states a fact if and only if it is that fact's home;
-every other document links to it.
+Use the ownership table below to place reference information; link to its canonical
+description elsewhere.
 
 | Document | Audience | Depth |
 | --- | --- | --- |

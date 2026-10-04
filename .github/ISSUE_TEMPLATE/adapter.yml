@@ -37,5 +37,4 @@ body:
     attributes:
       label: What was awkward?
       description: >
-        Anything the specification made harder than it needed to be. This is the
-        part we most want to read.
+        Anything the specification made harder than it needed to be.
