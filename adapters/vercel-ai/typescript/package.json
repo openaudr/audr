@@ -58,7 +58,7 @@
   },
   "devDependencies": {
     "@openaudr/audr": "^0.1.0",
-    "ai": "7.0.98",
+    "ai": "7.0.127",
     "zod": "^4.6.4"
   },
   "publishConfig": {
