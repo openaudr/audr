@@ -6,8 +6,37 @@ warehouse, Chargebee. It owns encoding, transport, credentials, retries, and any
 destination-specific byte limits. The core never talks to a destination directly, and a
 sink never talks to a runtime — that is an [adapter's](../adapters/README.md) job.
 
-```
-adapter ──▶ Client ──▶ sink.deliver(batch) ──▶ destination
+The specification calls this ingest layer the sink: a conformant one de-duplicates on
+`record_id` and merges records that share `(run_id, span_id)`. A sink package delivers each
+batch to it and reports, per record, what the destination did.
+
+```mermaid
+sequenceDiagram
+    participant H as Host application
+    participant C as Client (core SDK)
+    participant S as Sink
+    participant D as Destination
+
+    Note over H,D: Batching
+    C->>C: queue admitted records in a bounded FIFO
+    C->>C: form a batch on batch_max_size or linger
+
+    Note over H,D: Delivery, one batch at a time
+    C->>S: deliver(batch)
+    S->>S: encode, set aside records the destination cannot accept, listed by record_id
+    loop retries, if the sink makes them (bounded, with backoff)
+        S->>D: send the batch with the sink's credentials
+        Note over D: de-duplicates on record_id,<br/>so a retry or replay is safe
+        D-->>S: per-record result
+    end
+    D->>D: store, and a conformant destination merges on (run_id, span_id)
+    S-->>C: BatchResult: ACCEPTED with rejected and unknown,<br/>RETRYABLE_FAILURE, PERMANENT_FAILURE or CLOSED
+    C->>C: settle each record as sent, dropped or unknown
+    C-->>H: on_delivered and on_failure callbacks, DeliveryStats
+
+    Note over H,D: Shutdown
+    H->>C: shutdown()
+    C->>S: close(), idempotent
 ```
 
 A sink implements two asynchronous operations, `deliver()` and `close()`, and answers each
