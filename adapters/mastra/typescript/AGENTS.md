@@ -9,9 +9,12 @@ covers changes to the package itself.
 ## What this is
 
 `adapters/mastra/typescript` is the `@openaudr/audr-adapter-mastra` npm package: a Mastra
-`ObservabilityExporter` that turns eligible ended `model_inference`, `rag_embedding`,
-`tool_call` and `mcp_tool_call` spans into attributed AUDR records for an
-`@openaudr/audr` `Client` the host application owns.
+`ObservabilityExporter` that turns ended `model_inference`, `rag_embedding`, `tool_call`
+and `mcp_tool_call` spans into attributed AUDR records for an `@openaudr/audr` `Client` the
+host application owns.
+
+Keep public exports covered by `tests/public-api.test.ts`. Examples must use mock models and
+run without credentials or network access.
 
 ## Rules
 
@@ -31,13 +34,13 @@ covers changes to the package itself.
    client; `flush()` delegates to `client.flush()`.
 6. Diagnostics go through `Diagnostics` with a `DiagnosticCode` and the fixed field set in
    `src/diagnostics.ts`. Add a code for every new diagnostic. Never log a record value, an id,
-   a model name, a tool name or an error message; error class names only.
+   a model name, a tool name or an error message; error class names only. A new code gets a
+   row in the diagnostics table of `docs/reference.md`.
 7. Write `requests: 1` for each model inference and embedding call. Never write `cost` or
    `totalTokens`. `input_tokens` excludes cache reads and writes; `output_tokens` excludes
    reasoning.
 8. A behaviour change updates its one home: `README.md` for installation, usage and
-   attribution, `docs/reference.md` for everything else. Neither repeats the other's
-   detail. A new diagnostic code gets a row in the diagnostics table of `docs/reference.md`.
+   attribution, `docs/reference.md` for everything else. Neither repeats the other.
 
 ## Toolchain
 
@@ -53,11 +56,11 @@ package:
   equal.
 
 ```bash
-make install     # npm ci
+make install     # install every TypeScript package from the root lockfile, then build the core
 make lint        # eslint, prettier --check and tsc --noEmit
 make test        # vitest with the 90% coverage gate
 make examples    # build, then run every example against dist/
-make isolation   # build, then publint --strict and attw
+make isolation   # build, publint --strict and attw, then tools/verify-npm-package.mjs
 make verify      # lint + test + examples + isolation
 ```
 

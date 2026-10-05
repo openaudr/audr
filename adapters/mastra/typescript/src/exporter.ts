@@ -63,9 +63,8 @@ export interface AudrExporterOptions {
 }
 
 /**
- * Mastra observability exporter that turns eligible ended `model_inference`,
- * `rag_embedding`, `tool_call` and `mcp_tool_call` spans into AUDR records for the host's
- * `client`.
+ * Mastra observability exporter that turns ended `model_inference`, `rag_embedding`,
+ * `tool_call` and `mcp_tool_call` spans into AUDR records for the host's `client`.
  */
 export class AudrExporter implements ObservabilityExporter {
   readonly name = 'audr';

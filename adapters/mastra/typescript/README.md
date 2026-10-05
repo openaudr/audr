@@ -3,8 +3,8 @@
 [![npm](https://img.shields.io/npm/v/@openaudr/audr-adapter-mastra?include_prereleases)](https://www.npmjs.com/package/@openaudr/audr-adapter-mastra)
 [![Node versions](https://img.shields.io/node/v/@openaudr/audr-adapter-mastra)](https://www.npmjs.com/package/@openaudr/audr-adapter-mastra)
 
-The **AUDR observability exporter** for [Mastra](https://mastra.ai) turns each eligible
-ended `model_inference`, `rag_embedding`, `tool_call` and `mcp_tool_call` span into one
+The **AUDR observability exporter** for [Mastra](https://mastra.ai) turns every provider
+model call, embedding call and tool call into one
 [AUDR](https://openaudr.dev/spec/v1.0.0/) record for an `@openaudr/audr` `Client` your
 application owns. It reads usage, identifiers and timings only: never prompts, completions,
 tool inputs, tool outputs or error messages.
@@ -76,12 +76,12 @@ Shut down Mastra first, then the client. A runnable version with a mock model an
 
 > [!IMPORTANT]
 > Metered spans reach the exporter only when Mastra observability emits them. Keep
-> `sampling.type` at `always`, set `includeInternalSpans: true` when internal model calls
-> are billable, and leave `model_inference`, `rag_embedding`, `tool_call` and
-> `mcp_tool_call` out of `excludeSpanTypes`. The `agent_run` and `workflow_run` spans used
-> to recognize delegation wrappers must also remain visible. The exporter warns with
-> `CONFIG_DROPS_SPANS` at registration when these settings can omit metered spans or
-> delegation markers.
+> `sampling.type` at `always`, set `includeInternalSpans: true` so that model calls made by
+> structured output and built-in processors are metered, and leave `model_inference`,
+> `rag_embedding`, `tool_call` and `mcp_tool_call` out of `excludeSpanTypes`. Keep
+> `agent_run` and `workflow_run` there too: without them, a call from one agent to a
+> sub-agent or workflow is also recorded as a tool execution. The exporter warns with
+> `CONFIG_DROPS_SPANS` at registration when any of these settings applies.
 
 ## Attribution
 
@@ -144,24 +144,22 @@ await client.shutdown();
 
 | Mastra span (`span_ended`) | `resource.operation` | `usage` |
 | --- | --- | --- |
-| `model_inference` | `generation` | `llm` tokens and `requests: 1` |
-| `rag_embedding` | `embedding` | `llm` input tokens and `requests: 1` |
+| `model_inference`, one per provider model call | `generation` | `llm` tokens, `requests: 1` |
+| `rag_embedding` | `embedding` | `llm: { input_tokens?, requests: 1 }` |
 | `tool_call`, `mcp_tool_call` | `tool_execution` | `tool: { type: 'invocation', call_count: 1 }` |
 
-Each `model_inference` is one provider request, including a failed request that reports no
-token counters. `model_generation`, `model_step` and `model_chunk` are not metered. Cache
-and reasoning tokens are counted apart from `input_tokens` and `output_tokens`, and a
+Cache and reasoning tokens are counted apart from `input_tokens` and `output_tokens`, and a
 counter Mastra did not report is omitted rather than zeroed. Cost is never written.
 
-Not metered: provider-executed and client-side tools that Mastra does not surface as
-`tool_call` or `mcp_tool_call`, delegation tools with a direct `agent_run` or `workflow_run`
-child, Mastra internal spans unless `includeInternalSpans` is set, and spans that sampling
-or filters drop.
+Not metered: the tool call through which an agent invokes a sub-agent or a workflow, whose
+own calls are metered; Mastra internal model calls unless `includeInternalSpans` is set;
+provider-executed tools; and spans that sampling or filters drop.
 
 ## Documentation
 
 - [Reference](https://github.com/openaudr/audr/blob/main/adapters/mastra/typescript/docs/reference.md): options, record fields and identifiers, provider slugs, diagnostics, operational bounds
 - [Examples](https://github.com/openaudr/audr/tree/main/adapters/mastra/typescript/examples): runnable on mock models, without network access
+- [Changelog](https://github.com/openaudr/audr/blob/main/adapters/mastra/typescript/CHANGELOG.md)
 - [AUDR specification](https://openaudr.dev/spec/v1.0.0/), which defines every record field
 
 ## License
