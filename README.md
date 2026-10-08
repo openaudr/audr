@@ -39,6 +39,52 @@ attribution that the records join.
 }
 ```
 
+## How a run flows across components
+
+Each participating layer — harness, router, provider — may emit its own AUDR
+record for an operation, each with its own `record_id`. In this example, the
+harness creates a `run_id` for the run and a distinct `span_id` for each
+operation, passing both along the request path. The sink deduplicates replayed
+records by `record_id` and joins records from different components that share
+`(run.run_id, run.span_id)`; separate operations remain separate. Pricing the
+joined usage happens downstream and is outside AUDR. See
+[SPEC.md §1.2](spec/SPEC.md#12-architecture),
+[§1.4](spec/SPEC.md#14-record-processing-model), and the
+[Merge key definition](spec/SPEC.md#2-definitions) for the normative
+description.
+
+```mermaid
+sequenceDiagram
+    participant App as Application
+    participant Harness as Agent Harness
+    participant Router as Router / AI Gateway
+    participant Provider as Model Provider
+    participant Sink as Sink
+    participant Rating as Rating<br/>(outside AUDR)
+
+    App->>Harness: Start an agent run
+    Harness->>Harness: Create run_id
+
+    Note over Harness,Provider: span model-call-1: a model call
+    Harness->>Router: Model request<br/>with run_id and span_id
+    Router->>Provider: Forward request<br/>with the same IDs
+    Provider-->>Router: Result and usage
+    opt Provider also reports
+        Provider--)Sink: AUDR record (provider's view)
+    end
+    Router--)Sink: AUDR record (router's view)
+    Router-->>Harness: Result / tool request
+    Harness--)Sink: AUDR record (harness's view)
+
+    Note over Harness: span tool-call-2<br/>A tool in the same run
+    Harness->>Harness: Run tool<br/>parent_span_id: model-call-1
+    Harness--)Sink: AUDR record (tool usage)
+    Harness-->>App: Response
+
+    Note over Sink: Deduplicate replays by record_id<br/>Join records sharing<br/>run_id and span_id
+    Sink->>Rating: Joined usage, ready to price
+```
+
 ## Start here
 
 | Path | Contains |
