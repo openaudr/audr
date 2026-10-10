@@ -33,12 +33,12 @@ dependencies = [
 # The runtime is optional so the adapter can be installed and type-checked
 # without it; activation raises if it is missing or out of range.
 runtime = [
-  "nemo-relay>=0.8,<0.9",
+  "nemo-relay>=0.8,<0.10",
 ]
 # Dependencies used by the runnable network example.
 example = [
   "httpx>=0.27,<1",
-  "nemo-relay>=0.8,<0.9",
+  "nemo-relay>=0.8,<0.10",
 ]
 
 [project.urls]

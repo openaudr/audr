@@ -42,7 +42,7 @@ dev = [
   "mypy>=1.13",
   # Pinned exactly: the generator's output is committed, so a float here would show up as a
   # spurious `make models-check` failure rather than as a dependency bump.
-  "datamodel-code-generator==0.82.0",
+  "datamodel-code-generator==0.83.0",
   "jsonschema>=4.23",
   "types-jsonschema>=4.26",
 ]
