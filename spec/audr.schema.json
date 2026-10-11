@@ -305,6 +305,12 @@
           "type": "string",
           "description": "Subscription associated with the paying account for this usage record."
         },
+        "feature_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Host-defined identifier of the product feature the operation served. Opaque to AUDR; a sink or rating component uses it to select the meter, metric or price the usage is billed against. One operation has one feature.",
+          "x_summary": "Host-defined identifier of the product feature the operation served. Opaque to AUDR; a sink or rating component uses it to select the meter, metric or price the usage is billed against. One operation has one feature."
+        },
         "labels": {
           "type": "object",
           "maxProperties": 20,

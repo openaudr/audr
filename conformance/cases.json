@@ -88,6 +88,12 @@
       "note": "Free-form non-billable label dimensions."
     },
     {
+      "file": "valid/feature-id.json",
+      "expect": "valid",
+      "rule": "3.4.9",
+      "note": "feature_id is an optional host-defined meter selector."
+    },
+    {
       "file": "valid/provider-hosted-tool.json",
       "expect": "valid",
       "rule": "3.4.7",
@@ -230,6 +236,12 @@
       "expect": "invalid",
       "rule": "3.4.9",
       "note": "labels is capped at 20 pairs."
+    },
+    {
+      "file": "invalid/empty-feature-id.json",
+      "expect": "invalid",
+      "rule": "3.4.9",
+      "note": "feature_id must not be empty when present."
     }
   ]
 }

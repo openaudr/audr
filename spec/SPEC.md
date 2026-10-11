@@ -406,7 +406,7 @@ hierarchy.
 #### 3.4.9 `attribution`
 
 The REQUIRED business `attribution` object carries environment, user, account,
-subscription, and label dimensions.
+subscription, feature, and label dimensions.
 
 ##### 3.4.9.1 JSON Example
 
@@ -416,6 +416,7 @@ subscription, and label dimensions.
   "user_id": "user-7",
   "account_id": "account-42",
   "subscription_id": "subscription-9",
+  "feature_id": "support-chat",
   "labels": {
     "team": "platform"
   }
@@ -430,6 +431,7 @@ subscription, and label dimensions.
 | `attribution.user_id` | string | Optional | Pseudonymous identity of the triggering user; never an email or name. It MUST NOT be used by rating; account_id MUST be used for rating. |
 | `attribution.account_id` | string (min 1 chars) | Conditional | The account that pays the bill. Rating may aggregate usage by this account. Required for production traffic; optional otherwise. |
 | `attribution.subscription_id` | string | Optional | Subscription associated with the paying account for this usage record. |
+| `attribution.feature_id` | string (min 1 chars) | Optional | Host-defined identifier of the product feature the operation served. Opaque to AUDR; a sink or rating component uses it to select the meter, metric or price the usage is billed against. One operation has one feature. |
 | `attribution.labels` | object (≤ 20 key-value pairs) | Optional | Up to 20 free-form dimensions for non-billable metadata. Labels MUST NOT contain PII. |
 
 <a id="usage"></a>
