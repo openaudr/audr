@@ -124,7 +124,7 @@
             "azure-openai",
             "self-hosted"
           ],
-          "description": "Canonical lowercase provider slug. For tool operations, identify the executing vendor or platform; use self-hosted for locally run tools."
+          "description": "Canonical lowercase provider slug. For tool operations, identify the executing vendor or platform: self-hosted for a tool executed by the host application or a process it launched, otherwise the slug of the operator, supplied by the host for a remote source."
         },
         "type": {
           "enum": [
@@ -143,6 +143,15 @@
             "web_search"
           ],
           "description": "Verbatim provider model identifier for models, or stable logical tool/backend identifier for tools. Do not normalize model names or use URLs and versioned function symbols for tools."
+        },
+        "namespace": {
+          "type": "string",
+          "minLength": 1,
+          "examples": [
+            "tavily-remote-mcp",
+            "crm-toolkit"
+          ],
+          "description": "Host-configured name of the source within the provider that defines a tool, such as a toolkit, an action group or an MCP server configuration key. It never names the provider itself. Permitted only for tool operations; resource.name is unique within it. It MUST NOT be a URL, a network address or a credential."
         },
         "operation": {
           "enum": [
@@ -591,6 +600,11 @@
               "type": {
                 "const": "model"
               }
+            },
+            "not": {
+              "required": [
+                "namespace"
+              ]
             }
           },
           "usage": {

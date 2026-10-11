@@ -94,6 +94,12 @@
       "note": "A provider-executed tool names the executing vendor."
     },
     {
+      "file": "valid/namespaced-tool.json",
+      "expect": "valid",
+      "rule": "3.4.7",
+      "note": "A tool from a named source carries that source in resource.namespace."
+    },
+    {
       "file": "invalid/missing-spec-version.json",
       "expect": "invalid",
       "rule": "3.4.1",
@@ -158,6 +164,12 @@
       "expect": "invalid",
       "rule": "3.5",
       "note": "cost.llm is absent on tool operations."
+    },
+    {
+      "file": "invalid/model-op-with-namespace.json",
+      "expect": "invalid",
+      "rule": "3.5",
+      "note": "resource.namespace is absent on model operations."
     },
     {
       "file": "invalid/unknown-operation.json",

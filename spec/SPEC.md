@@ -339,6 +339,14 @@ duration observations.
 The REQUIRED `resource` object identifies the consumed model or tool and the
 operation performed.
 
+A tool identity has up to three levels. `resource.provider` names the vendor or
+platform that executes the tool: `self-hosted` for a tool executed by the host
+application or a process it launched, otherwise the operator's slug, which the host
+supplies for a remote source. `resource.namespace` names the source within that
+provider that defines the tool, such as a toolkit, an action group or an MCP server
+configuration key. `resource.name` is the bare tool name, unique within the
+namespace.
+
 ##### 3.4.7.1 JSON Example
 
 ```json
@@ -357,9 +365,10 @@ operation performed.
 
 | Field Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `resource.provider` | string (pattern) | Required | Canonical lowercase provider slug. For tool operations, identify the executing vendor or platform; use self-hosted for locally run tools. |
+| `resource.provider` | string (pattern) | Required | Canonical lowercase provider slug. For tool operations, identify the executing vendor or platform: self-hosted for a tool executed by the host application or a process it launched, otherwise the slug of the operator, supplied by the host for a remote source. |
 | `resource.type` | enum (`model`, `tool`) | Required | Named resource kind: model for model operations or tool for tool_execution and retrieval. resource.operation selects the usage block. |
 | `resource.name` | string (min 1 chars) | Required | Verbatim provider model identifier for models, or stable logical tool/backend identifier for tools. Do not normalize model names or use URLs and versioned function symbols for tools. |
+| `resource.namespace` | string (min 1 chars) | Optional | Host-configured name of the source within the provider that defines a tool, such as a toolkit, an action group or an MCP server configuration key. It never names the provider itself. Permitted only for tool operations; resource.name is unique within it. It MUST NOT be a URL, a network address or a credential. |
 | `resource.operation` | enum (`generation`, `embedding`, `reranking`, `tool_execution`, `retrieval`) | Required | Operation class that selects resource.type and usage: model operations use model with usage.llm; tool_execution and retrieval use tool with usage.tool. |
 | `resource.modality` | enum (`text`, `image`, `audio`, `multimodal`) | Conditional | The modality of the task or operation. This field is required when resource.type is model. |
 | `resource.key_name` | string | Optional | Credential label from the gateway registry. It MUST contain no key material, prefix, hash, or other secret substring. |
@@ -571,6 +580,8 @@ sub-objects. These constraints are enforced by the schema's root `allOf`.
 | Model operations (`generation`, `embedding`, `reranking`) | `model` | `usage.llm` present; `usage.tool` absent | `cost.llm` MAY be present; `cost.tool` absent |
 | Tool operations (`tool_execution`, `retrieval`) | `tool` | `usage.tool` present; `usage.llm` absent | `cost.tool` MAY be present; `cost.llm` absent |
 
+`resource.namespace` is permitted only on tool operations.
+
 #### 3.5.1 JSON Examples
 
 ```json
@@ -595,6 +606,7 @@ sub-objects. These constraints are enforced by the schema's root `allOf`.
   "resource": {
     "provider": "self-hosted",
     "type": "tool",
+    "namespace": "crm-toolkit",
     "name": "search_tickets",
     "operation": "retrieval"
   },
