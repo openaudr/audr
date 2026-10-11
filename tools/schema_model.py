@@ -2,14 +2,14 @@
 
 The schema is the single source of truth. Everything the specification says
 about a field -- its type expression, whether it is required, and the one-line
-table summary -- is derived from or stored on the schema node itself.
+table summary -- is derived from or stored on the schema node itself. The table
+summary is the first paragraph of the node's `description`.
 
 Two annotation keywords carry documentation that JSON Schema has no keyword for.
 Both are ignored by validators and are namespaced so they can never collide with
 a future JSON Schema keyword:
 
-    x_summary       one-line description used in the field tables. The schema's
-                    own `description` stays normative and long-form.
+    x_title         overrides the derived Type column with a display name.
     x_requirement   overrides the derived Required/Optional when a field is
                     required by a rule the `required` array cannot express
                     (a conditional in allOf, or an invariant the sink enforces).
@@ -23,6 +23,8 @@ from pathlib import Path
 EN_DASH = "–"
 GE = "≥"
 LE = "≤"
+# A schema `description` is plain text, so the field tables add the reference link.
+RFC_3339_LINK = "[RFC 3339](https://www.rfc-editor.org/rfc/rfc3339)"
 
 
 def load(path: Path) -> dict:
@@ -82,9 +84,9 @@ def requirement(name: str, node: dict, parent: dict) -> str:
 
 
 def summary(node: dict) -> str:
-    """The one-line table description."""
-    text = node.get("x_summary") or node.get("description", "")
-    return " ".join(text.split("\n\n")[0].split())
+    """The one-line table description, taken from the node's `description`."""
+    text = " ".join(node.get("description", "").split("\n\n")[0].split())
+    return text.replace("RFC 3339", RFC_3339_LINK)
 
 
 def fields(root: dict, pointer: str, prefix: str = "") -> list[dict]:

@@ -58,7 +58,7 @@ def main() -> int:
             failures.append((case, detail))
         if args.verbose or not ok:
             mark = "ok  " if ok else "FAIL"
-            print(f"  {mark} [{case['rule']:>5}] {case['file']}")
+            print(f"  {mark} [{case['rule']:>6}] {case['file']}")
 
     total = len(manifest["cases"])
     if failures:

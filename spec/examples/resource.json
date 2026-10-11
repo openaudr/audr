@@ -3,6 +3,7 @@
   "type": "model",
   "name": "claude-sonnet-4-20250514",
   "operation": "generation",
+  "modality": "text",
   "region": "us-east-1",
   "deployment": "AWS"
 }

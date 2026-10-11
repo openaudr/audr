@@ -1,1 +1,9 @@
-{"total_cost": 0.012, "currency": "USD", "tool": {"type": "code_execution", "call_cost": 0.002, "sandbox_cost": 0.01}}
+{
+  "total_cost": 0.012,
+  "currency": "USD",
+  "tool": {
+    "type": "code_execution",
+    "call_cost": 0.002,
+    "sandbox_cost": 0.01
+  }
+}

@@ -1,5 +1,5 @@
 JSON Schema validation does not enforce every AUDR invariant. Conformant sinks
-are responsible for the following requirements:
+and conformance tooling are responsible for the following requirements:
 
 - A record missing `attribution.environment` MUST be ignored and MUST NOT be
   rated.

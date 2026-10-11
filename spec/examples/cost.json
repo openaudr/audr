@@ -1,1 +1,9 @@
-{"total_cost": 0.0084, "currency": "USD", "llm": {"total_token_cost": 0.0084, "input_token_cost": 0.0036, "output_token_cost": 0.0048}}
+{
+  "total_cost": 0.0084,
+  "currency": "USD",
+  "llm": {
+    "total_token_cost": 0.0084,
+    "input_token_cost": 0.0036,
+    "output_token_cost": 0.0048
+  }
+}

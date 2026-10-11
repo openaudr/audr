@@ -1,1 +1,7 @@
-{"tool": {"type": "code_execution", "call_count": 1, "sandbox_time": 4250}}
+{
+  "tool": {
+    "type": "code_execution",
+    "call_count": 1,
+    "sandbox_time": 4250
+  }
+}

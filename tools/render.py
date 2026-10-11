@@ -149,8 +149,10 @@ def render_markdown(base: Path, outline: dict, schema: dict) -> str:
                 p.append("")
 
     for sec in outline["sections"]:
+        h = heading(sec["number"])
+        sub_h = h + "#"
         p.extend(anchor(sec.get("id")))
-        p.append(f"## {sec['number']} {heading_text(sec)}")
+        p.append(f"{h} {sec['number']} {heading_text(sec)}")
         p.append("")
         if sec.get("heading_only"):
             continue
@@ -160,11 +162,15 @@ def render_markdown(base: Path, outline: dict, schema: dict) -> str:
             p.append("")
         n = 1
         if sec.get("example"):
-            p.append(f"### {sec['number']}.{n} JSON Example")
+            p.append(f"{sub_h} {sec['number']}.{n} JSON Example")
             p.append("")
             p.append("```json")
             p.append(read_example(base, sec["example"]))
             p.append("```")
+            p.append("")
+            n += 1
+        if sec.get("examples"):
+            p.append(f"{sub_h} {sec['number']}.{n} JSON Examples")
             p.append("")
             n += 1
         for ex in sec.get("examples", []):
@@ -173,12 +179,12 @@ def render_markdown(base: Path, outline: dict, schema: dict) -> str:
             p.append("```")
             p.append("")
         if sec.get("table"):
-            p.append(f"### {sec['number']}.{n} Field Descriptions")
+            p.append(f"{sub_h} {sec['number']}.{n} Field Descriptions")
             p.append("")
             p.append(md_table(table_rows(schema, sec["table"])))
             p.append("")
         for sub in sec.get("subtables", []):
-            p.append(f"### {sub['number']} {sub['title']}")
+            p.append(f"{sub_h} {sub['number']} {sub['title']}")
             p.append("")
             if sub.get("example"):
                 p.append("```json")
@@ -205,9 +211,14 @@ def anchor(ident: str | None) -> list[str]:
     return [f'<a id="{ident}"></a>', ""] if ident else []
 
 
+def heading(number: str) -> str:
+    """Markdown heading marks for a section number: `3` is `##`, `3.4.1` is `####`."""
+    return "#" * min(6, number.count(".") + 2)
+
+
 def heading_text(sec: dict) -> str:
     if sec.get("code", True) and sec["title"].islower():
-        return f"`{sec['title']}` Object"
+        return f"`{sec['title']}`"
     return sec["title"]
 
 

@@ -122,7 +122,7 @@ execution, file access, retrieval, database queries, and API calls.
 
 <a id="format"></a>
 
-## 3.1 Format
+### 3.1 Format
 
 An AUDR record is represented as a JSON object. Property names are
 case-sensitive. Objects use fixed fields unless a patterned `x_*` extension is
@@ -130,17 +130,17 @@ explicitly defined. All other additional properties are invalid.
 
 <a id="conformance"></a>
 
-## 3.2 Conformance
+### 3.2 Conformance
 
 A conformant record MUST contain all top-level required properties and MUST
-satisfy the cross-field operation constraints in [section 3.13](#313-cross-field-operation-constraints).
+satisfy the cross-field operation constraints in [section 3.5](#35-cross-field-operation-constraints).
 
 <a id="validation-boundaries"></a>
 
-## 3.3 Validation Boundaries
+### 3.3 Validation Boundaries
 
 JSON Schema validation does not enforce every AUDR invariant. Conformant sinks
-are responsible for the following requirements:
+and conformance tooling are responsible for the following requirements:
 
 - A record missing `attribution.environment` MUST be ignored and MUST NOT be
   rated.
@@ -152,13 +152,19 @@ are responsible for the following requirements:
 - A merge key MUST identify one metered operation.
 - A correction MUST use the same `emitter.component` as the corrected record.
 
+<a id="schema"></a>
+
+### 3.4 Schema
+
+The following sections define the AUDR object and each of its fields in schema order.
+
 <a id="audr-record"></a>
 
-## 3.4 AUDR Record Object
+#### 3.4.1 AUDR Object
 
 This is the root document object for the AUDR specification.
 
-### 3.4.1 JSON Example
+##### 3.4.1.1 JSON Example
 
 ```json
 {
@@ -199,7 +205,7 @@ This is the root document object for the AUDR specification.
 }
 ```
 
-### 3.4.2 Field Descriptions
+##### 3.4.1.2 Field Descriptions
 
 | Field Name | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -214,42 +220,87 @@ This is the root document object for the AUDR specification.
 | `usage` | Usage Object | Required | Raw, non-monetary counters with exactly one non-empty llm or tool block selected by resource.operation. An absent counter means unreported or inapplicable; zero means measured as zero and MUST NOT be inferred from absence. |
 | `cost` | Cost Object | Optional | Provider- or router-asserted cost that rating MAY use or ignore according to its billing configuration. Components are gross, total_cost is net, and the single cost sub-block must match usage; rating MAY check consistency but MUST NOT overwrite the total. |
 
-<a id="identity"></a>
+<a id="spec-version"></a>
 
-## 3.5 Record Identity
+#### 3.4.2 `spec_version`
 
-The REQUIRED `spec_version` and `record_id` properties declare schema version
-and record identity. The OPTIONAL `corrects` property identifies the earlier
-record fully restated by a correction.
+The REQUIRED `spec_version` field declares the AUDR schema version the record
+conforms to.
 
-### 3.5.1 JSON Example
+##### 3.4.2.1 JSON Example
 
 ```json
-{"spec_version": "1.0.0", "record_id": "01K4N8D2J4P7Q9R3S6T8V1W5XY"}
+{
+  "spec_version": "1.0.0"
+}
 ```
 
-### 3.5.2 Field Descriptions
+##### 3.4.2.2 Field Descriptions
 
 | Field Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `spec_version` | string (pattern) | Required | AUDR schema version, constrained here to 1.0.x. Consumers MUST reject unsupported major versions. |
+
+<a id="record-id"></a>
+
+#### 3.4.3 `record_id`
+
+The REQUIRED `record_id` field is the idempotency key that uniquely identifies
+this emitted record.
+
+##### 3.4.3.1 JSON Example
+
+```json
+{
+  "record_id": "01K4N8D2J4P7Q9R3S6T8V1W5XY"
+}
+```
+
+##### 3.4.3.2 Field Descriptions
+
+| Field Name | Type | Required | Description |
+| --- | --- | --- | --- |
 | `record_id` | string (8–64 chars) | Required | ULID or UUIDv7 idempotency key, unique to each emitted record rather than each logical event. Records from different components use distinct IDs and are merged, not deduplicated. |
+
+<a id="corrects"></a>
+
+#### 3.4.4 `corrects`
+
+The OPTIONAL `corrects` field identifies the earlier record that this record
+fully restates.
+
+##### 3.4.4.1 JSON Example
+
+```json
+{
+  "corrects": "01K4N8D2J4P7Q9R3S6T8V1W5XY"
+}
+```
+
+##### 3.4.4.2 Field Descriptions
+
+| Field Name | Type | Required | Description |
+| --- | --- | --- | --- |
 | `corrects` | string (8–64 chars) | Optional | Identifies one earlier record fully restated by this correction. The correction MUST contain full state, use a fresh record_id, and come from the same emitter.component; all-zero usage represents a void. |
 
 <a id="emitter"></a>
 
-## 3.6 `emitter` Object
+#### 3.4.5 `emitter`
 
 The REQUIRED `emitter` object identifies the software component that wrote the
 record.
 
-### 3.6.1 JSON Example
+##### 3.4.5.1 JSON Example
 
 ```json
-{"component": "router", "name": "@audr/openrouter", "version": "0.5.1"}
+{
+  "component": "router",
+  "name": "@audr/openrouter",
+  "version": "0.5.1"
+}
 ```
 
-### 3.6.2 Field Descriptions
+##### 3.4.5.2 Field Descriptions
 
 | Field Name | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -259,18 +310,21 @@ record.
 
 <a id="timing"></a>
 
-## 3.7 `timing` Object
+#### 3.4.6 `timing`
 
 The REQUIRED `timing` object records event completion and optional ingest and
 duration observations.
 
-### 3.7.1 JSON Example
+##### 3.4.6.1 JSON Example
 
 ```json
-{"event_time": "2026-09-08T12:00:00.000Z", "duration_ms": 842}
+{
+  "event_time": "2026-09-08T12:00:00.000Z",
+  "duration_ms": 842
+}
 ```
 
-### 3.7.2 Field Descriptions
+##### 3.4.6.2 Field Descriptions
 
 | Field Name | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -280,12 +334,12 @@ duration observations.
 
 <a id="resource"></a>
 
-## 3.8 `resource` Object
+#### 3.4.7 `resource`
 
 The REQUIRED `resource` object identifies the consumed model or tool and the
 operation performed.
 
-### 3.8.1 JSON Example
+##### 3.4.7.1 JSON Example
 
 ```json
 {
@@ -293,12 +347,13 @@ operation performed.
   "type": "model",
   "name": "claude-sonnet-4-20250514",
   "operation": "generation",
+  "modality": "text",
   "region": "us-east-1",
   "deployment": "AWS"
 }
 ```
 
-### 3.8.2 Field Descriptions
+##### 3.4.7.2 Field Descriptions
 
 | Field Name | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -313,12 +368,12 @@ operation performed.
 
 <a id="run"></a>
 
-## 3.9 `run` Object
+#### 3.4.8 `run`
 
 The REQUIRED `run` object associates one metered operation with a run and span
 hierarchy.
 
-### 3.9.1 JSON Example
+##### 3.4.8.1 JSON Example
 
 ```json
 {
@@ -331,7 +386,7 @@ hierarchy.
 }
 ```
 
-### 3.9.2 Field Descriptions
+##### 3.4.8.2 Field Descriptions
 
 | Field Name | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -348,12 +403,12 @@ hierarchy.
 
 <a id="attribution"></a>
 
-## 3.10 `attribution` Object
+#### 3.4.9 `attribution`
 
 The REQUIRED business `attribution` object carries environment, user, account,
 subscription, and label dimensions.
 
-### 3.10.1 JSON Example
+##### 3.4.9.1 JSON Example
 
 ```json
 {
@@ -367,7 +422,7 @@ subscription, and label dimensions.
 }
 ```
 
-### 3.10.2 Field Descriptions
+##### 3.4.9.2 Field Descriptions
 
 | Field Name | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -379,26 +434,32 @@ subscription, and label dimensions.
 
 <a id="usage"></a>
 
-## 3.11 `usage` Object
+#### 3.4.10 `usage`
 
 The REQUIRED `usage` object contains raw, non-monetary counters. Exactly one
 non-empty sub-object MUST be present: `llm` for model operations or `tool` for
 tool execution and retrieval.
 
-### 3.11.1 JSON Example
+##### 3.4.10.1 JSON Example
 
 ```json
-{"llm": {"input_tokens": 1200, "output_tokens": 300, "requests": 1}}
+{
+  "llm": {
+    "input_tokens": 1200,
+    "output_tokens": 300,
+    "requests": 1
+  }
+}
 ```
 
-### 3.11.2 Field Descriptions
+##### 3.4.10.2 Field Descriptions
 
 | Field Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `usage.llm` | object | Conditional | Non-empty model-call counters. A harness may emit counters read from the provider response. |
 | `usage.tool` | object | Conditional | Non-empty counters reported by the component that executed the tool: harness for caller-held contracts, router for provider-executed tools. |
 
-### 3.11.3 `usage.llm` Field Descriptions
+##### 3.4.10.3 `usage.llm` Field Descriptions
 
 | Field Name | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -413,10 +474,16 @@ tool execution and retrieval.
 | `usage.llm.audio_output_seconds` | number ≥ 0 | Optional | Seconds of audio generated. |
 | `usage.llm.x_*` | integer \| number | Optional | Non-negative provider counter named x_&lt;provider&gt;_&lt;name&gt;. |
 
-### 3.11.4 `usage.tool` Field Descriptions
+##### 3.4.10.4 `usage.tool` Field Descriptions
 
 ```json
-{"tool": {"type": "code_execution", "call_count": 1, "sandbox_time": 4250}}
+{
+  "tool": {
+    "type": "code_execution",
+    "call_count": 1,
+    "sandbox_time": 4250
+  }
+}
 ```
 
 | Field Name | Type | Required | Description |
@@ -428,19 +495,27 @@ tool execution and retrieval.
 
 <a id="cost"></a>
 
-## 3.12 `cost` Object
+#### 3.4.11 `cost`
 
 The OPTIONAL `cost` object records an asserted event cost. When present, it MUST
 contain `total_cost` and `currency`. A rating component MAY use or ignore this
 assertion according to its own billing configuration.
 
-### 3.12.1 JSON Example
+##### 3.4.11.1 JSON Example
 
 ```json
-{"total_cost": 0.0084, "currency": "USD", "llm": {"total_token_cost": 0.0084, "input_token_cost": 0.0036, "output_token_cost": 0.0048}}
+{
+  "total_cost": 0.0084,
+  "currency": "USD",
+  "llm": {
+    "total_token_cost": 0.0084,
+    "input_token_cost": 0.0036,
+    "output_token_cost": 0.0048
+  }
+}
 ```
 
-### 3.12.2 Field Descriptions
+##### 3.4.11.2 Field Descriptions
 
 | Field Name | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -452,7 +527,7 @@ assertion according to its own billing configuration.
 | `cost.llm` | object | Conditional | The gross cost of the model operation calls. The breakdown is similar to usage.llm and is present only for model operations. |
 | `cost.tool` | object | Conditional | The gross cost of the tool execution calls. The breakdown is similar to usage.tool and is present only for tool_execution and retrieval. |
 
-### 3.12.3 `cost.llm` Field Descriptions
+##### 3.4.11.3 `cost.llm` Field Descriptions
 
 | Field Name | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -463,10 +538,18 @@ assertion according to its own billing configuration.
 | `cost.llm.cache_write_cost` | number ≥ 0 | Optional | Prompt-cache write cost. |
 | `cost.llm.reasoning_cost` | number ≥ 0 | Optional | Reasoning-token cost. |
 
-### 3.12.4 `cost.tool` Field Descriptions
+##### 3.4.11.4 `cost.tool` Field Descriptions
 
 ```json
-{"total_cost": 0.012, "currency": "USD", "tool": {"type": "code_execution", "call_cost": 0.002, "sandbox_cost": 0.01}}
+{
+  "total_cost": 0.012,
+  "currency": "USD",
+  "tool": {
+    "type": "code_execution",
+    "call_cost": 0.002,
+    "sandbox_cost": 0.01
+  }
+}
 ```
 
 | Field Name | Type | Required | Description |
@@ -478,7 +561,7 @@ assertion according to its own billing configuration.
 
 <a id="cross-field"></a>
 
-## 3.13 Cross-Field Operation Constraints
+### 3.5 Cross-Field Operation Constraints
 
 `resource.operation` determines the required `resource.type`, `usage` and `cost`
 sub-objects. These constraints are enforced by the schema's root `allOf`.
@@ -487,6 +570,8 @@ sub-objects. These constraints are enforced by the schema's root `allOf`.
 | --- | --- | --- | --- |
 | Model operations (`generation`, `embedding`, `reranking`) | `model` | `usage.llm` present; `usage.tool` absent | `cost.llm` MAY be present; `cost.tool` absent |
 | Tool operations (`tool_execution`, `retrieval`) | `tool` | `usage.tool` present; `usage.llm` absent | `cost.tool` MAY be present; `cost.llm` absent |
+
+#### 3.5.1 JSON Examples
 
 ```json
 {

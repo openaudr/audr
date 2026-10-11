@@ -13,7 +13,8 @@
     "provider": "anthropic",
     "type": "tool",
     "name": "claude-sonnet-4-20250514",
-    "operation": "generation"
+    "operation": "generation",
+    "modality": "text"
   },
   "run": {
     "run_id": "01K4N8B0M2C5F7H9J1L3N6P8QR",

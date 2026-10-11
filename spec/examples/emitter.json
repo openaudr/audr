@@ -1,1 +1,5 @@
-{"component": "router", "name": "@audr/openrouter", "version": "0.5.1"}
+{
+  "component": "router",
+  "name": "@audr/openrouter",
+  "version": "0.5.1"
+}

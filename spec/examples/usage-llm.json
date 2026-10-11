@@ -1,1 +1,7 @@
-{"llm": {"input_tokens": 1200, "output_tokens": 300, "requests": 1}}
+{
+  "llm": {
+    "input_tokens": 1200,
+    "output_tokens": 300,
+    "requests": 1
+  }
+}

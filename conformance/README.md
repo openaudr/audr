@@ -35,11 +35,11 @@ naming every case whose outcome disagreed with the manifest.
 | Rule | Covers |
 | --- | --- |
 | 3.1 | Closed objects; unspecified properties rejected |
-| 3.4–3.5 | Required properties, `spec_version` family, `record_id` bounds, corrections |
-| 3.6–3.10 | Per-object field constraints and closed sub-objects |
-| 3.11 | Usage counters, absent-vs-zero, `x_*` extension naming |
-| 3.12 | Cost components, currency format, required pairs |
-| 3.13 | Cross-field operation constraints |
+| 3.4.1–3.4.4 | Required properties, `spec_version` family, `record_id` bounds, corrections |
+| 3.4.5–3.4.9 | Per-object field constraints and closed sub-objects |
+| 3.4.10 | Usage counters, absent-vs-zero, `x_*` extension naming |
+| 3.4.11 | Cost components, currency format, required pairs |
+| 3.5 | Cross-field operation constraints |
 
 Two fixtures guard the schema's structure rather than a single field rule, and
 both must keep failing:

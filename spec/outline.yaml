@@ -44,9 +44,14 @@ sections:
     title: Validation Boundaries
     prose: prose/03-03-validation-boundaries.md
 
-  - id: audr-record
+  - id: schema
     number: "3.4"
-    title: AUDR Record Object
+    title: Schema
+    prose: prose/03-04-schema.md
+
+  - id: audr-record
+    number: "3.4.1"
+    title: AUDR Object
     code: false
     prose: prose/03-04-audr-record.md
     example: examples/record.json
@@ -54,20 +59,41 @@ sections:
     table:
       pointer: "#"
 
-  - id: identity
-    number: "3.5"
-    title: Record Identity
-    code: false
-    prose: prose/03-05-identity.md
-    example: examples/identity.json
+  - id: spec-version
+    number: "3.4.2"
+    title: spec_version
+    prose: prose/03-04-02-spec-version.md
+    example: examples/spec-version.json
     pointer: "#"
     mode: fragment
     table:
       pointer: "#"
-      only: [spec_version, record_id, corrects]
+      only: [spec_version]
+
+  - id: record-id
+    number: "3.4.3"
+    title: record_id
+    prose: prose/03-04-03-record-id.md
+    example: examples/record-id.json
+    pointer: "#"
+    mode: fragment
+    table:
+      pointer: "#"
+      only: [record_id]
+
+  - id: corrects
+    number: "3.4.4"
+    title: corrects
+    prose: prose/03-04-04-corrects.md
+    example: examples/corrects.json
+    pointer: "#"
+    mode: fragment
+    table:
+      pointer: "#"
+      only: [corrects]
 
   - id: emitter
-    number: "3.6"
+    number: "3.4.5"
     title: emitter
     prose: prose/03-06-emitter.md
     example: examples/emitter.json
@@ -77,7 +103,7 @@ sections:
       prefix: "emitter."
 
   - id: timing
-    number: "3.7"
+    number: "3.4.6"
     title: timing
     prose: prose/03-07-timing.md
     example: examples/timing.json
@@ -87,7 +113,7 @@ sections:
       prefix: "timing."
 
   - id: resource
-    number: "3.8"
+    number: "3.4.7"
     title: resource
     prose: prose/03-08-resource.md
     example: examples/resource.json
@@ -97,7 +123,7 @@ sections:
       prefix: "resource."
 
   - id: run
-    number: "3.9"
+    number: "3.4.8"
     title: run
     prose: prose/03-09-run.md
     example: examples/run.json
@@ -107,7 +133,7 @@ sections:
       prefix: "run."
 
   - id: attribution
-    number: "3.10"
+    number: "3.4.9"
     title: attribution
     prose: prose/03-10-attribution.md
     example: examples/attribution.json
@@ -117,7 +143,7 @@ sections:
       prefix: "attribution."
 
   - id: usage
-    number: "3.11"
+    number: "3.4.10"
     title: usage
     prose: prose/03-11-usage.md
     example: examples/usage-llm.json
@@ -126,11 +152,11 @@ sections:
       pointer: "#/properties/usage"
       prefix: "usage."
     subtables:
-      - number: "3.11.3"
+      - number: "3.4.10.3"
         title: "`usage.llm` Field Descriptions"
         pointer: "#/properties/usage/properties/llm"
         prefix: "usage.llm."
-      - number: "3.11.4"
+      - number: "3.4.10.4"
         title: "`usage.tool` Field Descriptions"
         pointer: "#/properties/usage/properties/tool"
         prefix: "usage.tool."
@@ -138,7 +164,7 @@ sections:
         example_pointer: "#/properties/usage"
 
   - id: cost
-    number: "3.12"
+    number: "3.4.11"
     title: cost
     prose: prose/03-12-cost.md
     example: examples/cost.json
@@ -148,11 +174,11 @@ sections:
       prefix: "cost."
       order: [total_cost, currency, original_cost, discount_amount, discount_percent, llm, tool]
     subtables:
-      - number: "3.12.3"
+      - number: "3.4.11.3"
         title: "`cost.llm` Field Descriptions"
         pointer: "#/properties/cost/properties/llm"
         prefix: "cost.llm."
-      - number: "3.12.4"
+      - number: "3.4.11.4"
         title: "`cost.tool` Field Descriptions"
         pointer: "#/properties/cost/properties/tool"
         prefix: "cost.tool."
@@ -160,7 +186,7 @@ sections:
         example_pointer: "#/properties/cost"
 
   - id: cross-field
-    number: "3.13"
+    number: "3.5"
     title: Cross-Field Operation Constraints
     prose: prose/03-13-cross-field.md
     examples:
