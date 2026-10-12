@@ -2,7 +2,7 @@
 
 # Agent Usage Detail Record (AUDR)
 
-**Technical Specification · Version 1.1.0-dev**
+**Technical Specification · Version 1.1.0**
 
 A JSON record format for agent cost monitoring and monetization.
 
@@ -11,7 +11,7 @@ A JSON record format for agent cost monitoring and monetization.
 ## Attribution
 
 This document is a technical specification of the Agent Usage Detail Record
-v1.1.0-dev JSON Schema. Its field semantics, constraints, and requirement language
+v1.1.0 JSON Schema. Its field semantics, constraints, and requirement language
 are derived from the AUDR schema.
 
 The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHOULD**, **SHOULD NOT**,
@@ -67,7 +67,7 @@ Each emitted record has an independent `record_id` for deduplication and
 correction processing. Downstream rating components MAY use or ignore the
 asserted `cost` object according to its own billing configuration.
 
-**Schema ID**: `https://openaudr.dev/spec/v1.1.0-dev/audr.schema.json`
+**Schema ID**: `https://openaudr.dev/spec/v1.1.0/audr.schema.json`
 
 **Root type**: JSON object
 
@@ -625,6 +625,6 @@ sub-objects. These constraints are enforced by the schema's root `allOf`.
 
 | Status | Schema dialect | Record unit | Content model |
 | --- | --- | --- | --- |
-| **Versioned schema**<br>This document describes AUDR version 1.1.0-dev. | **Draft 2020-12**<br>JSON Schema validation vocabulary. | **One operation**<br>Each record describes one metered event. | **Closed objects**<br>Unspecified properties are rejected except defined extensions. |
+| **Versioned schema**<br>This document describes AUDR version 1.1.0. | **Draft 2020-12**<br>JSON Schema validation vocabulary. | **One operation**<br>Each record describes one metered event. | **Closed objects**<br>Unspecified properties are rejected except defined extensions. |
 
-Agent Usage Detail Record · Specification v1.1.0-dev
+Agent Usage Detail Record · Specification v1.1.0
