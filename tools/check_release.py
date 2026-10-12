@@ -3,7 +3,9 @@
 A release tag ``<package-directory>/v<version>`` is valid only when the package declares
 that version and its ``CHANGELOG.md`` holds a dated section for it,
 ``## [<version>] - YYYY-MM-DD``. A TypeScript package declares its version in
-``package.json``; a Python package in the file named by ``[tool.hatch.version].path``.
+``package.json``; a Python package in the file named by ``[tool.hatch.version].path``;
+the ``spec`` tree in the ``spec_version`` example of ``audr.schema.json``, whose ``$id``
+must not carry the ``-dev`` draft suffix.
 
 Usage: ``python tools/check_release.py <package-dir> <version>``
 """
@@ -20,6 +22,12 @@ import tomllib
 
 def declared_version(package: pathlib.Path) -> tuple[str, str]:
     """The version the package declares, and the name of the file that declares it."""
+    schema_file = package / "audr.schema.json"
+    if schema_file.exists():
+        schema = json.loads(schema_file.read_text())
+        if schema["$id"].endswith("-dev/audr.schema.json"):
+            sys.exit(f"{schema_file.name}: $id still carries the -dev draft suffix")
+        return schema["properties"]["spec_version"]["examples"][0], schema_file.name
     package_json = package / "package.json"
     if package_json.exists():
         return json.loads(package_json.read_text())["version"], "package.json"

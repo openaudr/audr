@@ -56,7 +56,8 @@ identity and attribution that records from different systems join.
   [`CONTRIBUTING.md`](CONTRIBUTING.md#classes-of-change) defines which changes require an
   issue.
 - Record every user-visible change to a package under `[Unreleased]` in its
-  `CHANGELOG.md`.
+  `CHANGELOG.md`, and every change to the specification under `[Unreleased]` in
+  `spec/CHANGELOG.md`.
 
 ## Verification
 
