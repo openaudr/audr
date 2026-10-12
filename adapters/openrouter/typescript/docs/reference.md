@@ -55,13 +55,12 @@ invalid `maxWaitMs` leaves the lookup off.
 - **It delays the call.** The record is submitted after the lookup, and the facade's promise
   resolves after the record is submitted. For a stream, the terminal event is delivered
   after the lookup. The delay is at most `maxWaitMs` and is zero when router metadata names
-  the vendor. Choose a budget that the application can afford on every call when the
-  endpoint is unavailable.
+  the vendor.
 - **It does not change the timing.** `timing.event_time` and `timing.duration_ms` are taken
   when the primary call completes, before the lookup.
-- **What is retried.** OpenRouter publishes a generation's statistics shortly after the
-  call, so a `404` is expected at first. The adapter retries a `404`, `408`, `429`, any `5xx`
-  and a failure with no HTTP status, such as a network error. It stops at once on any other
+- **What is retried.** The adapter retries a `404`, which can precede the generation's
+  statistics, a `408`, `429`, any `5xx` and a failure with no HTTP status, such as a network
+  error. It stops at once on any other
   `4xx` (including authentication and payment failures), on a response the SDK could not
   validate, and on an invalid request.
 - **The attempt deadline.** Each attempt is cut off when the total budget ends.
@@ -76,10 +75,9 @@ invalid `maxWaitMs` leaves the lookup off.
   `resource.provider` `openrouter` (`PROVIDER_UNRESOLVED`). When only the BYOK cost is
   incomplete, the record is written without a cost (`BYOK_COST_INCOMPLETE`).
 
-With the default `maxWaitMs` of `0`, send `xOpenRouterMetadata: 'enabled'` on every Chat and
-Responses request: the vendor, and the BYOK status the router metadata carries, arrive on
-the result and no request is added. Embeddings never carry router metadata, so they are recorded as
-`openrouter` unless `mapResource` names a vendor or the lookup is enabled:
+With the default, send `xOpenRouterMetadata: 'enabled'` on every Chat and Responses
+request. Embeddings never carry router metadata, so they are recorded as `openrouter` unless
+`mapResource` names a vendor or the lookup is enabled:
 
 ```ts
 import { instrumentOpenRouter } from '@openaudr/audr-adapter-openrouter';
@@ -107,9 +105,8 @@ await openrouter.embeddings.generate({
 await client.shutdown();
 ```
 
-Router metadata is read from the `available` endpoint whose `selected` flag is set. A call
-replayed from OpenRouter's response cache is detected by the lookup alone, so a call whose
-metadata already names a vendor is attributed to that vendor.
+Router metadata is read from the `available` endpoint whose `selected` flag is set. A
+response-cache replay carries no router metadata; only the lookup names it as `openrouter`.
 
 ## Agent runs
 
@@ -244,11 +241,9 @@ includes cache reads and writes, and its completion (or output) count includes r
 | BYOK | `usage.cost` plus the provider's own charge, `usage.costDetails.upstreamInferenceCost` or, if the usage lacks it, the lookup's `upstreamInferenceCost` |
 | BYOK with either part unknown, or BYOK status unknown | None: the record is written without `cost`, and `BYOK_COST_INCOMPLETE` is logged |
 
-OpenRouter documents `usage.cost` as "cost in credits". Its credits are denominated in US
-dollars (one credit is one dollar: the base currency of OpenRouter's credit system is USD and
-every price in its API is in dollars), so the amount is written as `total_cost` without
-conversion. `usage.costDetails.upstreamInferenceCost` is the provider's own charge in the
-same currency.
+OpenRouter documents `usage.cost` as credits. Its credits are denominated in US dollars, so
+the amount is written as `total_cost` without conversion;
+`usage.costDetails.upstreamInferenceCost` is the provider's charge in the same currency.
 
 `usage.costDetails.serverToolCost` is already part of OpenRouter's charge and is never added.
 A call that reports no `usage.cost` and is not BYOK carries no `cost`, silently. The
@@ -260,9 +255,11 @@ OpenRouter invoice.
 
 `resource.provider` is the vendor that served the call, as a slug: lowercase, with each run
 of characters outside `a-z` and `0-9` replaced by one `-` (`Amazon Bedrock` becomes
-`amazon-bedrock`, `Google Vertex` becomes `google-vertex`). It is `openrouter` when a lookup
-shows a response-cache replay, and when the vendor cannot be resolved, including a name with
-no such characters; the latter also logs `PROVIDER_UNRESOLVED`.
+`amazon-bedrock`). OpenRouter names Google Vertex `Google`, which becomes `google`; use
+`mapResource` to emit `google-vertex` where records must join with other adapters. It is
+`openrouter` when a lookup shows a response-cache replay, and when the vendor cannot be
+resolved, including a name with no such characters; the latter also logs
+`PROVIDER_UNRESOLVED`.
 `resource.name` is the `model` the result reports, verbatim (`anthropic/claude-sonnet-4.5`).
 
 `resource.modality` follows the output modalities the request declared in `modalities`
@@ -318,7 +315,9 @@ with `MODEL_UNREPORTED`.
 | `run.parent_span_id` | The scope's `parent_span_id` |
 | `run.name` | The scope's `name` |
 | `run.run_type` | `agent_run` inside a run scope; `single_call` otherwise |
-| `run.error_code` | `OPENROUTER_RESPONSE_FAILED` (`RESPONSE_FAILED_CODE`) or `OPENROUTER_RESPONSE_INCOMPLETE` (`RESPONSE_INCOMPLETE_CODE`), for a Responses result with that `status`, or a `response.failed` or `response.incomplete` event, that carries usage; `OPENROUTER_CHAT_FAILED` (`CHAT_FAILED_CODE`), for a Chat stream in which a chunk carried an `error` (OpenRouter reports a failure after the HTTP 200 this way) and the usage chunk still arrived |
+| `run.error_code` `OPENROUTER_RESPONSE_FAILED` (`RESPONSE_FAILED_CODE`) | A Responses result with `status: 'failed'`, or a `response.failed` event, that carries usage |
+| `run.error_code` `OPENROUTER_RESPONSE_INCOMPLETE` (`RESPONSE_INCOMPLETE_CODE`) | A Responses result with `status: 'incomplete'`, or a `response.incomplete` event, that carries usage |
+| `run.error_code` `OPENROUTER_CHAT_FAILED` (`CHAT_FAILED_CODE`) | A Chat stream in which a chunk carried an `error`, OpenRouter's report of a failure after the HTTP 200, and the usage chunk still arrived |
 
 `run.step`, `run.trace_id` and `run.outcome` are never written. A run can span several
 scopes, processes and concurrent calls, so a call's position is undefined; order records by
@@ -342,7 +341,7 @@ name or an error message. The `DiagnosticCode` type lists every code.
 | Code | Level | Logged when | Action |
 | --- | --- | --- | --- |
 | `ATTRIBUTION_UNRESOLVED` | warn | A call starts with no `environment` in its attribution; it is not metered | Set `environment` in `attributionDefaults` or the `withAudr` scope |
-| `PROVIDER_UNRESOLVED` | warn | Neither the result, the lookup nor `mapResource` names a vendor; the record is written with `resource.provider` `openrouter` | Send `xOpenRouterMetadata: 'enabled'`, raise the lookup budget, or return a provider from `mapResource` |
+| `PROVIDER_UNRESOLVED` | warn | Neither the result, the lookup nor `mapResource` names a vendor; the record is written with `resource.provider` `openrouter` | Send `xOpenRouterMetadata: 'enabled'`, enable the lookup, or return a provider from `mapResource` |
 | `LOOKUP_FAILED` | warn | The [lookup](#lookup) produced nothing, with a `reason`: `disabled` (`maxWaitMs: 0`), `no_id` (the result has no id that `getGeneration` accepts), `rejected` (a failure that waiting cannot fix) or `exhausted` (the budget ran out) | Send `xOpenRouterMetadata: 'enabled'`, or enable the lookup with `maxWaitMs` and check the key's access to `generations` |
 | `BYOK_COST_INCOMPLETE` | warn | A call's cost is withheld because its BYOK status or the provider's charge is unknown | Send `xOpenRouterMetadata: 'enabled'` or allow the lookup |
 | `MODEL_UNREPORTED` | warn | A result names no model and `mapResource` supplies none; the record is skipped | Return a name from `mapResource` |
