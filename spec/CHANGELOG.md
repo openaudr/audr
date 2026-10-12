@@ -8,6 +8,12 @@ A published version is immutable; a defect is corrected by a new version.
 
 ## [Unreleased]
 
+### Added
+
+- `attribution.feature_id`, an optional host-defined identifier of the product
+  feature the operation served, used by a sink or rating component to select the
+  meter, metric or price the usage is billed against.
+
 ## [1.0.0] - 2026-09-22
 
 ### Added

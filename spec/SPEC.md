@@ -2,7 +2,7 @@
 
 # Agent Usage Detail Record (AUDR)
 
-**Technical Specification · Version 1.0.0**
+**Technical Specification · Version 1.1.0-dev**
 
 A JSON record format for agent cost monitoring and monetization.
 
@@ -11,7 +11,7 @@ A JSON record format for agent cost monitoring and monetization.
 ## Attribution
 
 This document is a technical specification of the Agent Usage Detail Record
-v1.0.0 JSON Schema. Its field semantics, constraints, and requirement language
+v1.1.0-dev JSON Schema. Its field semantics, constraints, and requirement language
 are derived from the AUDR schema.
 
 The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHOULD**, **SHOULD NOT**,
@@ -67,13 +67,13 @@ Each emitted record has an independent `record_id` for deduplication and
 correction processing. Downstream rating components MAY use or ignore the
 asserted `cost` object according to its own billing configuration.
 
-**Schema ID**: `https://openaudr.dev/spec/v1.0.0/audr.schema.json`
+**Schema ID**: `https://openaudr.dev/spec/v1.1.0-dev/audr.schema.json`
 
 **Root type**: JSON object
 
 **Schema dialect**: `https://json-schema.org/draft/2020-12/schema`
 
-**Version pattern**: `^1\.0\.\d+$`
+**Version pattern**: `^1\.\d+\.\d+$`
 
 <a id="definitions"></a>
 
@@ -209,7 +209,7 @@ This is the root document object for the AUDR specification.
 
 | Field Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `spec_version` | string (pattern) | Required | AUDR schema version, constrained here to 1.0.x. Consumers MUST reject unsupported major versions. |
+| `spec_version` | string (pattern) | Required | AUDR schema version, constrained here to major version 1. Consumers MUST reject unsupported major versions; a record that uses a field introduced in a later minor version is rejected by the closed object that would hold it. |
 | `record_id` | string (8–64 chars) | Required | ULID or UUIDv7 idempotency key, unique to each emitted record rather than each logical event. Records from different components use distinct IDs and are merged, not deduplicated. |
 | `emitter` | Emitter Object | Required | Identifies the software component that wrote the record. |
 | `corrects` | string (8–64 chars) | Optional | Identifies one earlier record fully restated by this correction. The correction MUST contain full state, use a fresh record_id, and come from the same emitter.component; all-zero usage represents a void. |
@@ -239,7 +239,7 @@ conforms to.
 
 | Field Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `spec_version` | string (pattern) | Required | AUDR schema version, constrained here to 1.0.x. Consumers MUST reject unsupported major versions. |
+| `spec_version` | string (pattern) | Required | AUDR schema version, constrained here to major version 1. Consumers MUST reject unsupported major versions; a record that uses a field introduced in a later minor version is rejected by the closed object that would hold it. |
 
 <a id="record-id"></a>
 
@@ -406,7 +406,7 @@ hierarchy.
 #### 3.4.9 `attribution`
 
 The REQUIRED business `attribution` object carries environment, user, account,
-subscription, and label dimensions.
+subscription, feature, and label dimensions.
 
 ##### 3.4.9.1 JSON Example
 
@@ -416,6 +416,7 @@ subscription, and label dimensions.
   "user_id": "user-7",
   "account_id": "account-42",
   "subscription_id": "subscription-9",
+  "feature_id": "support-chat",
   "labels": {
     "team": "platform"
   }
@@ -430,6 +431,7 @@ subscription, and label dimensions.
 | `attribution.user_id` | string | Optional | Pseudonymous identity of the triggering user; never an email or name. It MUST NOT be used by rating; account_id MUST be used for rating. |
 | `attribution.account_id` | string (min 1 chars) | Conditional | The account that pays the bill. Rating may aggregate usage by this account. Required for production traffic; optional otherwise. |
 | `attribution.subscription_id` | string | Optional | Subscription associated with the paying account for this usage record. |
+| `attribution.feature_id` | string (min 1 chars) | Optional | Host-defined identifier of the product feature the operation served. Opaque to AUDR; a sink or rating component uses it to select the meter, metric or price the usage is billed against. One operation has one feature. |
 | `attribution.labels` | object (≤ 20 key-value pairs) | Optional | Up to 20 free-form dimensions for non-billable metadata. Labels MUST NOT contain PII. |
 
 <a id="usage"></a>
@@ -611,6 +613,6 @@ sub-objects. These constraints are enforced by the schema's root `allOf`.
 
 | Status | Schema dialect | Record unit | Content model |
 | --- | --- | --- | --- |
-| **Versioned schema**<br>This document describes AUDR version 1.0.0. | **Draft 2020-12**<br>JSON Schema validation vocabulary. | **One operation**<br>Each record describes one metered event. | **Closed objects**<br>Unspecified properties are rejected except defined extensions. |
+| **Versioned schema**<br>This document describes AUDR version 1.1.0-dev. | **Draft 2020-12**<br>JSON Schema validation vocabulary. | **One operation**<br>Each record describes one metered event. | **Closed objects**<br>Unspecified properties are rejected except defined extensions. |
 
-Agent Usage Detail Record · Specification v1.0.0
+Agent Usage Detail Record · Specification v1.1.0-dev

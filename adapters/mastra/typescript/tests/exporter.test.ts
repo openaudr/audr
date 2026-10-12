@@ -1,5 +1,5 @@
 import type { ObservabilityInstanceConfig } from '@mastra/core/observability';
-import { ConfigurationError, type Client } from '@openaudr/audr';
+import { ConfigurationError, SPEC_VERSION, type Client } from '@openaudr/audr';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AudrExporter } from '../src/index.js';
@@ -44,7 +44,7 @@ describe('model records', () => {
     await h.exporter.exportTracingEvent(ended(modelSpan()));
     const [record] = await h.records();
     expect(record).toMatchObject({
-      spec_version: '1.0.0',
+      spec_version: SPEC_VERSION,
       emitter: { component: 'harness', name: 'mastra-tests', version: '0' },
       timing: { duration_ms: 1234 },
       resource: {

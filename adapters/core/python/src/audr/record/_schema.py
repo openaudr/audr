@@ -248,6 +248,13 @@ class Attribution(FrozenBase):
             description="Subscription associated with the paying account for this usage record."
         ),
     ] = None
+    feature_id: Annotated[
+        str | None,
+        Field(
+            description="Host-defined identifier of the product feature the operation served. Opaque to AUDR; a sink or rating component uses it to select the meter, metric or price the usage is billed against. One operation has one feature.",
+            min_length=1,
+        ),
+    ] = None
     labels: Annotated[
         dict[
             constr(pattern=r"^[a-zA-Z0-9_.-]+$", max_length=64),
@@ -479,9 +486,9 @@ class AUDR(FrozenBase):
     spec_version: Annotated[
         str,
         Field(
-            description="AUDR schema version, constrained here to 1.0.x. Consumers MUST reject unsupported major versions.",
-            examples=["1.0.0"],
-            pattern="^1\\.0\\.\\d+$",
+            description="AUDR schema version, constrained here to major version 1. Consumers MUST reject unsupported major versions; a record that uses a field introduced in a later minor version is rejected by the closed object that would hold it.",
+            examples=["1.1.0"],
+            pattern="^1\\.\\d+\\.\\d+$",
         ),
     ]
     record_id: Annotated[

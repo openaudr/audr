@@ -1,6 +1,6 @@
 /** The hooks called directly with hand-built events, a real `Client` and a `MemorySink`. */
 import type { Telemetry } from 'ai';
-import { type Client, ConfigurationError } from '@openaudr/audr';
+import { type Client, ConfigurationError, SPEC_VERSION } from '@openaudr/audr';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { audrTelemetry, TOOL_ERROR_CODE } from '../src/index.js';
@@ -131,7 +131,7 @@ describe('generation record', () => {
     t.onLanguageModelCallEnd(modelEnd('call-00000001', { modelId: 'gpt-5.4-2026-01-01' }));
     const [record] = await h.records();
     expect(record).toMatchObject({
-      spec_version: '1.0.0',
+      spec_version: SPEC_VERSION,
       emitter: { component: 'harness', name: 'vercel-ai-tests' },
       timing: { duration_ms: 812 },
       resource: {

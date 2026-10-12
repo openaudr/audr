@@ -34,8 +34,8 @@ const SCHEMA = JSON.parse(
   readFileSync(join(import.meta.dirname, '../../../../spec/audr.schema.json'), 'utf8'),
 ) as SchemaNode;
 
-it('implements the release the schema $id declares', () => {
-  expect(SCHEMA.$id).toContain(`/v${SPEC_VERSION}/`);
+it('implements the release the schema $id declares, draft suffix allowed', () => {
+  expect(SCHEMA.$id).toMatch(new RegExp(`/v${SPEC_VERSION.replaceAll('.', '\\.')}(-dev)?/`));
 });
 
 // Every bound the schema declares is probed at its limit and one step past it, and the SDK
