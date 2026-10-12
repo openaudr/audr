@@ -42,6 +42,13 @@ body:
         `attribution.labels` and `x_*` counters absorb most extension needs.
         Usually they are insufficient because a sink has to understand the value,
         or because it must aggregate across independently deployed emitters.
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal for discussion
+      description: >
+        The field, type or constraint you would add or change, with an example
+        record. Include alternatives you considered and why you rejected them.
   - type: input
     id: version
     attributes:

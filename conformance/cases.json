@@ -1,5 +1,5 @@
 {
-  "spec_version": "1.0.0",
+  "spec_version": "1.1.0",
   "schema": "../spec/audr.schema.json",
   "description": "Shared conformance fixtures. Every AUDR emitter and sink SHOULD reproduce these outcomes.",
   "cases": [
@@ -109,7 +109,7 @@
       "file": "invalid/unsupported-major-version.json",
       "expect": "invalid",
       "rule": "3.4.2",
-      "note": "Schema pins the 1.0.x family."
+      "note": "Schema pins major version 1."
     },
     {
       "file": "invalid/record-id-too-short.json",

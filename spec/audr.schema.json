@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://openaudr.dev/spec/v1.0.0/audr.schema.json",
+  "$id": "https://openaudr.dev/spec/v1.1.0-dev/audr.schema.json",
   "title": "Agent Usage Detail Record (AUDR)",
   "description": "This specification defines the Agent Usage Detail Record (AUDR), a JSON object that describes one metered operation in an agent system. A record identifies its emitter and resource, reports raw model or tool usage, associates the operation with a run, and carries attribution required for downstream cost allocation. A record MAY include an informational cost assertion.",
   "type": "object",
@@ -18,11 +18,11 @@
   "properties": {
     "spec_version": {
       "type": "string",
-      "pattern": "^1\\.0\\.\\d+$",
+      "pattern": "^1\\.\\d+\\.\\d+$",
       "examples": [
-        "1.0.0"
+        "1.1.0"
       ],
-      "description": "AUDR schema version, constrained here to 1.0.x. Consumers MUST reject unsupported major versions."
+      "description": "AUDR schema version, constrained here to major version 1. Consumers MUST reject unsupported major versions; a record that uses a field introduced in a later minor version is rejected by the closed object that would hold it."
     },
     "record_id": {
       "type": "string",

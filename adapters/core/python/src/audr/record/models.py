@@ -40,7 +40,7 @@ from audr.record._schema import (
 from audr.record.codes import ErrorCode
 
 #: The one AUDR release this package implements.
-SPEC_VERSION = "1.0.0"
+SPEC_VERSION = "1.1.0"
 
 # Names for the closed vocabularies of the schema, so callers can annotate their own code
 # without reaching into the generated module. `tests/test_models.py` asserts each one still

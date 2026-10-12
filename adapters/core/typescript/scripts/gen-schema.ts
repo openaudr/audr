@@ -224,13 +224,14 @@ function withExtensionSlot(source: string, { path, value }: ExtensionSlot): stri
 
 async function schemaSource(schema: Node): Promise<string> {
   const id = String(schema.$id);
-  const release = /\/v(\d+\.\d+\.\d+)\//.exec(id)?.[1];
-  if (release === undefined) throw new Error(`no release in the schema $id ${id}`);
   const version = asNode(asNode(schema.properties, '#/properties').spec_version, 'spec_version');
+  // The schema declares its own version in examples[0]; the $id may carry a -dev draft suffix.
+  const release = (version.examples as unknown[] | undefined)?.[0];
+  if (typeof release !== 'string') throw new Error(`no spec_version example in the schema ${id}`);
   const prefix = extensionPrefix(schema);
   return `${HEADER}
 
-/** The AUDR release this package implements, from the schema's \`$id\`. */
+/** The AUDR release this package implements, from the schema's \`spec_version\` example. */
 export const SPEC_VERSION = ${JSON.stringify(release)};
 /** Every \`spec_version\` the schema admits. */
 export const SUPPORTED_SPEC_VERSION = ${new RegExp(String(version.pattern)).toString()};

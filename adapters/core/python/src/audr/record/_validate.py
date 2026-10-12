@@ -24,7 +24,7 @@ if TYPE_CHECKING:  # pragma: no cover - import cycle broken for runtime
 
     from audr.record.models import AUDR, Attribution
 
-_SUPPORTED_SPEC_VERSION = re.compile(r"^1\.0\.\d+$")
+_SUPPORTED_SPEC_VERSION = re.compile(r"^1\.\d+\.\d+$")
 _ULID = re.compile(r"^[0-7][0-9A-HJKMNP-TV-Z]{25}$")
 _UUID7 = re.compile(
     r"^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",

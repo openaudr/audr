@@ -8,10 +8,6 @@ A published version is immutable; a defect is corrected by a new version.
 
 ## [Unreleased]
 
-The schema `$id` and the `spec_version` pattern remain at 1.0.0 until the next
-version is published. Records that use the fields below do not validate against
-the published 1.0.0 schema.
-
 ### Added
 
 - `attribution.feature_id`, an optional host-defined identifier of the product

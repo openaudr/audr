@@ -119,7 +119,7 @@ describe('validate: structure', () => {
     expect(pairs(withBlock('run', { name: null }))).toEqual([['INVALID_TYPE', '/run/name']]);
   });
 
-  it('gates spec_version on the 1.0.x family', () => {
+  it('gates spec_version on major version 1', () => {
     expect(pairs({ ...makeRecord(), spec_version: '2.0.0' })).toEqual([
       ['UNSUPPORTED_VERSION', '/spec_version'],
     ]);

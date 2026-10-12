@@ -25,6 +25,7 @@ identity and attribution that records from different systems join.
 | `adapters/core/python/` | [`adapters/core/python/AGENTS.md`](adapters/core/python/AGENTS.md) |
 | `adapters/core/typescript/` | [`adapters/core/typescript/AGENTS.md`](adapters/core/typescript/AGENTS.md) |
 | `adapters/merge-gateway/typescript/` | [`adapters/merge-gateway/typescript/AGENTS.md`](adapters/merge-gateway/typescript/AGENTS.md) |
+| `adapters/openrouter/typescript/` | [`adapters/openrouter/typescript/AGENTS.md`](adapters/openrouter/typescript/AGENTS.md) |
 | `adapters/litellm/python/` | [`adapters/litellm/python/AGENTS.md`](adapters/litellm/python/AGENTS.md) |
 | `adapters/nemo-relay/python/` | [`adapters/nemo-relay/python/AGENTS.md`](adapters/nemo-relay/python/AGENTS.md) |
 | `adapters/vercel-ai/typescript/` | [`adapters/vercel-ai/typescript/AGENTS.md`](adapters/vercel-ai/typescript/AGENTS.md) |
@@ -54,8 +55,9 @@ identity and attribution that records from different systems join.
   issue exists. If none exists, stop and report it.
   [`CONTRIBUTING.md`](CONTRIBUTING.md#classes-of-change) defines which changes require an
   issue.
-- Record every user-visible change to a package, or to the specification, under
-  `[Unreleased]` in its `CHANGELOG.md`.
+- Record every user-visible change to a package under `[Unreleased]` in its
+  `CHANGELOG.md`, and every change to the specification under `[Unreleased]` in
+  `spec/CHANGELOG.md`.
 
 ## Verification
 

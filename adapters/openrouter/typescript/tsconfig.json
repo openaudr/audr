@@ -1,0 +1,16 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    // Examples share a stand-in server and import it by its real `.ts` file name, which is
+    // what Node's type stripping needs. The build emits only `src`, so it turns this off.
+    "allowImportingTsExtensions": true,
+    // Examples import the package by name, exactly as an application does. At run time
+    // Node resolves that through the package's own `exports` after a build; the compiler
+    // needs the mapping to check them without one. `@openaudr/audr` resolves through
+    // node_modules.
+    "paths": {
+      "@openaudr/audr-adapter-openrouter": ["./src/index.ts"]
+    }
+  },
+  "include": ["src", "tests", "examples", "*.config.ts"]
+}

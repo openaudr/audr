@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Schema regenerated from specification 1.1.0: `attribution.feature_id` is accepted, records
+  default to `spec_version` 1.1.0, and any 1.x `spec_version` is accepted.
+
 ## [0.1.1] - 2026-10-03
 
 ### Added
