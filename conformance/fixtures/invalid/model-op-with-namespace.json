@@ -1,0 +1,36 @@
+{
+  "spec_version": "1.1.0",
+  "record_id": "01K4N8D2J4P7Q9R3S6T8V1W5XY",
+  "emitter": {
+    "component": "router",
+    "name": "@audr/openrouter",
+    "version": "0.5.1"
+  },
+  "timing": {
+    "event_time": "2026-09-08T12:00:00.000Z"
+  },
+  "resource": {
+    "provider": "anthropic",
+    "type": "model",
+    "namespace": "github",
+    "name": "claude-sonnet-4-20250514",
+    "operation": "generation",
+    "modality": "text"
+  },
+  "run": {
+    "run_id": "01K4N8B0M2C5F7H9J1L3N6P8QR",
+    "span_id": "model-call-1",
+    "run_type": "agent_run"
+  },
+  "attribution": {
+    "environment": "production",
+    "account_id": "account-42"
+  },
+  "usage": {
+    "llm": {
+      "input_tokens": 1200,
+      "output_tokens": 300,
+      "requests": 1
+    }
+  }
+}

@@ -256,13 +256,21 @@ export interface Resource {
    */
   readonly name: string;
   /**
+   * Host-configured name of the source within the provider that defines a tool, such as a
+   * toolkit, an action group or an MCP server configuration key. It never names the provider
+   * itself. Permitted only for tool operations; resource.name is unique within it. It MUST
+   * NOT be a URL, a network address or a credential.
+   */
+  readonly namespace?: string | undefined;
+  /**
    * Operation class that selects resource.type and usage: model operations use model with
    * usage.llm; tool_execution and retrieval use tool with usage.tool.
    */
   readonly operation: Operation;
   /**
    * Canonical lowercase provider slug. For tool operations, identify the executing vendor or
-   * platform; use self-hosted for locally run tools.
+   * platform: self-hosted for a tool executed by the host application or a process it
+   * launched, otherwise the slug of the operator, supplied by the host for a remote source.
    */
   readonly provider: string;
   /**

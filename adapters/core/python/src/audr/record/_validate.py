@@ -142,6 +142,8 @@ def _shape_issues(record: AUDR) -> Iterator[ValidationIssue]:
             yield ValidationIssue(ErrorCode.INVALID_STRUCTURE, "/usage")
         if record.cost is not None and record.cost.tool is not None:
             yield ValidationIssue(ErrorCode.FORBIDDEN, "/cost/tool")
+        if record.resource.namespace is not None:
+            yield ValidationIssue(ErrorCode.FORBIDDEN, "/resource/namespace")
     elif operation in _TOOL_OPERATIONS:
         if record.resource.type != "tool":
             yield ValidationIssue(ErrorCode.INVALID_STRUCTURE, "/resource/type")

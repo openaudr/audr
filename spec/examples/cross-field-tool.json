@@ -2,6 +2,7 @@
   "resource": {
     "provider": "self-hosted",
     "type": "tool",
+    "namespace": "crm-toolkit",
     "name": "search_tickets",
     "operation": "retrieval"
   },

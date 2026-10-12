@@ -13,6 +13,10 @@ A published version is immutable; a defect is corrected by a new version.
 - `attribution.feature_id`, an optional host-defined identifier of the product
   feature the operation served, used by a sink or rating component to select the
   meter, metric or price the usage is billed against.
+- `resource.namespace`, an optional host-configured name of the source within the
+  provider that defines a tool, such as a toolkit, an action group or an MCP server
+  configuration key, so that `provider`, `namespace` and `name` together identify a
+  tool. Permitted only for tool operations.
 
 ## [1.0.0] - 2026-09-22
 

@@ -70,7 +70,7 @@ class Resource(FrozenBase):
     provider: Annotated[
         str,
         Field(
-            description="Canonical lowercase provider slug. For tool operations, identify the executing vendor or platform; use self-hosted for locally run tools.",
+            description="Canonical lowercase provider slug. For tool operations, identify the executing vendor or platform: self-hosted for a tool executed by the host application or a process it launched, otherwise the slug of the operator, supplied by the host for a remote source.",
             examples=[
                 "anthropic",
                 "openai",
@@ -101,6 +101,14 @@ class Resource(FrozenBase):
             min_length=1,
         ),
     ]
+    namespace: Annotated[
+        str | None,
+        Field(
+            description="Host-configured name of the source within the provider that defines a tool, such as a toolkit, an action group or an MCP server configuration key. It never names the provider itself. Permitted only for tool operations; resource.name is unique within it. It MUST NOT be a URL, a network address or a credential.",
+            examples=["tavily-remote-mcp", "crm-toolkit"],
+            min_length=1,
+        ),
+    ] = None
     operation: Annotated[
         Literal["generation", "embedding", "reranking", "tool_execution", "retrieval"],
         Field(
