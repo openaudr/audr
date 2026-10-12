@@ -101,7 +101,7 @@ is the same in every language.
 
 ## Validation
 
-`AUDR.from_json(text)` and `client.record()` validate against the AUDR v1.0.0 schema and
+`AUDR.from_json(text)` and `client.record()` validate against the AUDR v1.1.0 schema and
 rules; `record.validate()` returns the issues for a record built in code. Each
 `ValidationIssue` carries a `code`, a JSON-pointer `path` and a `message`, and never the
 offending value.
