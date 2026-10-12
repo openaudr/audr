@@ -68,7 +68,8 @@ jobs:
       # would 404 here until the branch reaches main. The raw.githubusercontent.com form,
       # which the NeMo Relay README uses to fetch its example, is excluded for the same
       # reason. www.npmjs.com answers 403 to every non-browser client, so its package
-      # pages cannot be checked at all.
+      # pages cannot be checked at all. docs.merge.dev answers 451 to direct HTTP
+      # requests, so the Merge Gateway documentation links cannot be checked either.
       - name: External URLs respond
         uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2
         with:
@@ -79,6 +80,7 @@ jobs:
             --exclude 'https://github\.com/openaudr/audr/'
             --exclude 'https://raw\.githubusercontent\.com/openaudr/audr/'
             --exclude 'https://www\.npmjs\.com/'
+            --exclude 'https://docs\.merge\.dev/'
             --exclude 'mailto:'
             --exclude-path spec/prose
             '**/*.md'
