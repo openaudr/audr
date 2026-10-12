@@ -3,13 +3,13 @@
 [![PyPI](https://img.shields.io/pypi/v/audr?include_prereleases)](https://pypi.org/project/audr/)
 [![Python versions](https://img.shields.io/pypi/pyversions/audr)](https://pypi.org/project/audr/)
 
-The **core Python SDK** for [AUDR](https://openaudr.dev/spec/v1.0.0/) (Agent Usage Detail
+The **core Python SDK** for [AUDR](https://openaudr.dev/spec/v1.1.0/) (Agent Usage Detail
 Record) builds records, validates them against the published schema, and delivers them to
 any `Sink`, such as a file, a queue or a metering backend, through a bounded, batching
 async pipeline. Adapters and sinks build on it, and an application can emit records with
 this package alone.
 
-> **Status: alpha.** The record model tracks AUDR v1.0.0; until 1.0.0, a minor release may
+> **Status: alpha.** The record model tracks AUDR v1.1.0; until 1.0.0, a minor release may
 > change the public API.
 
 ## Setup
@@ -72,7 +72,7 @@ Records arriving as JSON are parsed and validated by `AUDR.from_json()`, which r
 ```python
 import audr
 
-payload = '{"spec_version": "1.0.0", "resource": {"type": "model"}}'
+payload = '{"spec_version": "1.1.0", "resource": {"type": "model"}}'
 try:
     record = audr.AUDR.from_json(payload)
 except audr.ValidationError as error:
@@ -102,7 +102,7 @@ way, the batch is reported retryable while the lines already written remain in t
 - [Reference](https://github.com/openaudr/audr/blob/main/adapters/core/python/docs/reference.md): client options, submission outcomes, callbacks, the sink contract, validation codes, testing helpers
 - [Examples](https://github.com/openaudr/audr/tree/main/adapters/core/python/examples): runnable offline, against the local filesystem
 - [Changelog](https://github.com/openaudr/audr/blob/main/adapters/core/python/CHANGELOG.md)
-- [AUDR specification](https://openaudr.dev/spec/v1.0.0/), which defines every record field
+- [AUDR specification](https://openaudr.dev/spec/v1.1.0/), which defines every record field
 
 ## License
 
