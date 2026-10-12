@@ -25,7 +25,7 @@ import schema_model as sm  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 BANNER = "GENERATED FILE -- field semantics are derived from audr.schema.json."
-VERSION_IN_ID = re.compile(r"/spec/v(\d+\.\d+\.\d+)/")
+VERSION_IN_ID = re.compile(r"/spec/v(\d+\.\d+\.\d+(?:-dev)?)/")
 
 
 # --------------------------------------------------------------------------

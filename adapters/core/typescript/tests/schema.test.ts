@@ -34,8 +34,8 @@ const SCHEMA = JSON.parse(
   readFileSync(join(import.meta.dirname, '../../../../spec/audr.schema.json'), 'utf8'),
 ) as SchemaNode;
 
-it('implements the release the schema $id declares', () => {
-  expect(SCHEMA.$id).toContain(`/v${SPEC_VERSION}/`);
+it('implements the release the schema $id declares, draft suffix allowed', () => {
+  expect(SCHEMA.$id).toMatch(new RegExp(`/v${SPEC_VERSION.replaceAll('.', '\\.')}(-dev)?/`));
 });
 
 // Every bound the schema declares is probed at its limit and one step past it, and the SDK
@@ -104,7 +104,9 @@ const TOOL = makeRecord({
 
 /** A valid record of the right kind with `value` placed at `path`. */
 function place(path: readonly string[], value: unknown): unknown {
-  const base: unknown = path[1] === 'tool' ? TOOL : MODEL;
+  // Tool usage fields and resource.namespace are permitted only on tool operations.
+  const tool = path[1] === 'tool' || path.join('.') === 'resource.namespace';
+  const base: unknown = tool ? TOOL : MODEL;
   const record = structuredClone(base) as Record<string, unknown>;
   let parent = record;
   for (const key of path.slice(0, -1)) {

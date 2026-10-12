@@ -35,8 +35,8 @@ def sdk_accepts(data: dict[str, Any]) -> bool:
 
 
 def test_manifest_is_the_expected_size() -> None:
-    assert len(CASES) == 38
-    assert sum(c["expect"] == "valid" for c in CASES) == 15
+    assert len(CASES) == 42
+    assert sum(c["expect"] == "valid" for c in CASES) == 17
 
 
 @pytest.mark.parametrize("case", CASES, ids=lambda c: c["file"])

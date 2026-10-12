@@ -54,6 +54,7 @@ make all         # check + python + typescript: everything CI runs
 | `make sink-chargebee-python` | `make verify` in `sinks/chargebee/python` |
 | `make core-typescript` | `make install verify` in `adapters/core/typescript` |
 | `make adapter-merge-gateway-typescript` | `make install verify` in `adapters/merge-gateway/typescript` |
+| `make adapter-openrouter-typescript` | `make install verify` in `adapters/openrouter/typescript` |
 | `make adapter-vercel-ai-typescript` | `make install verify` in `adapters/vercel-ai/typescript` |
 | `make adapter-mastra-typescript` | `make install verify` in `adapters/mastra/typescript` |
 | `make sink-chargebee-typescript` | `make install verify` in `sinks/chargebee/typescript` |
@@ -227,6 +228,48 @@ root lockfile, and `src/version.ts` is updated to match.
 
 Release tags can be created, moved or deleted only by maintainers. A published version is
 never re-uploaded; a defect is corrected by releasing a new version.
+
+### Releasing the specification
+
+The specification follows [Semantic Versioning](https://semver.org/) as applied to the set
+of conformant records:
+
+| Change | Version |
+| --- | --- |
+| Editorial: prose, examples, descriptions, with the set of conformant records unchanged | Patch |
+| Additive: a record that uses the change is conformant only from this version on, such as a new optional field or enumeration value | Minor |
+| Invalidating: a record conformant under the previous version is no longer conformant | Major |
+
+`main` holds the working draft of the next version. The draft is marked by a `-dev`
+suffix on the schema `$id`, for example
+`https://openaudr.dev/spec/v1.1.0-dev/audr.schema.json`, while the `spec_version`
+example names the version being prepared, `1.1.0`. A record never carries a `-dev`
+version, and no SDK is released from a `-dev` schema. Every pull request that changes
+the specification records its change under `[Unreleased]` in
+[`spec/CHANGELOG.md`](spec/CHANGELOG.md).
+
+1. Open a release pull request that removes the `-dev` suffix from `$id`, renames the
+   `[Unreleased]` section of `spec/CHANGELOG.md` to `[X.Y.Z] - YYYY-MM-DD`, and
+   regenerates `spec/SPEC.md` with `make spec`. It changes nothing else.
+2. Merge it once the specification verify workflow passes.
+3. A maintainer confirms the merge commit is ready, tags it and pushes the tag:
+
+   ```bash
+   python tools/check_release.py spec X.Y.Z
+   git tag spec/vX.Y.Z <merge-commit>
+   git push origin spec/vX.Y.Z
+   ```
+
+4. The maintainer creates a GitHub Release for the tag with the changelog section as its
+   notes, and publishes `audr.schema.json` and `SPEC.md` from the tagged commit at
+   `https://openaudr.dev/spec/vX.Y.Z/`. The hosted files are byte-identical to the tagged
+   files; the `$id` check in `make lint` depends on it.
+5. Open a pull request that starts the next draft: `$id` to `vX.Y+1.0-dev`, the
+   `spec_version` example to `X.Y+1.0`, and an empty `[Unreleased]` section. If the next
+   release turns out to be a patch or a major, the release pull request corrects the
+   number.
+6. Release the core SDKs, which regenerate their schema from the published version, and
+   then any adapter or sink that uses the new fields.
 
 ## Documentation
 

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from audr import ConfigurationError, FileSink
+from audr import SPEC_VERSION, ConfigurationError, FileSink
 from audr.sinks import BatchOutcome
 from audr.testing import assert_sink_contract, make_record
 
@@ -17,7 +17,8 @@ async def test_writes_one_json_object_per_line(tmp_path: Path) -> None:
     await sink.deliver([make_record(), make_record()])
     await sink.close()
     lines = path.read_text().splitlines()
-    assert len(lines) == 2 and all(json.loads(line)["spec_version"] == "1.0.0" for line in lines)
+    assert len(lines) == 2
+    assert all(json.loads(line)["spec_version"] == SPEC_VERSION for line in lines)
 
 
 async def test_append_and_overwrite(tmp_path: Path) -> None:

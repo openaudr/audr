@@ -19,6 +19,7 @@ FIXTURES = ROOT / "conformance" / "fixtures"
 CROSS_FIELD_ONLY = {
     "empty-usage-llm.json",
     "model-op-with-cost-tool.json",
+    "model-op-with-namespace.json",
     "model-op-with-tool-type.json",
     "tool-op-with-cost-llm.json",
     "tool-op-with-usage-llm.json",

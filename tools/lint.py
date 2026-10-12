@@ -30,8 +30,10 @@ def check_version_claims() -> list[str]:
     pattern = spec_version["pattern"]
 
     problems = []
+    # The working draft on main carries a -dev suffix; check_release.py rejects it at tag time.
     expected = f"https://openaudr.dev/spec/v{version}/audr.schema.json"
-    if schema["$id"] != expected:
+    draft = f"https://openaudr.dev/spec/v{version}-dev/audr.schema.json"
+    if schema["$id"] not in (expected, draft):
         problems.append(
             f"$id is {schema['$id']!r}, but the site publishes it at {expected!r}"
         )

@@ -43,8 +43,8 @@ function sdkAccepts(data: unknown): boolean {
 
 describe('conformance', () => {
   it('reads the whole manifest', () => {
-    expect(CASES.length).toBe(38);
-    expect(CASES.filter((testCase) => testCase.expect === 'valid').length).toBe(15);
+    expect(CASES.length).toBe(42);
+    expect(CASES.filter((testCase) => testCase.expect === 'valid').length).toBe(17);
   });
 
   it.each(CASES.map((testCase) => [testCase.file, testCase] as const))(

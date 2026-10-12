@@ -24,7 +24,7 @@ if TYPE_CHECKING:  # pragma: no cover - import cycle broken for runtime
 
     from audr.record.models import AUDR, Attribution
 
-_SUPPORTED_SPEC_VERSION = re.compile(r"^1\.0\.\d+$")
+_SUPPORTED_SPEC_VERSION = re.compile(r"^1\.\d+\.\d+$")
 _ULID = re.compile(r"^[0-7][0-9A-HJKMNP-TV-Z]{25}$")
 _UUID7 = re.compile(
     r"^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
@@ -142,6 +142,8 @@ def _shape_issues(record: AUDR) -> Iterator[ValidationIssue]:
             yield ValidationIssue(ErrorCode.INVALID_STRUCTURE, "/usage")
         if record.cost is not None and record.cost.tool is not None:
             yield ValidationIssue(ErrorCode.FORBIDDEN, "/cost/tool")
+        if record.resource.namespace is not None:
+            yield ValidationIssue(ErrorCode.FORBIDDEN, "/resource/namespace")
     elif operation in _TOOL_OPERATIONS:
         if record.resource.type != "tool":
             yield ValidationIssue(ErrorCode.INVALID_STRUCTURE, "/resource/type")

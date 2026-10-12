@@ -16,8 +16,9 @@ Normative changes need an accepted issue first; see [CONTRIBUTING.md](../CONTRIB
 - [ ] Examples still validate (`make examples`)
 - [ ] A conformance fixture covers the rule I added or changed
 - [ ] The generated specification is regenerated (`make spec`) and committed
-- [ ] Version impact considered: does this invalidate a record that was
-      conformant before? If so it is a major version, not a patch
+- [ ] Version impact considered and recorded under `[Unreleased]` in
+      `spec/CHANGELOG.md`: editorial is a patch, a record that is conformant only
+      from this version on is a minor, an invalidated record is a major
 
 ## Checks
 

@@ -3,6 +3,7 @@
   "user_id": "user-7",
   "account_id": "account-42",
   "subscription_id": "subscription-9",
+  "feature_id": "support-chat",
   "labels": {
     "team": "platform"
   }
