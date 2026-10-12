@@ -98,7 +98,7 @@ sequenceDiagram
 The schema's canonical URL is its `$id`:
 
 ```
-https://openaudr.dev/spec/v1.0.0/audr.schema.json
+https://openaudr.dev/spec/v1.1.0/audr.schema.json
 ```
 
 Validate records with a JSON Schema Draft 2020-12 validator. Repository setup,

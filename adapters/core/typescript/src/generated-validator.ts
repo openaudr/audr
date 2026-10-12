@@ -4,7 +4,7 @@ import type { SchemaError } from './validate.js';
 
 const schema31 = {
   $schema: 'https://json-schema.org/draft/2020-12/schema',
-  $id: 'https://openaudr.dev/spec/v1.1.0-dev/audr.schema.json',
+  $id: 'https://openaudr.dev/spec/v1.1.0/audr.schema.json',
   type: 'object',
   additionalProperties: false,
   required: [
@@ -236,7 +236,7 @@ function validate20(
   data,
   { instancePath = '', parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {},
 ) {
-  /*# sourceURL="https://openaudr.dev/spec/v1.1.0-dev/audr.schema.json" */ let vErrors = null;
+  /*# sourceURL="https://openaudr.dev/spec/v1.1.0/audr.schema.json" */ let vErrors = null;
   let errors = 0;
   const evaluated0 = validate20.evaluated;
   if (evaluated0.dynamicProps) {

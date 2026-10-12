@@ -250,7 +250,9 @@ the specification records its change under `[Unreleased]` in
 
 1. Open a release pull request that removes the `-dev` suffix from `$id`, renames the
    `[Unreleased]` section of `spec/CHANGELOG.md` to `[X.Y.Z] - YYYY-MM-DD`, and
-   regenerates `spec/SPEC.md` with `make spec`. It changes nothing else.
+   regenerates `spec/SPEC.md` with `make spec` and the core SDK schema files, which
+   embed the `$id`, with `make models` and `make schema` in the core packages. It
+   changes nothing else.
 2. Merge it once the specification verify workflow passes.
 3. A maintainer confirms the merge commit is ready, tags it and pushes the tag:
 
