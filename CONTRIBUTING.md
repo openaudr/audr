@@ -111,7 +111,8 @@ An entry is accepted when:
 - It reads or writes AUDR records and names the specification version it targets.
   Conformance is self-attested; the [conformance fixtures](conformance/README.md) are the
   means to check it.
-- It links to a public repository or product page.
+- It links to a public repository or product page, and the pull request author is a
+  maintainer of that repository or a member of the organisation that publishes it.
 - The description states what the entry does. It carries no marketing claims and no
   comparison with other entries.
 
