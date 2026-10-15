@@ -2,8 +2,11 @@ name: Verify documentation
 
 # Every README, CONTRIBUTING and AGENTS file: links resolve, and no distribution version
 # is written into Markdown. External URLs are checked by lychee in a separate job so a
-# slow or rate-limiting upstream cannot fail the offline checks.
+# slow or rate-limiting upstream cannot fail the offline checks. A weekly run re-checks
+# the third-party links in IMPLEMENTATIONS.md, whose targets change outside this repository.
 on:
+  schedule:
+    - cron: "0 6 * * 1"
   pull_request:
     paths:
       - '**/*.md'
@@ -36,6 +39,7 @@ concurrency:
 jobs:
   docs:
     name: Links and versions
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout project
@@ -83,4 +87,4 @@ jobs:
             --exclude 'https://docs\.merge\.dev/'
             --exclude 'mailto:'
             --exclude-path spec/prose
-            '**/*.md'
+            ${{ github.event_name == 'schedule' && 'IMPLEMENTATIONS.md' || '**/*.md' }}

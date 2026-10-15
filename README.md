@@ -161,6 +161,9 @@ asyncio.run(main())
 | Adapters | [`audr-adapter-litellm`](adapters/litellm/python/README.md) (Python)<br>[`audr-adapter-nemo-relay`](adapters/nemo-relay/python/README.md) (Python)<br>[`@openaudr/audr-adapter-merge-gateway`](adapters/merge-gateway/typescript/README.md) (TypeScript)<br>[`@openaudr/audr-adapter-openrouter`](adapters/openrouter/typescript/README.md) (TypeScript)<br>[`@openaudr/audr-adapter-vercel-ai`](adapters/vercel-ai/typescript/README.md) (TypeScript)<br>[`@openaudr/audr-adapter-mastra`](adapters/mastra/typescript/README.md) (TypeScript) | [`adapters/README.md`](adapters/README.md) |
 | Sinks | [`audr-sink-chargebee`](sinks/chargebee/python/README.md) (Python)<br>[`@openaudr/audr-sink-chargebee`](sinks/chargebee/typescript/README.md) (TypeScript)<br>[`@openaudr/audr-sink-lago`](sinks/lago/typescript/README.md) (TypeScript) | [`sinks/README.md`](sinks/README.md) |
 
+Adapters, sinks and tools maintained outside this repository are listed in
+[`IMPLEMENTATIONS.md`](IMPLEMENTATIONS.md).
+
 ## Status
 
 The current specification version is [1.0.0](spec/SPEC.md).
