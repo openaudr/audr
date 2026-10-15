@@ -68,6 +68,7 @@ make all         # check + python + typescript: everything CI runs
 | An existing package | That package's `AGENTS.md`, for example [`adapters/core/python/AGENTS.md`](adapters/core/python/AGENTS.md) |
 | A new adapter | [`adapters/CONTRIBUTING.md`](adapters/CONTRIBUTING.md) |
 | A new sink | [`sinks/CONTRIBUTING.md`](sinks/CONTRIBUTING.md) |
+| A third-party entry in `IMPLEMENTATIONS.md` | [Listing an implementation](#listing-an-implementation) below |
 | Any `README.md`, `CONTRIBUTING.md` or `AGENTS.md` | The Documentation section below |
 
 ## Classes of change
@@ -75,7 +76,8 @@ make all         # check + python + typescript: everything CI runs
 ### Editorial changes
 
 _Examples: correcting a typographical error, repairing a broken link, rewording
-a sentence without altering its meaning, correcting an example._
+a sentence without altering its meaning, correcting an example, adding or updating
+an entry in [`IMPLEMENTATIONS.md`](IMPLEMENTATIONS.md)._
 
 Submit a pull request directly. No issue is required.
 
@@ -93,6 +95,27 @@ without review.
 
 A draft pull request may accompany the issue to illustrate a proposal, but it
 does not substitute for one.
+
+## Listing an implementation
+
+An adapter, sink or tool maintained outside this repository is listed in
+[`IMPLEMENTATIONS.md`](IMPLEMENTATIONS.md). Open a pull request that adds one line to the
+category it belongs to, in alphabetical order. No issue is required.
+
+```markdown
+- [Name](https://example.com/name) (by Organisation) — What it does, in one sentence. Targets specification 1.1.0.
+```
+
+An entry is accepted when:
+
+- It reads or writes AUDR records and names the specification version it targets.
+  Conformance is self-attested; the [conformance fixtures](conformance/README.md) are the
+  means to check it.
+- It links to a public repository or product page.
+- The description states what the entry does. It carries no marketing claims and no
+  comparison with other entries.
+
+An entry whose link stops resolving is removed.
 
 ## Published versions
 
@@ -283,6 +306,7 @@ description elsewhere.
 | `README.md` | A reader who uses the software | Repository, tier, component, language package |
 | `CONTRIBUTING.md` | A reader who wants a change accepted | Repository and tier only |
 | `AGENTS.md` | Anyone working inside that tree — a coding agent or a maintainer | Repository, tier, language package |
+| `IMPLEMENTATIONS.md` | A reader looking for an adapter, sink or tool maintained outside this repository | Repository |
 | `docs/*.md` | A reader who uses the software and needs the full reference | Language package |
 
 | Fact | Home |
@@ -291,6 +315,8 @@ description elsewhere.
 | The sink contract and delivery states | `adapters/core/README.md` |
 | Package naming, repository setup, the shared toolchain, releasing a package | This document |
 | Implementing a new adapter or sink | `adapters/CONTRIBUTING.md`; `sinks/CONTRIBUTING.md` |
+| Third-party adapters, sinks and tools | `IMPLEMENTATIONS.md` |
+| The criteria for listing a third-party implementation | This document |
 | How to work inside one package | That package's `AGENTS.md` |
 | Data-handling prohibitions | `SECURITY.md` |
 | The example AUDR record | `README.md` |
