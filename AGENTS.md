@@ -77,6 +77,7 @@ done when `make all` passes.
 
 `README.md` is for users; a `CONTRIBUTING.md` is for contributors and
 exists only at the repository root and in `adapters/` and `sinks/`; an `AGENTS.md` is for
-whoever works inside its tree. A `*/python/README.md` is a PyPI long description and must
+whoever works inside its tree; `IMPLEMENTATIONS.md` lists what is maintained outside this
+repository. A `*/python/README.md` is a PyPI long description and must
 stay self-contained with absolute URLs. The full table of where each fact lives is the
 Documentation section of [`CONTRIBUTING.md`](CONTRIBUTING.md#documentation).
