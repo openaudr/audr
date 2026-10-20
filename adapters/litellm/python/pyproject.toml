@@ -27,7 +27,7 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "audr>=0.1.0a1,<0.2",
+  "audr>=0.2,<0.3",
   "pydantic>=2.10,<3",
 ]
 
