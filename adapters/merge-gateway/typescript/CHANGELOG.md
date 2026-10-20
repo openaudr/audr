@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Requires `@openaudr/audr` 0.2, which emits specification 1.1.0 records.
+
 ## [0.1.1] - 2026-10-03
 
 ### Added

@@ -53,11 +53,11 @@
     "prepack": "npm run build"
   },
   "peerDependencies": {
-    "@openaudr/audr": "^0.1.0",
+    "@openaudr/audr": "^0.2.0",
     "merge-gateway-sdk": "^0.4.0"
   },
   "devDependencies": {
-    "@openaudr/audr": "^0.1.0",
+    "@openaudr/audr": "^0.2.0",
     "merge-gateway-sdk": "0.4.0"
   },
   "publishConfig": {
