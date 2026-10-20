@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "audr"
 dynamic = ["version"]
-description = "Vendor-neutral SDK for emitting AUDR (Agent Usage Detail Record) v1.0.0 records."
+description = "Vendor-neutral SDK for emitting AUDR (Agent Usage Detail Record) v1.1.0 records."
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE"]
@@ -31,7 +31,7 @@ Homepage = "https://openaudr.dev"
 Issues = "https://github.com/openaudr/audr/issues"
 Source = "https://github.com/openaudr/audr/tree/main/adapters/core/python"
 Changelog = "https://github.com/openaudr/audr/blob/main/adapters/core/python/CHANGELOG.md"
-Specification = "https://openaudr.dev/spec/v1.0.0/"
+Specification = "https://openaudr.dev/spec/v1.1.0/"
 
 [dependency-groups]
 dev = [

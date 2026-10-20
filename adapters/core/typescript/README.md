@@ -3,14 +3,14 @@
 [![npm](https://img.shields.io/npm/v/@openaudr/audr?include_prereleases)](https://www.npmjs.com/package/@openaudr/audr)
 [![Node versions](https://img.shields.io/node/v/@openaudr/audr)](https://www.npmjs.com/package/@openaudr/audr)
 
-The **core TypeScript SDK** for [AUDR](https://openaudr.dev/spec/v1.0.0/) (Agent Usage
+The **core TypeScript SDK** for [AUDR](https://openaudr.dev/spec/v1.1.0/) (Agent Usage
 Detail Record) builds records, validates them against the published schema, and delivers
 them to any `Sink`, such as a file, a queue or a metering backend, through a bounded,
 batching async pipeline. Adapters and sinks build on it, and an application can emit
 records with this package alone. ESM with full type declarations and one small runtime
 dependency, `uuid`.
 
-> **Status: alpha.** The record model tracks AUDR v1.0.0; until 1.0.0, a minor release may
+> **Status: alpha.** The record model tracks AUDR v1.1.0; until 1.0.0, a minor release may
 > change the public API.
 
 ## Setup
@@ -71,7 +71,7 @@ Records arriving as JSON are parsed and validated by `decodeRecord()`, which thr
 ```ts
 import { decodeRecord, ValidationError } from '@openaudr/audr';
 
-const payload = '{"spec_version": "1.0.0", "resource": {"type": "model"}}';
+const payload = '{"spec_version": "1.1.0", "resource": {"type": "model"}}';
 try {
   decodeRecord(payload);
 } catch (error) {
@@ -102,7 +102,7 @@ reports each batch's outcome rather than throwing.
 - [Reference](https://github.com/openaudr/audr/blob/main/adapters/core/typescript/docs/reference.md): client options, submission outcomes, callbacks, the sink contract, `FileSink`, validation codes, testing helpers
 - [Examples](https://github.com/openaudr/audr/tree/main/adapters/core/typescript/examples): runnable offline, against the local filesystem
 - [Changelog](https://github.com/openaudr/audr/blob/main/adapters/core/typescript/CHANGELOG.md)
-- [AUDR specification](https://openaudr.dev/spec/v1.0.0/), which defines every record field
+- [AUDR specification](https://openaudr.dev/spec/v1.1.0/), which defines every record field
 
 ## License
 
