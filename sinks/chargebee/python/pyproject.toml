@@ -26,7 +26,7 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "audr>=0.1.0a1,<0.2",
+  "audr>=0.2,<0.3",
   "httpx>=0.27,<1",
 ]
 
@@ -35,7 +35,7 @@ Homepage = "https://openaudr.dev"
 Issues = "https://github.com/openaudr/audr/issues"
 Source = "https://github.com/openaudr/audr/tree/main/sinks/chargebee/python"
 Changelog = "https://github.com/openaudr/audr/blob/main/sinks/chargebee/python/CHANGELOG.md"
-Specification = "https://openaudr.dev/spec/v1.0.0/"
+Specification = "https://openaudr.dev/spec/v1.1.0/"
 
 [tool.hatch.version]
 path = "src/audr_sink_chargebee/_version.py"
