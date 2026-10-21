@@ -1,7 +1,5 @@
 """Flattening and event encoding must be deterministic and cached."""
 
-import json
-
 import pytest
 from audr import Attribution, ConfigurationError
 from audr.testing import make_record
@@ -10,25 +8,26 @@ from audr_sink_chargebee import ChargebeeSink
 from audr_sink_chargebee._flatten import flatten_audr
 
 
-def test_flatten_audr_produces_double_underscore_names_and_json_containers() -> None:
+def test_flatten_audr_produces_double_underscore_names() -> None:
     record = make_record(
         attribution=Attribution(
             environment="production",
             account_id="acct_1",
             subscription_id="sub_123",
+            feature_id="support-chat",
             labels={"team": "billing", "a": "z"},
         ),
     )
 
     assert record.usage.llm is not None
     properties = flatten_audr(record)
-    labels_json = properties["attribution__labels__json"]
-    assert isinstance(labels_json, str)
 
     assert properties["usage__llm__input_tokens"] == record.usage.llm.input_tokens
     assert properties["resource__name"] == record.resource.name
     assert properties["attribution__subscription_id"] == "sub_123"
-    assert json.loads(labels_json) == {"a": "z", "team": "billing"}
+    assert properties["attribution__feature_id"] == "support-chat"
+    assert properties["attribution__labels__team"] == "billing"
+    assert properties["attribution__labels__a"] == "z"
 
 
 def test_flatten_audr_accepts_a_configurable_separator() -> None:
@@ -43,7 +42,7 @@ def test_flatten_audr_accepts_a_configurable_separator() -> None:
     assert "usage__llm__input_tokens" not in properties
 
 
-def test_flatten_audr_uses_the_separator_for_the_json_suffix() -> None:
+def test_flatten_audr_uses_the_separator_for_label_names() -> None:
     record = make_record(
         attribution=Attribution(
             environment="production",
@@ -54,8 +53,8 @@ def test_flatten_audr_uses_the_separator_for_the_json_suffix() -> None:
 
     properties = flatten_audr(record, separator="_")
 
-    assert "attribution_labels_json" in properties
-    assert "attribution__labels__json" not in properties
+    assert properties["attribution_labels_team"] == "billing"
+    assert "attribution__labels__team" not in properties
 
 
 def test_sink_accepts_a_configurable_separator() -> None:

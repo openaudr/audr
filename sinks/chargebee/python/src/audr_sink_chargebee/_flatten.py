@@ -2,8 +2,9 @@
 
 Chargebee's ingest API accepts only scalar property values, so nested AUDR objects are
 flattened here, in the sink, rather than in the AUDR model layer. Nested objects
-become ``parent__child`` keys; arrays and the caller-keyed ``labels`` map are stored as
-canonical JSON under a terminal ``__json`` key so the destination only ever sees scalars.
+become ``parent__child`` keys, each ``labels`` entry becomes ``labels__<key>``, and arrays
+are stored as canonical JSON under a terminal ``__json`` key so the destination only ever
+sees scalars.
 """
 
 from __future__ import annotations
@@ -17,7 +18,7 @@ from audr import AUDR
 from audr_sink_chargebee._event_validation import InvalidUsageEventError
 
 _JSON_SUFFIX = "json"
-_JSON_CONTAINER_KEYS = frozenset({"labels"})
+_LABELS_KEY = "labels"
 PropertyValue: TypeAlias = str | int | float | bool | None
 
 
@@ -49,11 +50,9 @@ def _flatten_mapping(
     for key, item in value.items():
         item_path = (*path, key)
         if isinstance(item, Mapping):
-            if key in _JSON_CONTAINER_KEYS:
-                json_key = separator.join((*item_path, _JSON_SUFFIX))
-                output[json_key] = _canonical_json(item, item_path)
-            else:
-                _flatten_mapping(item, item_path, output, separator)
+            if key == _LABELS_KEY:
+                item = _rewrite_label_keys(item, item_path)
+            _flatten_mapping(item, item_path, output, separator)
         elif isinstance(item, list | tuple):
             json_key = separator.join((*item_path, _JSON_SUFFIX))
             output[json_key] = _canonical_json(item, item_path)
@@ -61,6 +60,19 @@ def _flatten_mapping(
             output[separator.join(item_path)] = item
         else:
             raise InvalidUsageEventError(f"field at {_pointer(item_path)} is not JSON-encodable")
+
+
+def _rewrite_label_keys(labels: Mapping[str, object], path: tuple[str, ...]) -> dict[str, object]:
+    """Label keys are caller-chosen and may contain ``.`` and ``-``, which Chargebee rejects."""
+    rewritten: dict[str, object] = {}
+    for key, value in labels.items():
+        name = key.replace(".", "_").replace("-", "_")
+        if name in rewritten:
+            raise InvalidUsageEventError(
+                f"labels at {_pointer(path)} collide once '.' and '-' are rewritten to '_'"
+            )
+        rewritten[name] = value
+    return rewritten
 
 
 def _canonical_json(value: object, path: tuple[str, ...]) -> str:
