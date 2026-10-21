@@ -7,9 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-21
+
 ### Changed
 
-- Requires `@openaudr/audr` 0.2, which emits specification 1.1.0 records.
+- **Breaking:** each `attribution.labels` entry is sent as its own property,
+  `attribution__labels__<key>`, instead of one JSON string under
+  `attribution__labels__json`. A `.` or `-` in a label key becomes `_`, and a record whose
+  label keys collide after that rewrite is rejected as invalid. Update metered features
+  that filter on `attribution__labels__json`.
+- Requires `@openaudr/audr` 0.2, which emits specification 1.1.0 records:
+  `attribution.feature_id` and `resource.namespace` arrive as `attribution__feature_id`
+  and `resource__namespace`.
 
 ## [0.1.1] - 2026-10-03
 

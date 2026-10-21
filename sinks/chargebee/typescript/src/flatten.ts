@@ -3,8 +3,8 @@
  *
  * Chargebee's ingest API accepts only scalar property values, so nested AUDR objects are
  * flattened here, in the sink, rather than in the record model. Nested objects become
- * `parent__child` keys; arrays and the caller-keyed `labels` map are stored as canonical
- * JSON under a terminal `json` key, so the destination only ever sees scalars.
+ * `parent__child` keys, each `labels` entry becomes `labels__<key>`, and arrays are stored
+ * as canonical JSON under a terminal `json` key, so the destination only ever sees scalars.
  */
 import { type AudrRecord } from '@openaudr/audr';
 
@@ -13,8 +13,7 @@ import { InvalidUsageEventError, type PropertyValue } from './event.js';
 // Two underscores keep a nested path apart from AUDR field names like `input_tokens`.
 export const DEFAULT_SEPARATOR = '__';
 const JSON_SUFFIX = 'json';
-// Label keys are chosen by the caller; flattening them would mint unbounded property names.
-const JSON_CONTAINER_KEYS = new Set(['labels']);
+const LABELS_KEY = 'labels';
 
 export interface FlattenOptions {
   /** Joins path segments. Chargebee needs one or more underscores. Default `__`. */
@@ -51,16 +50,35 @@ function flattenInto(
   for (const [key, item] of Object.entries(value)) {
     if (item === undefined) continue;
     const itemPath = [...path, key];
-    if (Array.isArray(item) || (isPlainObject(item) && JSON_CONTAINER_KEYS.has(key))) {
+    if (Array.isArray(item)) {
       output[[...itemPath, JSON_SUFFIX].join(separator)] = canonicalJson(item, itemPath);
     } else if (isPlainObject(item)) {
-      flattenInto(item, itemPath, output, separator);
+      const nested = key === LABELS_KEY ? rewriteLabelKeys(item, itemPath) : item;
+      flattenInto(nested, itemPath, output, separator);
     } else if (isScalar(item)) {
       output[itemPath.join(separator)] = item;
     } else {
       throw notEncodable(itemPath);
     }
   }
+}
+
+/** Label keys are caller-chosen and may contain `.` and `-`, which Chargebee rejects. */
+function rewriteLabelKeys(
+  labels: Readonly<Record<string, unknown>>,
+  path: readonly string[],
+): Record<string, unknown> {
+  const rewritten: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(labels)) {
+    const name = key.replaceAll('.', '_').replaceAll('-', '_');
+    if (Object.hasOwn(rewritten, name)) {
+      throw new InvalidUsageEventError(
+        `labels at ${pointer(path)} collide once '.' and '-' are rewritten to '_'`,
+      );
+    }
+    rewritten[name] = value;
+  }
+  return rewritten;
 }
 
 /** JSON with sorted keys; refuses what `JSON.stringify` would silently coerce, like `NaN`. */
