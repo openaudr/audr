@@ -53,11 +53,11 @@
     "prepack": "npm run build"
   },
   "peerDependencies": {
-    "@openaudr/audr": "^0.1.0",
+    "@openaudr/audr": "^0.2.0",
     "ai": "^7.0.98"
   },
   "devDependencies": {
-    "@openaudr/audr": "^0.1.0",
+    "@openaudr/audr": "^0.2.0",
     "ai": "7.0.98",
     "zod": "^4.6.4"
   },

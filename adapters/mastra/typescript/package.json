@@ -54,12 +54,12 @@
   "peerDependencies": {
     "@mastra/core": "^1.62.0",
     "@mastra/observability": "^1.17.2",
-    "@openaudr/audr": "^0.1.0"
+    "@openaudr/audr": "^0.2.0"
   },
   "devDependencies": {
     "@mastra/core": "1.62.0",
     "@mastra/observability": "1.17.2",
-    "@openaudr/audr": "^0.1.0",
+    "@openaudr/audr": "^0.2.0",
     "ai": "6.0.283",
     "zod": "^4.6.4"
   },

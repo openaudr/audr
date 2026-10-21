@@ -7,11 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-20
+
 ### Changed
 
 - Schema regenerated from specification 1.1.0: `attribution.feature_id` and
   `resource.namespace` are accepted, records
   default to `spec_version` 1.1.0, and any 1.x `spec_version` is accepted.
+
+### Fixed
+
+- An `onFailure` callback that resubmits a record no longer recurses until the stack
+  overflows. `onFailure` is never re-entered: a record it submits that fails at once
+  (invalid, or the queue is full) is reported only by the `SubmitResult` returned to it.
+- An error whose `name` cannot be read, thrown by a callback or a sink, is logged as
+  `unknown` instead of escaping `record()` or surfacing as an unhandled rejection.
 
 ## [0.1.1] - 2026-10-03
 
