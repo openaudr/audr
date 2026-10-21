@@ -42,8 +42,14 @@ const sink = new ChargebeeSink({
 
 - A nested object becomes one property per leaf, its path joined by the separator:
   `usage.llm.input_tokens` becomes `usage__llm__input_tokens`.
-- An array, and the caller-keyed `attribution.labels` map, become one canonical JSON
-  string under a terminal `json` segment: `attribution__labels__json`.
+- Each `attribution.labels` entry becomes one property, `attribution__labels__<key>`.
+  Chargebee property names admit only letters, digits and underscores, so a `.` or `-` in
+  the key becomes `_`: the label `cost-center` is sent as `attribution__labels__cost_center`.
+  A record whose label keys collide after that rewrite, such as `a.b` and `a-b`, is rejected
+  as invalid; the message names `/attribution/labels` and no value.
+- An array becomes one canonical JSON string under a terminal `json` segment.
+- `attribution.feature_id` and `resource.namespace`, introduced by specification 1.1.0,
+  arrive as `attribution__feature_id` and `resource__namespace`.
 - Every field is forwarded, including `x_*` extensions.
 
 The default `__` keeps path boundaries distinct from the underscores inside AUDR field

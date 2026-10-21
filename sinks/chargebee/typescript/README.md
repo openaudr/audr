@@ -85,8 +85,9 @@ exclusive with `site` and `ingestDomain`.
 | Every field, flattened | `properties`, such as `usage__llm__input_tokens` |
 
 Chargebee accepts scalar properties only, so every field is flattened to a reversible name
-joined by `__`. Arrays and `attribution.labels` are sent as canonical JSON under a `__json`
-suffix, such as `attribution__labels__json`. Create metered features against these names.
+joined by `__`. Each label becomes its own property, such as `attribution__labels__team`,
+with a `.` or `-` in the key rewritten to `_`. Create metered features against these names;
+`attribution__feature_id` is the property to select a feature's meter on.
 `flattenRecord(record)` returns the properties a record becomes before it is sent.
 
 A batch is sent as one request, and each response becomes one `BatchResult`. A replay

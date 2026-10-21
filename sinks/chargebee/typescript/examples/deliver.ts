@@ -28,7 +28,8 @@ const record = createRecord({
     environment: 'production',
     account_id: 'acct_42',
     subscription_id: 'sub_42',
-    labels: { feature: 'support-chat' },
+    feature_id: 'support-chat',
+    labels: { region: 'eu' },
   },
 });
 

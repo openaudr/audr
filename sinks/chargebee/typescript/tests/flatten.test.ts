@@ -20,23 +20,33 @@ describe('flatten', () => {
     });
   });
 
-  it('keeps labels whole as sorted JSON rather than minting property names', () => {
-    const flattened = flatten({ labels: { z: 'last', a: 'first' } });
-
-    expect(flattened).toEqual({ labels__json: '{"a":"first","z":"last"}' });
-    expect(flatten({ labels: { a: 1, b: 2 } })).toEqual(flatten({ labels: { b: 2, a: 1 } }));
+  it('makes each label its own property, rewriting . and - to _', () => {
+    expect(flatten({ labels: { team: 'core', 'cost-center': 'r1', 'env.tier': 'gold' } })).toEqual({
+      labels__team: 'core',
+      labels__cost_center: 'r1',
+      labels__env_tier: 'gold',
+    });
   });
 
-  it('does not escape non-ASCII label values', () => {
-    expect(flatten({ labels: { team: 'Ümlaut' } })).toEqual({
-      labels__json: '{"team":"Ümlaut"}',
+  it('rejects label keys that collide after rewriting, naming no value', () => {
+    const collide = () => flatten({ attribution: { labels: { 'a.b': '1', 'a-b': '2' } } });
+
+    expect(collide).toThrow(InvalidUsageEventError);
+    expect(collide).toThrow('labels at /attribution/labels collide');
+    expect(collide).not.toThrow(/[12]/);
+  });
+
+  it('does not escape non-ASCII values', () => {
+    expect(flatten({ labels: { team: 'Ümlaut' }, items: ['Ümlaut'] })).toEqual({
+      labels__team: 'Ümlaut',
+      items__json: '["Ümlaut"]',
     });
   });
 
   it('drops undefined values and empty objects', () => {
     expect(flatten({ a: {}, b: 1, c: undefined, labels: { d: undefined, e: 'x' } })).toEqual({
       b: 1,
-      labels__json: '{"e":"x"}',
+      labels__e: 'x',
     });
   });
 
@@ -48,7 +58,6 @@ describe('flatten', () => {
     [{ outer: { inner: new Date() } }, '/outer/inner'],
     [{ outer: { items: [() => 1] } }, '/outer/items'],
     [{ items: [Number.NaN] }, '/items'],
-    [{ labels: { x: Infinity } }, '/labels'],
     [{ 'a/b': { 'c~d': Symbol('s') } }, '/a~1b/c~0d'],
   ])('refuses %o, naming its pointer', (value, pointer) => {
     expect(() => flatten(value)).toThrow(InvalidUsageEventError);
@@ -59,24 +68,31 @@ describe('flatten', () => {
 describe('flattenRecord', () => {
   it('flattens a real record into addressable scalar properties', () => {
     const flattened = flattenRecord(
-      record({ account_id: 'acct_1', subscription_id: 'sub_1', labels: { team: 'billing' } }),
+      record({
+        account_id: 'acct_1',
+        subscription_id: 'sub_1',
+        feature_id: 'support-chat',
+        labels: { team: 'billing', 'cost-center': 'r1' },
+      }),
     );
 
     expect(flattened.usage__llm__input_tokens).toBe(10);
     expect(flattened.resource__type).toBe('model');
     expect(flattened.attribution__subscription_id).toBe('sub_1');
-    expect(JSON.parse(String(flattened.attribution__labels__json))).toEqual({ team: 'billing' });
+    expect(flattened.attribution__feature_id).toBe('support-chat');
+    expect(flattened.attribution__labels__team).toBe('billing');
+    expect(flattened.attribution__labels__cost_center).toBe('r1');
     for (const [key, value] of Object.entries(flattened)) {
       expect(key).toMatch(/^[a-zA-Z][a-zA-Z0-9_]*$/);
       expect(['string', 'number', 'boolean']).toContain(typeof value);
     }
   });
 
-  it('uses the separator for the json suffix too', () => {
+  it('uses the separator for label names too', () => {
     const flattened = flattenRecord(record({ labels: { team: 'billing' } }), { separator: '_' });
 
     expect(flattened).toHaveProperty('usage_llm_input_tokens');
-    expect(flattened).toHaveProperty('attribution_labels_json');
+    expect(flattened).toHaveProperty('attribution_labels_team');
     expect(flattened).not.toHaveProperty('usage__llm__input_tokens');
   });
 });
