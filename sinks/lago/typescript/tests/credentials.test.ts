@@ -2,6 +2,8 @@ import { ConfigurationError } from '@openaudr/audr';
 import { describe, expect, it } from 'vitest';
 
 import { parseApiUrl, resolveCredentials } from '../src/credentials.js';
+import { preflight } from '../src/preflight.js';
+import { record } from './helpers.js';
 
 const BATCH = '/api/v1/events/batch';
 const MINIMAL = { apiKey: 'key_1', metricCode: 'tokens' };
@@ -60,9 +62,17 @@ describe('resolveCredentials', () => {
     expect(() => resolveCredentials({ metricCode: 'm' }, {})).toThrow(
       'apiKey is required; provide apiKey or set LAGO_API_KEY',
     );
-    expect(() => resolveCredentials({ apiKey: 'k' }, {})).toThrow(
-      'metricCode is required; provide metricCode or set LAGO_METRIC_CODE',
-    );
+  });
+
+  it('bills each event against the record feature_id when no metricCode is set', () => {
+    const { metricCode } = resolveCredentials({ apiKey: 'k' }, {});
+    const named = record({ feature_id: 'support-chat' });
+    const unnamed = record({});
+
+    const { events, rejected } = preflight([named, unnamed], metricCode);
+
+    expect(events.map((event) => event.code)).toEqual(['support-chat']);
+    expect(rejected).toEqual([{ recordId: unnamed.record_id, detail: 'missing_metric_code' }]);
   });
 
   it.each(['', ' ', 'two words', 'tab\tkey', 'new\nline', 'caf\u00e9'])(

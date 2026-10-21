@@ -22,6 +22,9 @@ const API_KEY = /^[\x21-\x7e]+$/;
  */
 export type MetricCode = string | ((record: AudrRecord) => string | undefined);
 
+/** The default: the host names the feature on the record, and the feature is the metric. */
+const featureId = (record: AudrRecord): string | undefined => record.attribution.feature_id;
+
 export interface CredentialOptions {
   /** Always required. Env: `LAGO_API_KEY`. */
   readonly apiKey?: string | undefined;
@@ -30,7 +33,10 @@ export interface CredentialOptions {
    * Env: `LAGO_API_URL`.
    */
   readonly apiUrl?: string | undefined;
-  /** Always required. Env: `LAGO_METRIC_CODE`, which can only name one code. */
+  /**
+   * Default: the record's `attribution.feature_id`. Env: `LAGO_METRIC_CODE`, which can only
+   * name one code.
+   */
   readonly metricCode?: MetricCode | undefined;
   /** Permit an `http:` URL, for a self-hosted Lago on a trusted network. Default `false`. */
   readonly allowInsecureHttp?: boolean | undefined;
@@ -53,12 +59,7 @@ export function resolveCredentials(
   if (apiKey === undefined) {
     throw new ConfigurationError('apiKey is required; provide apiKey or set LAGO_API_KEY');
   }
-  const metricCode = options.metricCode ?? env.LAGO_METRIC_CODE;
-  if (metricCode === undefined) {
-    throw new ConfigurationError(
-      'metricCode is required; provide metricCode or set LAGO_METRIC_CODE',
-    );
-  }
+  const metricCode = options.metricCode ?? env.LAGO_METRIC_CODE ?? featureId;
   const allowInsecureHttp = options.allowInsecureHttp ?? false;
   if (typeof allowInsecureHttp !== 'boolean') {
     throw new ConfigurationError('allowInsecureHttp must be a boolean');

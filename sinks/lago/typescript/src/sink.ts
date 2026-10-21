@@ -41,8 +41,9 @@ type Exchange =
 /**
  * Deliver AUDR records to Lago's batch event endpoint.
  *
- * Each record becomes one event under the metric code `metricCode` names or chooses for it,
- * routed on `attribution.subscription_id` and de-duplicated on `record_id`. A record that
+ * Each record becomes one event under its `attribution.feature_id`, or the metric code
+ * `metricCode` names or chooses for it, routed on `attribution.subscription_id` and
+ * de-duplicated on `record_id`. A record that
  * cannot become a valid event is rejected by name and never sent. Events are sent in order,
  * at most 100 to a request.
  *

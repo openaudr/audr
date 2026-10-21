@@ -115,7 +115,8 @@ describe('LagoSink requests', () => {
     await makeSink({ fetch }).deliver([source]);
 
     expect(calls[0]?.events[0]?.properties).toMatchObject({
-      attribution__labels__json: '{"env":"blue","team":"search"}',
+      attribution__labels__team: 'search',
+      attribution__labels__env: 'blue',
       usage__llm__x_acme_cached: 4,
       usage__llm__input_tokens: 12,
       record_id: source.record_id,
