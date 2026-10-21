@@ -40,8 +40,11 @@ An invalid option throws `ConfigurationError` from the constructor.
 
 Callbacks run synchronously on the delivery path, so keep them fast. A callback may return
 a promise: delivery does not wait for it, but `shutdown()` does, within its bound. The
-client catches any error a callback throws or rejects with. Changing a record after
-passing it to `record()` does not change what is delivered.
+client catches any error a callback throws or rejects with. `onFailure` is never re-entered:
+when it resubmits a record that fails again at once (still invalid, or the queue is full),
+that failure is reported only by the `SubmitResult` returned to the callback, so a replay
+cannot recurse. Changing a record after passing it to `record()` does not change what is
+delivered.
 
 ## Submission outcomes
 
