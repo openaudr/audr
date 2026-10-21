@@ -8,8 +8,6 @@ silently coerced into something a billing system would read as a number.
 
 from __future__ import annotations
 
-import json
-
 import pytest
 from audr import Attribution
 from audr.testing import make_record
@@ -43,26 +41,36 @@ def test_a_tuple_is_treated_as_a_list() -> None:
     assert flatten({"items": (1, 2)}) == {"items__json": "[1,2]"}
 
 
-def test_labels_are_kept_whole_as_json_rather_than_flattened() -> None:
-    """Label keys are caller-chosen, so flattening them would mint unbounded
-    property names the destination has never seen."""
-    flattened = flatten({"labels": {"z": "last", "a": "first"}})
+def test_each_label_becomes_its_own_property() -> None:
+    flattened = flatten({"labels": {"team": "core", "cost-center": "r1", "env.tier": "gold"}})
 
-    assert list(flattened) == ["labels__json"]
-    assert flattened["labels__json"] == '{"a":"first","z":"last"}'  # keys sorted
+    assert flattened == {
+        "labels__team": "core",
+        "labels__cost_center": "r1",
+        "labels__env_tier": "gold",
+    }
+
+
+def test_label_keys_that_collide_after_rewriting_reject_the_record() -> None:
+    with pytest.raises(InvalidUsageEventError) as excinfo:
+        flatten({"attribution": {"labels": {"a.b": "1", "a-b": "2"}}})
+
+    assert "/attribution/labels" in str(excinfo.value)
+    assert "1" not in str(excinfo.value) and "2" not in str(excinfo.value)
 
 
 def test_canonical_json_is_stable_across_input_ordering() -> None:
-    one = flatten({"labels": {"a": 1, "b": 2}})
-    other = flatten({"labels": {"b": 2, "a": 1}})
+    one = flatten({"items": [{"a": 1, "b": 2}]})
+    other = flatten({"items": [{"b": 2, "a": 1}]})
 
     assert one == other
 
 
-def test_non_ascii_label_values_are_not_escaped() -> None:
-    flattened = flatten({"labels": {"team": "Ümlaut"}})
+def test_non_ascii_values_are_not_escaped() -> None:
+    flattened = flatten({"labels": {"team": "Ümlaut"}, "items": ["Ümlaut"]})
 
-    assert flattened["labels__json"] == '{"team":"Ümlaut"}'
+    assert flattened["labels__team"] == "Ümlaut"
+    assert flattened["items__json"] == '["Ümlaut"]'
 
 
 def test_an_empty_nested_object_contributes_no_properties() -> None:
@@ -131,15 +139,19 @@ def test_a_real_record_keeps_every_property_name_addressable_by_chargebee() -> N
     assert [key for key in flattened if not pattern.fullmatch(key)] == []
 
 
-def test_record_labels_round_trip_through_the_json_container() -> None:
-    labels = {"team": "billing", "region": "eu"}
+def test_record_labels_become_one_property_each() -> None:
     record = make_record(
-        attribution=Attribution(environment="test", subscription_id="s", labels=labels)
+        attribution=Attribution(
+            environment="test",
+            subscription_id="s",
+            labels={"team": "billing", "cost-center": "r1"},
+        )
     )
 
     flattened = flatten_audr(record)
 
-    assert json.loads(str(flattened["attribution__labels__json"])) == labels
+    assert flattened["attribution__labels__team"] == "billing"
+    assert flattened["attribution__labels__cost_center"] == "r1"
 
 
 def test_absent_optional_fields_produce_no_properties() -> None:
@@ -150,4 +162,4 @@ def test_absent_optional_fields_produce_no_properties() -> None:
     )
 
     assert "attribution__account_id" not in flattened
-    assert "attribution__labels__json" not in flattened
+    assert [key for key in flattened if key.startswith("attribution__labels__")] == []
