@@ -36,13 +36,20 @@ def test_metadata_without_the_audr_namespace_falls_back_to_the_defaults() -> Non
 def test_namespace_values_override_the_defaults_field_by_field() -> None:
     attribution, issue = resolve_attribution(
         defaults=_DEFAULTS,
-        metadata={"audr": {"account_id": "acct_override", "subscription_id": "sub_1"}},
+        metadata={
+            "audr": {
+                "account_id": "acct_override",
+                "subscription_id": "sub_1",
+                "feature_id": "support-chat",
+            }
+        },
     )
 
     assert issue is None
     assert attribution is not None
     assert attribution.account_id == "acct_override"
     assert attribution.subscription_id == "sub_1"
+    assert attribution.feature_id == "support-chat"
     assert attribution.environment == "production"  # untouched by the override
 
 
