@@ -45,14 +45,22 @@ describe('attribution', () => {
         user_id: 'u_default',
       },
     });
-    await withAudr({ attribution: { account_id: 'acct_scope', subscription_id: 'sub_1' } }, () =>
-      h.openrouter.chat.send(CHAT as never),
+    await withAudr(
+      {
+        attribution: {
+          account_id: 'acct_scope',
+          subscription_id: 'sub_1',
+          feature_id: 'support-chat',
+        },
+      },
+      () => h.openrouter.chat.send(CHAT as never),
     );
     expect((await h.records())[0]?.attribution).toEqual({
       environment: 'production',
       account_id: 'acct_scope',
       subscription_id: 'sub_1',
       user_id: 'u_default',
+      feature_id: 'support-chat',
     });
   });
 

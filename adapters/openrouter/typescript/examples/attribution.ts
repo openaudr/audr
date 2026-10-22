@@ -37,7 +37,12 @@ const ask = (content: string) =>
 
 await withAudr(
   {
-    attribution: { account_id: 'acct_42', subscription_id: 'sub_7', labels: { team: 'support' } },
+    attribution: {
+      account_id: 'acct_42',
+      subscription_id: 'sub_7',
+      feature_id: 'support-chat',
+      labels: { team: 'support' },
+    },
     run: { run_id: 'run-order-42-support', name: 'support-agent' },
   },
   async () => {
