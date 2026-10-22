@@ -58,7 +58,8 @@ async def main() -> None:
                         "audr": {
                             "account_id": "acct_42",
                             "subscription_id": "sub_7",
-                            "labels": {"feature": "support-chat"},
+                            "feature_id": "support-chat",
+                            "labels": {"team": "support"},
                         }
                     },
                 ):
