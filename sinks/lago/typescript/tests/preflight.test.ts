@@ -2,10 +2,9 @@ import { type AudrRecord } from '@openaudr/audr';
 import { describe, expect, it } from 'vitest';
 
 import { preflight } from '../src/preflight.js';
-import { METRIC_CODE, record } from './helpers.js';
+import { FEATURE_ID, record } from './helpers.js';
 
-const run = (batch: readonly AudrRecord[]): ReturnType<typeof preflight> =>
-  preflight(batch, METRIC_CODE);
+const run = (batch: readonly AudrRecord[]): ReturnType<typeof preflight> => preflight(batch);
 
 describe('preflight', () => {
   it('turns a record into one event with the agreed field mapping', () => {
@@ -21,7 +20,7 @@ describe('preflight', () => {
     expect(events[0]).toMatchObject({
       transaction_id: source.record_id,
       external_subscription_id: 'sub_42',
-      code: METRIC_CODE,
+      code: FEATURE_ID,
       timestamp: '1651241991.123',
     });
     expect(events[0]?.properties).toMatchObject({
@@ -62,72 +61,32 @@ describe('preflight', () => {
     });
   });
 
-  describe('with a function that chooses the metric code', () => {
-    const embedding = (): AudrRecord =>
-      record(
-        {},
-        {
-          resource: {
-            provider: 'openai',
-            type: 'model',
-            name: 'text-embedding-3-small',
-            operation: 'embedding',
-            modality: 'text',
-          },
-        },
-      );
-    const byOperation = (source: AudrRecord): string | undefined =>
-      ({ generation: 'llm_tokens', embedding: 'embedding_tokens' })[
-        source.resource.operation as string
-      ];
+  describe('metric code', () => {
+    it('bills each record against the metric its feature_id names', () => {
+      const batch = [record({ feature_id: 'llm_tokens' }), record({ feature_id: 'tool_calls' })];
 
-    it('sends each record under the code chosen from its own fields', () => {
-      const batch = [record(), embedding(), record()];
-
-      const { events, rejected } = preflight(batch, byOperation);
+      const { events, rejected } = preflight(batch);
 
       expect(rejected).toEqual([]);
-      expect(events.map((event) => event.code)).toEqual([
-        'llm_tokens',
-        'embedding_tokens',
-        'llm_tokens',
-      ]);
-      expect(events.map((event) => event.transaction_id)).toEqual(
-        batch.map((entry) => entry.record_id),
-      );
+      expect(events.map((event) => event.code)).toEqual(['llm_tokens', 'tool_calls']);
     });
 
-    it('rejects a record the function chooses no code for, and sends the others', () => {
-      const chosen = record();
-      const unchosen = embedding();
+    it('rejects a record without a feature_id, and sends the others', () => {
+      const named = record();
+      const unnamed = record({ feature_id: undefined });
 
-      expect(preflight([chosen, unchosen], () => undefined).rejected).toEqual([
-        { recordId: chosen.record_id, detail: 'missing_metric_code' },
-        { recordId: unchosen.record_id, detail: 'missing_metric_code' },
-      ]);
-      expect(
-        preflight([chosen, unchosen], (source) =>
-          source === chosen ? 'llm_tokens' : undefined,
-        ).events.map((event) => event.transaction_id),
-      ).toEqual([chosen.record_id]);
+      const { events, rejected } = preflight([named, unnamed]);
+
+      expect(rejected).toEqual([{ recordId: unnamed.record_id, detail: 'missing_metric_code' }]);
+      expect(events.map((event) => event.transaction_id)).toEqual([named.record_id]);
     });
 
-    it.each(['', ' llm_tokens', 42])('rejects a record the function gives the code %j', (code) => {
-      const source = record();
+    it.each([' llm_tokens', 'llm_tokens '])('rejects a record whose feature_id is %j', (code) => {
+      const source = record({ feature_id: code });
 
-      expect(preflight([source], () => code as string).rejected).toEqual([
+      expect(preflight([source]).rejected).toEqual([
         { recordId: source.record_id, detail: 'invalid_metric_code' },
       ]);
-    });
-
-    it('rejects a record the function throws for, without its message', () => {
-      const source = record();
-
-      expect(
-        preflight([source], () => {
-          throw new Error(`no code for ${source.record_id}`);
-        }).rejected,
-      ).toEqual([{ recordId: source.record_id, detail: 'invalid_metric_code' }]);
     });
   });
 

@@ -11,7 +11,7 @@ beforeEach(() => {
     vi.fn(() => Promise.reject(new LiveNetworkBlocked('unexpected real HTTP request'))),
   );
   // A developer's own Lago credentials must not leak into, or change, any test.
-  for (const name of ['LAGO_API_KEY', 'LAGO_API_URL', 'LAGO_METRIC_CODE']) {
+  for (const name of ['LAGO_API_KEY', 'LAGO_API_URL']) {
     vi.stubEnv(name, undefined);
   }
 });

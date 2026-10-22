@@ -18,14 +18,12 @@ Examples must stub `fetch` and run without credentials or network access.
 
 ## Rules
 
-1. `apiKey` and `metricCode` are always required, and `metricCode` has no default: Lago
-   accepts an event whose code matches no active metric and then skips it silently.
-   `metricCode` is a code or a function of the record; validate the code a function
-   returns like a configured one, and reject the record (`missing_metric_code`,
-   `invalid_metric_code`) when it returns none, an invalid one or throws, without logging
-   the thrown error. Explicit options take precedence over `LAGO_API_KEY`, `LAGO_API_URL`
-   and `LAGO_METRIC_CODE`. The key is sent only to the validated endpoint, and redirects
-   are never followed.
+1. `apiKey` is always required. The event code is the record's `attribution.feature_id`.
+   Reject a record without one as `missing_metric_code`, and one whose
+   `feature_id` has surrounding whitespace as `invalid_metric_code`. Lago accepts an event
+   whose code matches no active metric and then skips it silently. Explicit options take
+   precedence over `LAGO_API_KEY` and `LAGO_API_URL`. The key is sent only to the validated
+   endpoint, and redirects are never followed.
 2. Lago routes on `attribution.subscription_id`. Return a record without one as rejected
    with detail `missing_subscription_id`; never send it. Return a record that carries
    `corrects` as rejected with detail `unsupported_correction`, because Lago cannot
@@ -34,8 +32,8 @@ Examples must stub `fetch` and run without credentials or network access.
    request body once and resend those bytes on retry. On a ClickHouse event store the
    timestamp is part of the de-duplication key, so a retry with another timestamp is a
    second billable event.
-4. Send one event per record, under the code `metricCode` names or chooses for that
-   record. Do not fan a record out to several codes or invent transaction identifiers: the
+4. Send one event per record, under the code its `feature_id` names.
+   Do not fan a record out to several codes or invent transaction identifiers: the
    Postgres event store de-duplicates on `transaction_id` and subscription, without the
    code.
 5. Flatten and forward every field of the record, including `attribution.labels` and `x_*`

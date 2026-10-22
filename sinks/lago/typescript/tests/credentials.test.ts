@@ -2,22 +2,17 @@ import { ConfigurationError } from '@openaudr/audr';
 import { describe, expect, it } from 'vitest';
 
 import { parseApiUrl, resolveCredentials } from '../src/credentials.js';
-import { preflight } from '../src/preflight.js';
-import { record } from './helpers.js';
 
 const BATCH = '/api/v1/events/batch';
-const MINIMAL = { apiKey: 'key_1', metricCode: 'tokens' };
+const MINIMAL = { apiKey: 'key_1' };
 
 describe('resolveCredentials', () => {
   it('defaults to Lago Cloud in the US region', () => {
     expect(resolveCredentials(MINIMAL, {}).endpoint).toBe(`https://api.getlago.com${BATCH}`);
   });
 
-  it('sends the key as a Bearer token and keeps the metric code verbatim', () => {
-    expect(resolveCredentials(MINIMAL, {})).toMatchObject({
-      authorization: 'Bearer key_1',
-      metricCode: 'tokens',
-    });
+  it('sends the key as a Bearer token', () => {
+    expect(resolveCredentials(MINIMAL, {})).toMatchObject({ authorization: 'Bearer key_1' });
   });
 
   it('reads every setting from the environment', () => {
@@ -26,31 +21,24 @@ describe('resolveCredentials', () => {
       {
         LAGO_API_KEY: 'env_key',
         LAGO_API_URL: 'https://api.eu.getlago.com',
-        LAGO_METRIC_CODE: 'env_metric',
       },
     );
 
     expect(credentials).toEqual({
       endpoint: `https://api.eu.getlago.com${BATCH}`,
       authorization: 'Bearer env_key',
-      metricCode: 'env_metric',
     });
   });
 
   it('prefers explicit options over the environment', () => {
     const credentials = resolveCredentials(
-      { apiKey: 'opt_key', apiUrl: 'https://a.example.test', metricCode: 'opt_metric' },
-      {
-        LAGO_API_KEY: 'env_key',
-        LAGO_API_URL: 'https://b.example.test',
-        LAGO_METRIC_CODE: 'env_metric',
-      },
+      { apiKey: 'opt_key', apiUrl: 'https://a.example.test' },
+      { LAGO_API_KEY: 'env_key', LAGO_API_URL: 'https://b.example.test' },
     );
 
     expect(credentials).toEqual({
       endpoint: `https://a.example.test${BATCH}`,
       authorization: 'Bearer opt_key',
-      metricCode: 'opt_metric',
     });
   });
 
@@ -59,20 +47,9 @@ describe('resolveCredentials', () => {
   });
 
   it('names what is missing without a value', () => {
-    expect(() => resolveCredentials({ metricCode: 'm' }, {})).toThrow(
+    expect(() => resolveCredentials({}, {})).toThrow(
       'apiKey is required; provide apiKey or set LAGO_API_KEY',
     );
-  });
-
-  it('bills each event against the record feature_id when no metricCode is set', () => {
-    const { metricCode } = resolveCredentials({ apiKey: 'k' }, {});
-    const named = record({ feature_id: 'support-chat' });
-    const unnamed = record({});
-
-    const { events, rejected } = preflight([named, unnamed], metricCode);
-
-    expect(events.map((event) => event.code)).toEqual(['support-chat']);
-    expect(rejected).toEqual([{ recordId: unnamed.record_id, detail: 'missing_metric_code' }]);
   });
 
   it.each(['', ' ', 'two words', 'tab\tkey', 'new\nline', 'caf\u00e9'])(
@@ -88,42 +65,9 @@ describe('resolveCredentials', () => {
     );
   });
 
-  it.each(['', '   ', ' tokens', 'tokens ', 'tokens\n'])(
-    'rejects the metricCode %j',
-    (metricCode) => {
-      expect(() => resolveCredentials({ ...MINIMAL, metricCode }, {})).toThrow(ConfigurationError);
-    },
-  );
-
-  it('keeps a function that chooses the metric code per record', () => {
-    const choose = (): string => 'tokens';
-
-    expect(resolveCredentials({ ...MINIMAL, metricCode: choose }, {}).metricCode).toBe(choose);
-  });
-
-  it('prefers a metric code function over LAGO_METRIC_CODE', () => {
-    const choose = (): string => 'tokens';
-
-    expect(
-      resolveCredentials({ ...MINIMAL, metricCode: choose }, { LAGO_METRIC_CODE: 'env_metric' })
-        .metricCode,
-    ).toBe(choose);
-  });
-
-  it.each([42, true, {}])(
-    'rejects the metricCode %j, which is neither a string nor a function',
-    (metricCode) => {
-      expect(() =>
-        resolveCredentials({ ...MINIMAL, metricCode: metricCode as unknown as string }, {}),
-      ).toThrow('metricCode must be a non-empty string or a function; set LAGO_METRIC_CODE');
-    },
-  );
-
   it('rejects a blank environment value instead of treating it as missing', () => {
     expect(() => resolveCredentials(MINIMAL, { LAGO_API_URL: '' })).toThrow(ConfigurationError);
-    expect(() => resolveCredentials({ metricCode: 'm' }, { LAGO_API_KEY: '' })).toThrow(
-      'apiKey must not be empty',
-    );
+    expect(() => resolveCredentials({}, { LAGO_API_KEY: '' })).toThrow('apiKey must not be empty');
   });
 
   it('requires allowInsecureHttp to be a boolean', () => {

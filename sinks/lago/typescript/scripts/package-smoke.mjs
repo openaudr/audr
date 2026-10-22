@@ -11,11 +11,12 @@ const fetch = async (url, init) => {
 const sink = new LagoSink({
   apiUrl: 'https://lago.example.test',
   apiKey: 'test_key',
-  metricCode: 'ai_usage',
   fetch,
 });
 const client = new Client(sink, { logger: { warn() {}, error() {} } });
-const record = makeRecord({ attribution: { environment: 'test', subscription_id: 'sub_1' } });
+const record = makeRecord({
+  attribution: { environment: 'test', subscription_id: 'sub_1', feature_id: 'ai_usage' },
+});
 if (!client.record(record).queued) throw new Error('record was not queued');
 await client.shutdown();
 const [request] = requests;

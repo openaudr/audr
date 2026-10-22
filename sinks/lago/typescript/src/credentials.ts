@@ -1,9 +1,7 @@
 /** Credential resolution and validation of the single endpoint a request may be sent to. */
 import process from 'node:process';
 
-import { type AudrRecord, ConfigurationError } from '@openaudr/audr';
-
-import { isMetricCode } from './event.js';
+import { ConfigurationError } from '@openaudr/audr';
 
 /** Lago Cloud, US region. */
 export const DEFAULT_API_URL = 'https://api.getlago.com';
@@ -15,16 +13,6 @@ const ACCEPTED_PATHS = new Set(['', '/api/v1', BATCH_PATH]);
 // Printable ASCII without whitespace: a value in this range cannot break out of a header.
 const API_KEY = /^[\x21-\x7e]+$/;
 
-/**
- * The billable metric `code` of every event, or a function that chooses one per record. The
- * function must depend only on the record: a replay that chose another code would be a
- * second billable event on a ClickHouse event store. `undefined` leaves the record unsent.
- */
-export type MetricCode = string | ((record: AudrRecord) => string | undefined);
-
-/** The default: the host names the feature on the record, and the feature is the metric. */
-const featureId = (record: AudrRecord): string | undefined => record.attribution.feature_id;
-
 export interface CredentialOptions {
   /** Always required. Env: `LAGO_API_KEY`. */
   readonly apiKey?: string | undefined;
@@ -33,11 +21,6 @@ export interface CredentialOptions {
    * Env: `LAGO_API_URL`.
    */
   readonly apiUrl?: string | undefined;
-  /**
-   * Default: the record's `attribution.feature_id`. Env: `LAGO_METRIC_CODE`, which can only
-   * name one code.
-   */
-  readonly metricCode?: MetricCode | undefined;
   /** Permit an `http:` URL, for a self-hosted Lago on a trusted network. Default `false`. */
   readonly allowInsecureHttp?: boolean | undefined;
 }
@@ -47,7 +30,6 @@ export interface Credentials {
   readonly endpoint: string;
   /** The HTTP `Authorization` header value. Never log it. */
   readonly authorization: string;
-  readonly metricCode: MetricCode;
 }
 
 /** Resolve credentials once, preferring explicit options over the environment. */
@@ -59,7 +41,6 @@ export function resolveCredentials(
   if (apiKey === undefined) {
     throw new ConfigurationError('apiKey is required; provide apiKey or set LAGO_API_KEY');
   }
-  const metricCode = options.metricCode ?? env.LAGO_METRIC_CODE ?? featureId;
   const allowInsecureHttp = options.allowInsecureHttp ?? false;
   if (typeof allowInsecureHttp !== 'boolean') {
     throw new ConfigurationError('allowInsecureHttp must be a boolean');
@@ -67,7 +48,6 @@ export function resolveCredentials(
   return Object.freeze({
     endpoint: parseApiUrl(options.apiUrl ?? env.LAGO_API_URL ?? DEFAULT_API_URL, allowInsecureHttp),
     authorization: bearerAuthorization(apiKey),
-    metricCode: validMetricCode(metricCode),
   });
 }
 
@@ -124,15 +104,4 @@ function bearerAuthorization(apiKey: unknown): string {
     throw new ConfigurationError('apiKey must contain only printable ASCII without spaces');
   }
   return `Bearer ${apiKey}`;
-}
-
-function validMetricCode(metricCode: unknown): MetricCode {
-  if (typeof metricCode === 'function') return metricCode as MetricCode;
-  if (isMetricCode(metricCode)) return metricCode;
-  if (typeof metricCode !== 'string' || metricCode.trim() === '') {
-    throw new ConfigurationError(
-      'metricCode must be a non-empty string or a function; set LAGO_METRIC_CODE',
-    );
-  }
-  throw new ConfigurationError('metricCode must not have leading or trailing whitespace');
 }

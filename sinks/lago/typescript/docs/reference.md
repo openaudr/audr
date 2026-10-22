@@ -11,7 +11,6 @@ covers setup and usage.
 | Option | Default | Purpose |
 | --- | --- | --- |
 | `apiKey` | `LAGO_API_KEY` | Lago API key, sent as a bearer token; always required |
-| `metricCode` | `LAGO_METRIC_CODE`, then the record's `attribution.feature_id` | Code of the billable metric events are billed against, or a function that chooses it per record, see [Metric code](#metric-code) |
 | `apiUrl` | `LAGO_API_URL`, then `https://api.getlago.com` | Lago origin, an origin with `/api/v1`, or the full batch URL |
 | `allowInsecureHttp` | `false` | Permits an `http` `apiUrl`, which sends the API key unencrypted |
 | `retry` | see [Retries](#retries) | Retry budget and backoff |
@@ -28,7 +27,6 @@ import { LagoSink } from '@openaudr/audr-sink-lago';
 
 const sink = new LagoSink({
   apiKey: process.env.LAGO_API_KEY,
-  metricCode: 'ai_usage',
   apiUrl: 'https://api.eu.getlago.com',
   retry: { maxAttempts: 5, initialBackoffMs: 1_000 },
   timeoutMs: 20_000,
@@ -52,28 +50,18 @@ must not carry userinfo, a query string, a fragment, a backslash, an internation
 host name or an explicit default port. The API key is sent to the resulting endpoint only,
 and the sink never follows a redirect.
 
-`apiKey` is a non-empty string of printable ASCII characters without spaces. `metricCode`
-is a non-blank string without leading or trailing whitespace, or a function.
+`apiKey` is a non-empty string of printable ASCII characters without spaces.
 
 ### Metric code
 
-By default, the code of each record's event is its `attribution.feature_id`, and a record
-without one is rejected with `missing_metric_code`. `metricCode` replaces that default for
-every record: it is either one code for every event, or a function
-`(record: AudrRecord) => string | undefined` that chooses the code of each record's event.
-The `MetricCode` type names both forms. `LAGO_METRIC_CODE` can only name one code.
-
-- One `LagoSink` serves every metric. Each event carries its own `code`, so records with
-  different codes travel in the same batch and the same request. Create another sink only
-  for another Lago instance or API key.
-- The sink calls the function once per record, before anything is sent, and validates
-  what it returns as it validates a fixed code. A record for which it returns `undefined`
-  is rejected with detail `missing_metric_code`; a record for which it returns anything
-  else that is not a valid code, or throws, is rejected with detail
-  `invalid_metric_code`. The other records of the batch are unaffected, and the error the
-  function threw is neither logged nor returned.
-- The function must depend only on the record. A replay that chose another code would be
-  a second billable event on a ClickHouse event store, see [Idempotency](#idempotency).
+The code of each record's event is its `attribution.feature_id`, the host-defined
+identifier of the product feature the operation served. A record without one is rejected
+with `missing_metric_code`; one whose `feature_id` has leading or trailing whitespace is
+rejected with `invalid_metric_code`. One `LagoSink` serves every metric: each event carries
+its own `code`, so records with different features travel in the same batch and the same
+request. Create another sink only for another Lago instance or API key. A replay under
+another `feature_id` is a second billable event on a ClickHouse event store, see
+[Idempotency](#idempotency).
 
 ## Event mapping
 
@@ -83,7 +71,7 @@ Every record becomes one event of Lago's batch endpoint.
 | --- | --- |
 | `transaction_id` | `record_id` |
 | `external_subscription_id` | `attribution.subscription_id` |
-| `code` | `attribution.feature_id`, or the code `metricCode` names or chooses for the record |
+| `code` | `attribution.feature_id` |
 | `timestamp` | `timing.event_time`, in Unix seconds with millisecond precision, such as `"1791192555.242"` |
 | `properties` | the flattened record, see [Flattening](#flattening) |
 
@@ -128,8 +116,8 @@ unaffected.
 | --- | --- |
 | `missing_subscription_id` | `attribution.subscription_id` is absent or blank |
 | `unsupported_correction` | The record carries `corrects`; Lago cannot restate an event |
-| `missing_metric_code` | The record has no `attribution.feature_id` and no `metricCode` is set, or the `metricCode` function chose no code |
-| `invalid_metric_code` | The `metricCode` function chose an invalid code for the record, or threw |
+| `missing_metric_code` | The record has no `attribution.feature_id` |
+| `invalid_metric_code` | `attribution.feature_id` has leading or trailing whitespace |
 | `invalid_timestamp` | `timing.event_time` is not an RFC 3339 instant on or after the Unix epoch |
 | `invalid_field:/record_id` | `record_id` is not a non-empty string |
 | `unencodable_field:<pointer>` | The field at the JSON pointer cannot be a Lago property, see [Flattening](#flattening) |
@@ -236,8 +224,8 @@ stores de-duplicate differently.
   ClickHouse store and is billed again. Keep `record_id` and `timing.event_time` stable
   across replays.
 - The same holds for the metric code. A replay under another code, because the record's
-  `feature_id` or the `metricCode` function or option changed, is billed again on the ClickHouse store, and
-  is dropped as a duplicate on the Postgres store, where the event keeps its first code.
+  `feature_id` changed, is billed again on the ClickHouse store, and is dropped as a
+  duplicate on the Postgres store, where the event keeps its first code.
 - A restated record, one that carries `corrects`, is rejected locally. Postgres rejects a
   second event under one `transaction_id`, and ClickHouse replaces an event only when the
   `timestamp` matches, so a correction has no consistent meaning across the two.
