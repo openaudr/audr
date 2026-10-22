@@ -14,12 +14,19 @@ export type Resolution =
   | { readonly kind: 'resolved'; readonly attribution: Attribution }
   | { readonly kind: 'unresolved' };
 
-const STRING_FIELDS = ['environment', 'user_id', 'account_id', 'subscription_id'] as const;
+const STRING_FIELDS = [
+  'environment',
+  'user_id',
+  'account_id',
+  'subscription_id',
+  'feature_id',
+] as const;
 
 /**
  * The per-call reader: `runtimeContext.audr`, keeping `environment`, `user_id`,
- * `account_id` and `subscription_id` when each is a string and `labels` when it is a plain
- * object of strings. Everything else is dropped; the client validates what remains.
+ * `account_id`, `subscription_id` and `feature_id` when each is a string and `labels` when
+ * it is a plain object of strings. Everything else is dropped; the client validates what
+ * remains.
  */
 export function readRuntimeAttribution(source: AttributionSource): Attribution | undefined {
   const audr = Object.hasOwn(source.runtimeContext, 'audr')

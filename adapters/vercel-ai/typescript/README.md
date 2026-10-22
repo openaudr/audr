@@ -76,7 +76,8 @@ await generateText({
     audr: {
       account_id: 'acct_42',
       user_id: 'u_8f14e45f', // pseudonymous, never an email or a name
-      labels: { feature: 'support-chat' },
+      feature_id: 'support-chat', // selects the meter the usage is billed against
+      labels: { team: 'support' },
     },
   },
   telemetry: { includeRuntimeContext: { audr: true } },
@@ -85,8 +86,9 @@ await generateText({
 
 - **`includeRuntimeContext: { audr: true }` is required.** The AI SDK removes every
   other `runtimeContext` key before integrations see it.
-- `environment`, `user_id`, `account_id` and `subscription_id` are read when each is a
-  string, and `labels` when it is an object of strings. The `Client` validates the result.
+- `environment`, `user_id`, `account_id`, `subscription_id` and `feature_id` are read when
+  each is a string, and `labels` when it is an object of strings. The `Client` validates the
+  result.
 - An operation with no `environment` is skipped with an `ATTRIBUTION_UNRESOLVED` warning
   rather than billed to a guess. Omit it from `attributionDefaults` to require it per call.
 
