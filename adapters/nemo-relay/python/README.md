@@ -111,14 +111,16 @@ with nemo_relay.scope.scope(
             "account_id": "acct_42",
             "subscription_id": "sub_7",
             "user_id": "u_8f14e45f",  # pseudonymous, never an email or a name
-            "labels": {"feature": "support-chat"},
+            "feature_id": "support-chat",  # selects the meter the usage is billed against
+            "labels": {"team": "support"},
         }
     },
 ):
     ...  # Relay-managed LLM and tool calls
 ```
 
-- `environment`, `user_id`, `account_id`, `subscription_id` and `labels` are read.
+- `environment`, `user_id`, `account_id`, `subscription_id`, `feature_id` and `labels` are
+  read.
   Child scopes inherit the snapshot taken when their root started.
 - A scope with no `environment`, or a `production` scope with no `account_id`, is skipped
   with a warning rather than billed to a guess. Omit `environment` from

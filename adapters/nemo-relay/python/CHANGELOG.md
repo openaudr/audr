@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-22
+
+### Added
+
+- Scope `metadata["audr"]` and `attribution_defaults` accept `feature_id`, the
+  specification 1.1.0 identifier of the product feature the scope served, which a sink
+  uses to select the meter the usage is billed against.
+
 ### Changed
 
 - Requires `audr` 0.2, which emits specification 1.1.0 records.
