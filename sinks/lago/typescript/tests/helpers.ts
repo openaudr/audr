@@ -5,7 +5,7 @@ import { LagoSink, type LagoSinkOptions } from '../src/index.js';
 
 export const API_URL = 'https://lago.example.test';
 export const BATCH_URL = `${API_URL}/api/v1/events/batch`;
-export const METRIC_CODE = 'ai_usage';
+export const FEATURE_ID = 'ai_usage';
 export const API_KEY = 'test_key';
 
 /** A valid record Lago can route, with `attribution` fields merged in. */
@@ -14,7 +14,12 @@ export function record(
   overrides: Partial<RecordInput> = {},
 ): AudrRecord {
   return makeRecord({
-    attribution: { environment: 'test', subscription_id: 'sub_test', ...attribution },
+    attribution: {
+      environment: 'test',
+      subscription_id: 'sub_test',
+      feature_id: FEATURE_ID,
+      ...attribution,
+    },
     ...overrides,
   });
 }
@@ -130,7 +135,6 @@ export function makeSink({ retry, ...options }: LagoSinkOptions = {}): LagoSink 
   return new LagoSink({
     apiUrl: API_URL,
     apiKey: API_KEY,
-    metricCode: METRIC_CODE,
     logger: recordingLogger(),
     ...options,
     retry: { initialBackoffMs: 0, maxBackoffMs: 0, ...retry },

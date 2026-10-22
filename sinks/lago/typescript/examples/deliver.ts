@@ -1,6 +1,6 @@
 /**
  * Deliver one AUDR record through the Lago sink and print the event it became, billed against
- * the metric its operation selects. A stand-in `fetch` answers for the Lago batch endpoint, so
+ * the metric its `feature_id` names. A stand-in `fetch` answers for the Lago batch endpoint, so
  * the example runs without network access or credentials. Remove `fetch` to deliver to a real
  * Lago.
  *
@@ -29,21 +29,12 @@ const record = createRecord({
     environment: 'production',
     account_id: 'acct_42',
     subscription_id: 'sub_42',
-    labels: { feature: 'support-chat' },
+    feature_id: 'support-chat',
+    labels: { region: 'eu' },
   },
 });
 
-const METRICS: Record<string, string> = {
-  generation: 'llm_tokens',
-  embedding: 'embedding_tokens',
-  tool_execution: 'tool_calls',
-};
-
-const sink = new LagoSink({
-  apiKey: 'lago_test_key',
-  metricCode: (source) => METRICS[source.resource.operation],
-  fetch: lago,
-});
+const sink = new LagoSink({ apiKey: 'lago_test_key', fetch: lago });
 const client = new Client(sink, {
   emitter: { component: 'harness', name: 'my-harness', version: '1.4.0' },
 });

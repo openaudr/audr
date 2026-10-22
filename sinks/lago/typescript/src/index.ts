@@ -3,7 +3,6 @@
  * usage-based billing.
  */
 
-export { type MetricCode } from './credentials.js';
 export { type PropertyValue } from './event.js';
 export { flattenRecord } from './flatten.js';
 export { type RetryOptions } from './retry.js';

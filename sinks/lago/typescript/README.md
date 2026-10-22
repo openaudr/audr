@@ -37,10 +37,15 @@ const record = createRecord({
   },
   usage: { llm: { input_tokens: 1200, output_tokens: 340, requests: 1 } },
   run: { run_id: '01J8ZQ8Y2K3M4N5P6Q7R8S9T0V', span_id: 'turn-3', run_type: 'agent_run' },
-  attribution: { environment: 'production', account_id: 'acct_42', subscription_id: 'sub_42' },
+  attribution: {
+    environment: 'production',
+    account_id: 'acct_42',
+    subscription_id: 'sub_42',
+    feature_id: 'support-chat', // the billable metric code
+  },
 });
 
-const sink = new LagoSink(); // reads LAGO_API_KEY and LAGO_METRIC_CODE
+const sink = new LagoSink(); // reads LAGO_API_KEY
 const client = new Client(sink, {
   emitter: { component: 'harness', name: 'my-harness', version: '1.4.0' },
 });
@@ -66,16 +71,16 @@ A runnable version against a stand-in endpoint, which
 
 ## Configuration
 
-Configure the sink with `apiKey` and `metricCode`. Pass them explicitly or set
-`LAGO_API_KEY` and `LAGO_METRIC_CODE`; explicit values take precedence, and both are always
-required. Credentials belong to the sink and never appear in logs, errors, `String(sink)` or
+Configure the sink with `apiKey`, explicitly or as `LAGO_API_KEY`; the explicit value takes
+precedence. Credentials belong to the sink and never appear in logs, errors, `String(sink)` or
 `util.inspect(sink)`. An invalid configuration throws `ConfigurationError` from the
 constructor.
 
-`metricCode` is the `code` of the Lago billable metric an event is billed against: one code
-for every record, or a function that [chooses the code for each record](#billable-metric).
-`LAGO_METRIC_CODE` can only name one code. It has no default, because Lago accepts an event
-whose code matches no active metric and then skips it without an error.
+An event's `code` names the Lago billable metric it is billed against, and it is the record's
+`attribution.feature_id`, which the host sets on every record. A record without one is
+rejected with detail `missing_metric_code` and never sent. Lago accepts an event whose code
+matches no active metric and then skips it without an error, so define a metric for every
+feature the host emits.
 
 `apiUrl`, or `LAGO_API_URL`, selects the Lago instance. It defaults to Lago Cloud in the US
 region, `https://api.getlago.com`. Use `https://api.eu.getlago.com` for the EU region, or the
@@ -89,44 +94,36 @@ followed by `/api/v1`, or the full `/api/v1/events/batch` URL; all three name on
 | `attribution.subscription_id` | `external_subscription_id` |
 | `record_id` | `transaction_id` |
 | `timing.event_time` | `timestamp`, in Unix seconds with millisecond precision |
-| `metricCode`, or the code it chooses for the record | `code` |
+| `attribution.feature_id` | `code` |
 | Every field, flattened | `properties`, such as `usage__llm__input_tokens` |
 
 Lago accepts only string and number property values, so every field is flattened to a
-reversible name joined by `__`. Arrays and `attribution.labels` are sent as canonical JSON
-under a `__json` suffix, such as `attribution__labels__json`. The separator is fixed,
-because billable metric definitions refer to these names. `flattenRecord(record)` returns the
+reversible name joined by `__`. Each label becomes its own property, such as
+`attribution__labels__team`, and arrays are sent as canonical JSON under a `__json` suffix.
+The separator is fixed, because billable metric definitions refer to these names. `flattenRecord(record)` returns the
 properties a record becomes before it is sent.
 
 ### Billable metric
 
-Create the Lago billable metric with the code passed as `metricCode`, and choose its
-aggregation field from the flattened names. A metric that sums `usage__llm__input_tokens`,
-for example, bills the input tokens of every record.
+Create one Lago billable metric per `attribution.feature_id` the host emits, with that
+feature as its code, and choose its aggregation field from the flattened names. A metric
+that sums `usage__llm__input_tokens`, for example, bills the input tokens of every record
+of its feature.
 
 A Lago metric aggregates one field, so records that meter different things, such as model
-tokens and tool calls, belong to different metrics. Pass a function to choose the code from
-the record:
+tokens and tool calls, belong to different features. The host sets `feature_id` where it
+builds the record, through the attribution hook of its AUDR adapter, so the split is made
+where the operation is known.
 
-```ts
-const METRICS: Record<string, string> = {
-  generation: 'llm_tokens',
-  embedding: 'embedding_tokens',
-  tool_execution: 'tool_calls',
-};
+One sink serves every metric. Each event carries its own code, so records with different
+features are delivered in the same batch, and even the same request. A separate sink is
+needed only for another Lago instance or API key.
 
-const sink = new LagoSink({ metricCode: (record) => METRICS[record.resource.operation] });
-```
-
-One sink serves every metric. The function runs for each record, so records with different
-codes are delivered in the same batch, and even the same request. A separate sink is needed
-only for another Lago instance or API key.
-
-A record for which the function returns `undefined`, or an invalid code, is rejected with
-detail `missing_metric_code` or `invalid_metric_code` and never sent. The function must
-depend only on the record, so that a replay chooses the same code: on a ClickHouse event
-store the code is part of the de-duplication key, and the same record under another code is
-billed again.
+A record without `attribution.feature_id` is rejected with detail `missing_metric_code`,
+and one whose `feature_id` has leading or trailing whitespace with `invalid_metric_code`.
+Neither is sent. Keep `feature_id` stable across replays: on a ClickHouse event store the
+code is part of the de-duplication key, and the same record under another code is billed
+again.
 
 One record becomes one event under one metric code. Lago de-duplicates on `transaction_id`,
 so the same record sent under a second code is dropped as a duplicate on a Postgres event

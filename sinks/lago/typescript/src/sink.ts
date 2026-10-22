@@ -7,7 +7,7 @@ import {
   type Sink,
 } from '@openaudr/audr';
 
-import { type CredentialOptions, type MetricCode, resolveCredentials } from './credentials.js';
+import { type CredentialOptions, resolveCredentials } from './credentials.js';
 import { type LagoEvent } from './event.js';
 import { preflight } from './preflight.js';
 import { classifyStatus, exceedsBatchLimit, parseValidationErrors } from './response.js';
@@ -41,8 +41,8 @@ type Exchange =
 /**
  * Deliver AUDR records to Lago's batch event endpoint.
  *
- * Each record becomes one event under the metric code `metricCode` names or chooses for it,
- * routed on `attribution.subscription_id` and de-duplicated on `record_id`. A record that
+ * Each record becomes one event under the billable metric its `attribution.feature_id`
+ * names, routed on `attribution.subscription_id` and de-duplicated on `record_id`. A record that
  * cannot become a valid event is rejected by name and never sent. Events are sent in order,
  * at most 100 to a request.
  *
@@ -54,13 +54,12 @@ type Exchange =
 export class LagoSink implements Sink {
   readonly #endpoint: string;
   readonly #headers: Readonly<Record<string, string>>;
-  readonly #metricCode: MetricCode;
   readonly #retry: RetryPolicy;
   readonly #transport: Transport;
   readonly #logger: Logger;
 
   constructor(options: LagoSinkOptions = {}) {
-    const { endpoint, authorization, metricCode } = resolveCredentials(options);
+    const { endpoint, authorization } = resolveCredentials(options);
     this.#endpoint = endpoint;
     this.#headers = Object.freeze({
       Accept: 'application/json',
@@ -68,7 +67,6 @@ export class LagoSink implements Sink {
       'Content-Type': 'application/json;charset=UTF-8',
       'User-Agent': USER_AGENT,
     });
-    this.#metricCode = metricCode;
     this.#retry = new RetryPolicy(options.retry);
     this.#transport = new Transport(options);
     this.#logger = options.logger ? safe(options.logger) : SILENT;
@@ -100,7 +98,7 @@ export class LagoSink implements Sink {
   async #deliver(batch: readonly AudrRecord[], signal?: AbortSignal): Promise<BatchResult> {
     if (this.#transport.closed) return BatchResult.closed();
 
-    const { events, rejected } = preflight(batch, this.#metricCode);
+    const { events, rejected } = preflight(batch);
     const tally = new Tally(events, rejected);
     try {
       for (

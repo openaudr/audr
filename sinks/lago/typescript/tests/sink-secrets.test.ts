@@ -9,7 +9,6 @@ import {
   API_URL,
   fakeFetch,
   makeSink,
-  METRIC_CODE,
   record,
   recordingLogger,
   respond,
@@ -45,12 +44,11 @@ describe('LagoSink credentials', () => {
 
   it('does not appear in a configuration error', () => {
     for (const options of [
-      { apiKey: `${API_KEY} with a space`, metricCode: METRIC_CODE },
-      { apiKey: API_KEY, metricCode: ' padded ' },
-      { apiKey: API_KEY, metricCode: METRIC_CODE, apiUrl: `https://${API_KEY}@host.test` },
-      { apiKey: API_KEY, metricCode: METRIC_CODE, apiUrl: 'ftp://host.test' },
-      { apiKey: API_KEY, metricCode: METRIC_CODE, retry: { maxAttempts: 0 } },
-      { apiKey: API_KEY, metricCode: METRIC_CODE, timeoutMs: -1 },
+      { apiKey: `${API_KEY} with a space` },
+      { apiKey: API_KEY, apiUrl: `https://${API_KEY}@host.test` },
+      { apiKey: API_KEY, apiUrl: 'ftp://host.test' },
+      { apiKey: API_KEY, retry: { maxAttempts: 0 } },
+      { apiKey: API_KEY, timeoutMs: -1 },
     ]) {
       let message = '';
       try {

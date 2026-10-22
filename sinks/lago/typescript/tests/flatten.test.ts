@@ -21,9 +21,10 @@ describe('flatten', () => {
     });
   });
 
-  it('stores the labels map as canonical JSON with sorted keys', () => {
-    expect(flatten({ attribution: { labels: { b: '2', a: '1' } } })).toEqual({
-      attribution__labels__json: '{"a":"1","b":"2"}',
+  it('makes each label its own property, keeping the key verbatim', () => {
+    expect(flatten({ attribution: { labels: { b: '2', 'cost-center': '1' } } })).toEqual({
+      attribution__labels__b: '2',
+      'attribution__labels__cost-center': '1',
     });
   });
 
@@ -33,10 +34,10 @@ describe('flatten', () => {
     });
   });
 
-  it('omits undefined values, including inside a JSON container', () => {
-    expect(flatten({ a: undefined, labels: { b: '1', c: undefined } })).toEqual({
-      labels__json: '{"b":"1"}',
-    });
+  it('omits undefined values, including inside an array', () => {
+    expect(
+      flatten({ a: undefined, labels: { b: '1', c: undefined }, d: [{ e: undefined }] }),
+    ).toEqual({ labels__b: '1', d__json: '[{}]' });
   });
 
   it('keeps zero, negative and fractional numbers and the empty string', () => {
@@ -51,7 +52,7 @@ describe('flatten', () => {
     ['a function', { fn: () => 1 }, '/fn'],
     ['a bigint', { big: 1n }, '/big'],
     ['a date', { when: new Date(0) }, '/when'],
-    ['a non-finite number in labels', { labels: { x: Number.NaN } }, '/labels'],
+    ['a non-finite number in labels', { labels: { x: Number.NaN } }, '/labels/x'],
     ['an undefined array item', { list: [undefined] }, '/list'],
     ['a class instance in an array', { list: [new Date(0)] }, '/list'],
   ])('rejects a field that is %s, naming only its pointer', (_name, nested, path) => {
@@ -74,7 +75,7 @@ describe('flatten', () => {
 describe('flattenRecord', () => {
   it('forwards every field of a record, with labels and extension counters', () => {
     const source = record(
-      { account_id: 'acct_1', labels: { team: 'search', env: 'blue' } },
+      { account_id: 'acct_1', feature_id: 'search', labels: { team: 'search', env: 'blue' } },
       {
         timing: { event_time: '2022-04-29T14:19:51.123Z' },
         usage: { llm: { input_tokens: 12, output_tokens: 3, requests: 1, x_acme_cached: 4 } },
@@ -98,7 +99,9 @@ describe('flattenRecord', () => {
       attribution__environment: 'test',
       attribution__subscription_id: 'sub_test',
       attribution__account_id: 'acct_1',
-      attribution__labels__json: '{"env":"blue","team":"search"}',
+      attribution__feature_id: 'search',
+      attribution__labels__team: 'search',
+      attribution__labels__env: 'blue',
       usage__llm__input_tokens: 12,
       usage__llm__output_tokens: 3,
       usage__llm__requests: 1,
