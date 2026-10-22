@@ -50,11 +50,16 @@ describe('attribution resolution', () => {
       attributionDefaults: { environment: 'test', prompt: 'SENTINEL' } as never,
     });
     h.fake.json(response());
-    await withAudr({ attribution: { user_id: 'u_1', extra: 'SENTINEL' } as never }, () =>
-      h.gateway.responses.create(PARAMS),
+    await withAudr(
+      { attribution: { user_id: 'u_1', feature_id: 'support-chat', extra: 'SENTINEL' } as never },
+      () => h.gateway.responses.create(PARAMS),
     );
     const [record] = await h.records();
-    expect(record!.attribution).toEqual({ environment: 'test', user_id: 'u_1' });
+    expect(record!.attribution).toEqual({
+      environment: 'test',
+      user_id: 'u_1',
+      feature_id: 'support-chat',
+    });
     expect(JSON.stringify(record)).not.toContain('SENTINEL');
   });
 

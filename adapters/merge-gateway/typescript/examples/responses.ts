@@ -47,7 +47,7 @@ const gateway = instrumentMergeGateway(new MergeGateway({ apiKey: 'mg_example' }
 
 await withAudr(
   {
-    attribution: { account_id: 'acct_42', subscription_id: 'sub_7' },
+    attribution: { account_id: 'acct_42', subscription_id: 'sub_7', feature_id: 'support-chat' },
     run: { run_id: 'run-order-42-support', name: 'support-agent' },
   },
   async () => {
