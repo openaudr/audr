@@ -71,6 +71,7 @@ export function mergeAttribution(
     account_id: override?.account_id ?? base.account_id,
     subscription_id: override?.subscription_id ?? base.subscription_id,
     user_id: override?.user_id ?? base.user_id,
+    feature_id: override?.feature_id ?? base.feature_id,
     labels: Object.keys(labels).length > 0 ? labels : undefined,
   };
 }
