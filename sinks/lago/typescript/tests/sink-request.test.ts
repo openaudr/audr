@@ -7,7 +7,7 @@ import {
   BATCH_URL,
   fakeFetch,
   makeSink,
-  METRIC_CODE,
+  FEATURE_ID,
   record,
   records,
   respond,
@@ -54,24 +54,28 @@ describe('LagoSink requests', () => {
       {
         transaction_id: source.record_id,
         external_subscription_id: 'sub_42',
-        code: METRIC_CODE,
+        code: FEATURE_ID,
         timestamp: '1651241991.123',
         properties: flattenRecord(source),
       },
     ]);
   });
 
-  it('sends each record under the metric code a function chooses for it', async () => {
-    const batch = [record({ account_id: 'acct_a' }), record({ account_id: 'acct_b' })];
+  it('bills each record against the metric its feature_id names', async () => {
+    const unnamed = record({ feature_id: undefined });
+    const batch = [
+      record({ feature_id: 'llm_tokens' }),
+      record({ feature_id: 'tool_calls' }),
+      unnamed,
+    ];
     const { fetch, calls } = fakeFetch(ok);
-    const sink = makeSink({
-      fetch,
-      metricCode: (source) => `tokens_${source.attribution.account_id ?? 'none'}`,
-    });
 
-    expect(await sink.deliver(batch)).toEqual({ outcome: 'accepted', rejected: [] });
+    expect(await makeSink({ fetch }).deliver(batch)).toEqual({
+      outcome: 'accepted',
+      rejected: [{ recordId: unnamed.record_id, detail: 'missing_metric_code' }],
+    });
     expect(calls).toHaveLength(1);
-    expect(calls[0]?.events.map((event) => event.code)).toEqual(['tokens_acct_a', 'tokens_acct_b']);
+    expect(calls[0]?.events.map((event) => event.code)).toEqual(['llm_tokens', 'tool_calls']);
   });
 
   it('sends no cost or amount field of its own', async () => {
@@ -115,7 +119,8 @@ describe('LagoSink requests', () => {
     await makeSink({ fetch }).deliver([source]);
 
     expect(calls[0]?.events[0]?.properties).toMatchObject({
-      attribution__labels__json: '{"env":"blue","team":"search"}',
+      attribution__labels__team: 'search',
+      attribution__labels__env: 'blue',
       usage__llm__x_acme_cached: 4,
       usage__llm__input_tokens: 12,
       record_id: source.record_id,
@@ -247,37 +252,32 @@ describe('LagoSink requests', () => {
   });
 
   describe('environment', () => {
-    it('reads the key, URL and metric code from the environment once, at construction', async () => {
+    it('reads the key and URL from the environment once, at construction', async () => {
       vi.stubEnv('LAGO_API_KEY', 'env-key');
       vi.stubEnv('LAGO_API_URL', 'https://env.example.test/api/v1');
-      vi.stubEnv('LAGO_METRIC_CODE', 'env_metric');
       const { fetch, calls } = fakeFetch(ok);
       const sink = new LagoSink({ fetch });
       vi.stubEnv('LAGO_API_KEY', 'changed-key');
-      vi.stubEnv('LAGO_METRIC_CODE', 'changed_metric');
 
       await sink.deliver([record()]);
 
       expect(calls[0]?.url).toBe('https://env.example.test/api/v1/events/batch');
       expect(calls[0]?.headers.Authorization).toBe('Bearer env-key');
-      expect(calls[0]?.events[0]?.code).toBe('env_metric');
     });
 
     it('prefers explicit options to the environment', async () => {
       vi.stubEnv('LAGO_API_KEY', 'env-key');
-      vi.stubEnv('LAGO_METRIC_CODE', 'env_metric');
       const { fetch, calls } = fakeFetch(ok);
 
       await makeSink({ fetch }).deliver([record()]);
 
       expect(calls[0]?.headers.Authorization).toBe(`Bearer ${API_KEY}`);
-      expect(calls[0]?.events[0]?.code).toBe(METRIC_CODE);
     });
 
     it('defaults to Lago Cloud when no URL is set', async () => {
       const { fetch, calls } = fakeFetch(ok);
 
-      await new LagoSink({ apiKey: API_KEY, metricCode: METRIC_CODE, fetch }).deliver([record()]);
+      await new LagoSink({ apiKey: API_KEY, fetch }).deliver([record()]);
 
       expect(calls[0]?.url).toBe('https://api.getlago.com/api/v1/events/batch');
     });
@@ -292,18 +292,16 @@ describe('LagoSink requests', () => {
     });
 
     it('is unaffected by later changes to the options object', async () => {
-      const options = { apiKey: API_KEY, metricCode: METRIC_CODE, apiUrl: API_URL };
+      const options = { apiKey: API_KEY, apiUrl: API_URL };
       const { fetch, calls } = fakeFetch(ok);
       const sink = new LagoSink({ ...options, fetch });
       options.apiKey = 'swapped';
-      options.metricCode = 'swapped';
       options.apiUrl = 'https://swapped.example.test';
 
       await sink.deliver([record()]);
 
       expect(calls[0]?.url).toBe(BATCH_URL);
       expect(calls[0]?.headers.Authorization).toBe(`Bearer ${API_KEY}`);
-      expect(calls[0]?.events[0]?.code).toBe(METRIC_CODE);
     });
   });
 });

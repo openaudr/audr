@@ -3,10 +3,10 @@
  *
  * The batch schema permits only string and number property values, so nested AUDR objects
  * are flattened here, in the sink, rather than in the record model. Nested objects become
- * `parent__child` names; arrays and the caller-keyed `labels` map are stored as canonical
- * JSON under a terminal `json` segment, so the destination only ever sees scalars. The
- * separator is fixed: billable metric definitions refer to these names, so a different one
- * would silently detach every metric already defined against them.
+ * `parent__child` names, each label becomes `attribution__labels__<key>`, and arrays are
+ * stored as canonical JSON under a terminal `json` segment, so the destination only ever
+ * sees scalars. The separator is fixed: billable metric definitions refer to these names, so
+ * a different one would silently detach every metric already defined against them.
  */
 import { type AudrRecord } from '@openaudr/audr';
 
@@ -14,8 +14,6 @@ import { InvalidEventError, pointer, type PropertyValue } from './event.js';
 
 const SEPARATOR = '__';
 const JSON_SUFFIX = 'json';
-// Label keys are chosen by the caller; flattening them would mint unbounded property names.
-const JSON_CONTAINER_KEYS = new Set(['labels']);
 
 /**
  * Flatten every field of an AUDR record into Lago properties.
@@ -43,7 +41,7 @@ function flattenInto(
   for (const [key, item] of Object.entries(value)) {
     if (item === undefined) continue;
     const itemPath = [...path, key];
-    if (Array.isArray(item) || (isPlainObject(item) && JSON_CONTAINER_KEYS.has(key))) {
+    if (Array.isArray(item)) {
       output[[...itemPath, JSON_SUFFIX].join(SEPARATOR)] = canonicalJson(item, itemPath);
     } else if (isPlainObject(item)) {
       flattenInto(item, itemPath, output);

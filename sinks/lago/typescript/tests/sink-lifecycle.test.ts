@@ -8,7 +8,6 @@ import {
   fakeFetch,
   hangingFetch,
   makeSink,
-  METRIC_CODE,
   record,
   recordingLogger,
   records,
@@ -345,7 +344,6 @@ describe('LagoSink lifecycle', () => {
       const sink = new LagoSink({
         apiUrl: API_URL,
         apiKey: API_KEY,
-        metricCode: METRIC_CODE,
         fetch: fakeFetch(() => respond(401)).fetch,
       });
 
@@ -360,7 +358,6 @@ describe('LagoSink lifecycle', () => {
       const sink = new LagoSink({
         apiUrl: API_URL,
         apiKey: API_KEY,
-        metricCode: METRIC_CODE,
         retry: { maxAttempts: 1 },
       });
 

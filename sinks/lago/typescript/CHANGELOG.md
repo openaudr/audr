@@ -7,9 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-21
+
 ### Changed
 
-- Requires `@openaudr/audr` 0.2, which emits specification 1.1.0 records.
+- **Breaking:** each `attribution.labels` entry is sent as its own property,
+  `attribution__labels__<key>`, instead of one JSON string under `attribution__labels__json`.
+- **Breaking:** the `metricCode` option, the `LAGO_METRIC_CODE` variable and the
+  `MetricCode` type are removed. Each event's code is the record's `attribution.feature_id`,
+  and a record without one is rejected with `missing_metric_code`. Set `feature_id` where
+  the record is built.
+- Requires `@openaudr/audr` 0.2, which emits specification 1.1.0 records:
+  `attribution.feature_id` and `resource.namespace` arrive as `attribution__feature_id`
+  and `resource__namespace`.
 
 ## [0.1.0] - 2026-10-05
 
