@@ -85,7 +85,8 @@ await withAudr(
       account_id: 'acct_42',
       subscription_id: 'sub_7',
       user_id: 'u_8f14e45f', // pseudonymous, never an email or a name
-      labels: { feature: 'support-chat' },
+      feature_id: 'support-chat', // selects the meter the usage is billed against
+      labels: { team: 'support' },
     },
   },
   () => gateway.responses.create({ model: 'openai/gpt-5.4', input: 'Where is order 42?' }),
@@ -97,8 +98,8 @@ await client.shutdown();
   promises the scope creates. `withAudr` returns exactly what its body returns.
 - A stream keeps the attribution of the scope it was created in, even when it is read after
   that scope has exited.
-- Only `environment`, `account_id`, `subscription_id`, `user_id` and `labels` reach a
-  record. The `Client` validates their values.
+- Only `environment`, `account_id`, `subscription_id`, `user_id`, `feature_id` and `labels`
+  reach a record. The `Client` validates their values.
 - A call with no `environment` is skipped with an `ATTRIBUTION_UNRESOLVED` warning rather
   than billed to a guess. Omit `environment` from `attributionDefaults` to require it in
   every scope.
