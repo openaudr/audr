@@ -35,7 +35,7 @@ path.
 
 | Key | Fields |
 | --- | --- |
-| `attribution` | Any `audr.Attribution` field: `environment`, `account_id`, `subscription_id`, `user_id`, `labels` |
+| `attribution` | Any `audr.Attribution` field: `environment`, `account_id`, `subscription_id`, `user_id`, `feature_id`, `labels` |
 | `run` | `run_id`, `span_id`, `parent_span_id`, `step`, `trace_id`, `run_type` |
 | `resource` | `modality` (default `text`), `key_name`, `region`, `deployment` |
 

@@ -53,7 +53,8 @@ async def main() -> None:
                     "audr": {
                         "attribution": {
                             "subscription_id": "sub_7",
-                            "labels": {"feature": "support-chat"},
+                            "feature_id": "support-chat",
+                            "labels": {"team": "support"},
                         },
                         "run": {"run_id": "agent-run-123", "run_type": "agent_run"},
                     }
