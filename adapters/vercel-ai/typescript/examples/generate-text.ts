@@ -61,7 +61,9 @@ await generateText({
   prompt: 'Where is order 42?',
   tools: { lookupOrder },
   stopWhen: isStepCount(3),
-  runtimeContext: { audr: { account_id: 'acct_42', subscription_id: 'sub_7' } },
+  runtimeContext: {
+    audr: { account_id: 'acct_42', subscription_id: 'sub_7', feature_id: 'support-chat' },
+  },
   telemetry: { includeRuntimeContext: { audr: true } },
 });
 
