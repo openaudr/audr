@@ -177,6 +177,7 @@ def test_request_metadata_overrides_attribution_and_run_fields() -> None:
                         "environment": "production",
                         "account_id": "account_123",
                         "subscription_id": "subscription_123",
+                        "feature_id": "support-chat",
                         "labels": {"region": "us"},
                     },
                     "run": {
@@ -205,6 +206,7 @@ def test_request_metadata_overrides_attribution_and_run_fields() -> None:
     assert record.attribution.environment == "production"
     assert record.attribution.account_id == "account_123"
     assert record.attribution.user_id == "user_123"
+    assert record.attribution.feature_id == "support-chat"
     assert record.attribution.labels == {"region": "us"}
     assert record.run.run_id == "agent-run-123"
     assert record.run.span_id == "model-call-7"

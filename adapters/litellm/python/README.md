@@ -94,12 +94,13 @@ metadata = {
         "attribution": {
             "account_id": "acct_42",
             "user_id": "u_8f14e45f",  # pseudonymous, never an email or a name
-            "labels": {"feature": "support-chat"},
+            "feature_id": "support-chat",  # selects the meter the usage is billed against
+            "labels": {"team": "support"},
         },
         "run": {"run_id": "agent-run-123", "run_type": "agent_run"},
     }
 }
-# A call made with this metadata carries labels {"region": "us", "feature": "support-chat"}.
+# A call made with this metadata carries labels {"region": "us", "team": "support"}.
 ```
 
 - `metadata["audr"]` accepts `attribution`, `run` and `resource` objects, and each rejects
