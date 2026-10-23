@@ -84,7 +84,11 @@ const mastra = new Mastra({
 
 await agent.generate('Where is order 42?', {
   maxSteps: 5,
-  tracingOptions: { metadata: { audr: { account_id: 'acct_42', subscription_id: 'sub_7' } } },
+  tracingOptions: {
+    metadata: {
+      audr: { account_id: 'acct_42', subscription_id: 'sub_7', feature_id: 'support-chat' },
+    },
+  },
 });
 
 await mastra.shutdown();

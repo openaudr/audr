@@ -1,6 +1,7 @@
 import type {
   AnyExportedSpan,
   InitExporterOptions,
+  MCPToolCallAttributes,
   ModelInferenceAttributes,
   ObservabilityExporter,
   RagEmbeddingAttributes,
@@ -235,8 +236,19 @@ export class AudrExporter implements ObservabilityExporter {
       return undefined;
     }
     if (spanType === 'tool_call' && this.#delegationToolSpans.has(span.id)) return undefined;
+    // The MCP server configuration key is the source that defines the tool within the host.
+    const namespace =
+      spanType === 'mcp_tool_call'
+        ? nonEmpty((span.attributes as MCPToolCallAttributes | undefined)?.mcpServer)
+        : undefined;
     return {
-      resource: { provider: TOOL_PROVIDER, type: 'tool', name, operation: 'tool_execution' },
+      resource: {
+        provider: TOOL_PROVIDER,
+        type: 'tool',
+        ...(namespace === undefined ? {} : { namespace }),
+        name,
+        operation: 'tool_execution',
+      },
       usage: { tool: { type: 'invocation', call_count: 1 } },
       errorCode: TOOL_ERROR_CODE,
     };

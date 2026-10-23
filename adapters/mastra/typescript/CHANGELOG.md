@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-23
+
+### Added
+
+- `metadata.audr` and `attributionDefaults` accept `feature_id`, the specification 1.1.0
+  identifier of the product feature the span served, which a sink uses to select the meter
+  the usage is billed against.
+- An `mcp_tool_call` record carries `resource.namespace`, the MCP server configuration key
+  from the span's `mcpServer` attribute, so that `provider`, `namespace` and `name`
+  together identify the tool.
+
 ### Changed
 
 - Requires `@openaudr/audr` 0.2, which emits specification 1.1.0 records.

@@ -15,6 +15,7 @@ describe('metadata.audr reader', () => {
           user_id: 'u',
           account_id: 'a',
           subscription_id: 's',
+          feature_id: 'f',
           labels: { team: 'x' },
         },
       }),
@@ -23,6 +24,7 @@ describe('metadata.audr reader', () => {
       user_id: 'u',
       account_id: 'a',
       subscription_id: 's',
+      feature_id: 'f',
       labels: { team: 'x' },
     });
   });
