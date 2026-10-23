@@ -4,7 +4,13 @@ export type Resolution =
   | { readonly kind: 'resolved'; readonly attribution: Attribution }
   | { readonly kind: 'unresolved' };
 
-const STRING_FIELDS = ['environment', 'user_id', 'account_id', 'subscription_id'] as const;
+const STRING_FIELDS = [
+  'environment',
+  'user_id',
+  'account_id',
+  'subscription_id',
+  'feature_id',
+] as const;
 
 /**
  * Read `metadata.audr`, keeping string identity fields and string `labels`. Everything else

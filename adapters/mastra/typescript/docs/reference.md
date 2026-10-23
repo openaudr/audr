@@ -55,7 +55,8 @@ provider call that reports no token counters still produces a record with `reque
 - **Embeddings.** `resource.name` is `model`, `resource.operation` is `embedding` and
   `resource.modality` is `text`.
 - **Tools.** `resource.provider` is `self-hosted` and `resource.name` is the tool name
-  (`entityName`). A `tool_call` with a direct `agent_run` or `workflow_run` child is the
+  (`entityName`). On an `mcp_tool_call`, `resource.namespace` is the MCP server
+  configuration key (`attributes.mcpServer`) when the span carries one. A `tool_call` with a direct `agent_run` or `workflow_run` child is the
   call through which an agent invokes a sub-agent or a workflow. It produces no tool record;
   the sub-agent's or workflow's own operations are metered. This includes a user-defined
   tool whose execution runs an agent or a workflow in the same trace.

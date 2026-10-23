@@ -61,7 +61,8 @@ await agent.generate('Where is order 42?', {
         account_id: 'acct_42',
         subscription_id: 'sub_7',
         user_id: 'u_8f14e45f', // pseudonymous, never an email or a name
-        labels: { feature: 'support-chat' },
+        feature_id: 'support-chat', // selects the meter the usage is billed against
+        labels: { team: 'support' },
       },
     },
   },
@@ -134,8 +135,9 @@ await mastra.shutdown();
 await client.shutdown();
 ```
 
-- `environment`, `user_id`, `account_id` and `subscription_id` are read when each is a
-  string, and `labels` when it is an object of strings. The `Client` validates the result.
+- `environment`, `user_id`, `account_id`, `subscription_id` and `feature_id` are read when
+  each is a string, and `labels` when it is an object of strings. The `Client` validates the
+  result.
 - A span with no `environment` after the merge is skipped with an `ATTRIBUTION_UNRESOLVED`
   warning rather than billed to a guess. Omit it from `attributionDefaults` to require it
   per call.

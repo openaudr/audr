@@ -131,7 +131,12 @@ describe('tool records', () => {
     const h = harness();
     await h.exporter.exportTracingEvent(ended(toolSpan()));
     await h.exporter.exportTracingEvent(
-      ended(toolSpan({ entityName: 'mcp-tool' }, 'mcp_tool_call')),
+      ended(
+        toolSpan(
+          { entityName: 'mcp-tool', attributes: { mcpServer: 'tavily-remote-mcp' } },
+          'mcp_tool_call',
+        ),
+      ),
     );
     const records = await h.records();
     expect(records).toHaveLength(2);
@@ -144,7 +149,20 @@ describe('tool records', () => {
       },
       usage: { tool: { type: 'invocation', call_count: 1 } },
     });
-    expect(records[1]!.resource.name).toBe('mcp-tool');
+    expect(records[0]!.resource.namespace).toBeUndefined();
+    expect(records[1]!.resource).toMatchObject({
+      namespace: 'tavily-remote-mcp',
+      name: 'mcp-tool',
+    });
+  });
+
+  it('leaves namespace unset on an mcp_tool_call without a server name', async () => {
+    const h = harness();
+    await h.exporter.exportTracingEvent(
+      ended(toolSpan({ entityName: 'mcp-tool', attributes: { mcpServer: '' } }, 'mcp_tool_call')),
+    );
+    const [record] = await h.records();
+    expect(record!.resource.namespace).toBeUndefined();
   });
 
   it('warns when entityName is missing', async () => {
