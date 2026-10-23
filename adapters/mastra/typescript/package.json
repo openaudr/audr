@@ -57,11 +57,11 @@
     "@openaudr/audr": "^0.2.0"
   },
   "devDependencies": {
-    "@mastra/core": "1.62.0",
-    "@mastra/observability": "1.17.2",
+    "@mastra/core": "1.78.0",
+    "@mastra/observability": "1.20.1",
     "@openaudr/audr": "^0.2.0",
-    "ai": "6.0.283",
-    "zod": "^4.6.4"
+    "ai": "7.0.146",
+    "zod": "^4.6.7"
   },
   "publishConfig": {
     "access": "public",

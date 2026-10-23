@@ -58,8 +58,8 @@
   },
   "devDependencies": {
     "@openaudr/audr": "^0.2.0",
-    "ai": "7.0.98",
-    "zod": "^4.6.4"
+    "ai": "7.0.146",
+    "zod": "^4.6.7"
   },
   "publishConfig": {
     "access": "public",
