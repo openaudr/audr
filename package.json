@@ -8,6 +8,7 @@
     "adapters/core/typescript",
     "adapters/merge-gateway/typescript",
     "adapters/openrouter/typescript",
+    "adapters/openai/typescript",
     "adapters/vercel-ai/typescript",
     "adapters/mastra/typescript",
     "sinks/chargebee/typescript",

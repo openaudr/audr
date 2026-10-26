@@ -1,0 +1,69 @@
+{
+  "name": "@openaudr/audr-adapter-openai",
+  "version": "0.1.0",
+  "description": "Meter OpenAI SDK chat completions, responses and embeddings, from OpenAI or any OpenAI-compatible endpoint, as AUDR (Agent Usage Detail Record) records.",
+  "license": "Apache-2.0",
+  "author": "The AUDR contributors",
+  "homepage": "https://github.com/openaudr/audr/tree/main/adapters/openai/typescript#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/openaudr/audr.git",
+    "directory": "adapters/openai/typescript"
+  },
+  "bugs": {
+    "url": "https://github.com/openaudr/audr/issues"
+  },
+  "keywords": [
+    "audr",
+    "agent",
+    "usage",
+    "metering",
+    "billing",
+    "openai",
+    "openai-compatible",
+    "azure-openai",
+    "groq",
+    "ollama"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . && prettier --check .",
+    "format": "eslint --fix . && prettier --write .",
+    "test": "vitest run --coverage",
+    "check:package": "publint --strict && attw --pack . --profile esm-only",
+    "prepack": "npm run build"
+  },
+  "peerDependencies": {
+    "@openaudr/audr": "^0.2.0",
+    "openai": "^5.0.0 || ^6.0.0 || ^7.0.0"
+  },
+  "devDependencies": {
+    "@openaudr/audr": "^0.2.0",
+    "openai": "5.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
