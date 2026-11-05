@@ -3,13 +3,13 @@
 [![PyPI](https://img.shields.io/pypi/v/audr-sink-chargebee?include_prereleases)](https://pypi.org/project/audr-sink-chargebee/)
 [![Python versions](https://img.shields.io/pypi/pyversions/audr-sink-chargebee)](https://pypi.org/project/audr-sink-chargebee/)
 
-The **Chargebee sink** for [AUDR](https://openaudr.dev/spec/v1.0.0/) delivers record batches
+The **Chargebee sink** for [AUDR](https://openaudr.dev) delivers record batches
 from an `audr.Client` to a Chargebee site's usage-ingest batch endpoint, for Chargebee
 Usage-Based Billing. Each record becomes one usage event, routed on
 `attribution.subscription_id` and de-duplicated on `record_id`.
 
-> **Status: alpha.** The record model tracks AUDR v1.0.0; until 1.0.0, a minor release may
-> change the public API.
+> **Status: alpha.** The record model follows AUDR specification 1.x; until this package
+> reaches 1.0.0, a minor release may change the public API.
 
 ## Setup
 
@@ -111,7 +111,7 @@ enforced.
 - [Reference](https://github.com/openaudr/audr/blob/main/sinks/chargebee/python/docs/reference.md): options, flattening, responses, retries, diagnostics
 - [Examples](https://github.com/openaudr/audr/tree/main/sinks/chargebee/python/examples): runnable against a mock ingest endpoint, without network access
 - [Changelog](https://github.com/openaudr/audr/blob/main/sinks/chargebee/python/CHANGELOG.md)
-- [AUDR specification](https://openaudr.dev/spec/v1.0.0/), which defines every record field
+- [AUDR specification](https://openaudr.dev), which defines every record field
 
 ## License
 

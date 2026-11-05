@@ -3,15 +3,15 @@
 [![npm](https://img.shields.io/npm/v/@openaudr/audr-sink-lago?include_prereleases)](https://www.npmjs.com/package/@openaudr/audr-sink-lago)
 [![Node versions](https://img.shields.io/node/v/@openaudr/audr-sink-lago)](https://www.npmjs.com/package/@openaudr/audr-sink-lago)
 
-The **Lago sink** for [AUDR](https://openaudr.dev/spec/v1.0.0/) delivers record batches from
+The **Lago sink** for [AUDR](https://openaudr.dev) delivers record batches from
 an [`@openaudr/audr`](https://www.npmjs.com/package/@openaudr/audr) `Client` to
 [Lago's](https://www.getlago.com/) batch event endpoint, for usage-based billing. Each record
 becomes one Lago event, routed on `attribution.subscription_id` and de-duplicated on
 `record_id`. ESM with full type declarations; no runtime dependencies beyond
 `@openaudr/audr`.
 
-> **Status: alpha.** The record model tracks AUDR v1.0.0; until 1.0.0, a minor release may
-> change the public API.
+> **Status: alpha.** The record model follows AUDR specification 1.x; until this package
+> reaches 1.0.0, a minor release may change the public API.
 
 ## Setup
 
@@ -178,7 +178,7 @@ unknown record again is safe, because Lago de-duplicates on `record_id`.
 - [Reference](https://github.com/openaudr/audr/blob/main/sinks/lago/typescript/docs/reference.md): options, event mapping, responses, validation handling, idempotency, retries, diagnostics
 - [Examples](https://github.com/openaudr/audr/tree/main/sinks/lago/typescript/examples): runnable against a stand-in endpoint, without network access
 - [Changelog](https://github.com/openaudr/audr/blob/main/sinks/lago/typescript/CHANGELOG.md)
-- [AUDR specification](https://openaudr.dev/spec/v1.0.0/), which defines every record field
+- [AUDR specification](https://openaudr.dev), which defines every record field
 - [Lago batch endpoint](https://getlago.com/docs/api-reference/events/batch), which this sink calls
 
 ## License

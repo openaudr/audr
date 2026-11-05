@@ -5,12 +5,12 @@
 
 The **AUDR observability exporter** for [Mastra](https://mastra.ai) turns every provider
 model call, embedding call and tool call into one
-[AUDR](https://openaudr.dev/spec/v1.0.0/) record for an `@openaudr/audr` `Client` your
+[AUDR](https://openaudr.dev) record for an `@openaudr/audr` `Client` your
 application owns. It reads usage, identifiers and timings only: never prompts, completions,
 tool inputs, tool outputs or error messages.
 
-> **Status: alpha.** The record model tracks AUDR v1.0.0; until 1.0.0, a minor release may
-> change the public API.
+> **Status: alpha.** The record model follows AUDR specification 1.x; until this package
+> reaches 1.0.0, a minor release may change the public API.
 
 ## Setup
 
@@ -162,7 +162,7 @@ provider-executed tools; and spans that sampling or filters drop.
 - [Reference](https://github.com/openaudr/audr/blob/main/adapters/mastra/typescript/docs/reference.md): options, record fields and identifiers, provider slugs, diagnostics, operational bounds
 - [Examples](https://github.com/openaudr/audr/tree/main/adapters/mastra/typescript/examples): runnable on mock models, without network access
 - [Changelog](https://github.com/openaudr/audr/blob/main/adapters/mastra/typescript/CHANGELOG.md)
-- [AUDR specification](https://openaudr.dev/spec/v1.0.0/), which defines every record field
+- [AUDR specification](https://openaudr.dev), which defines every record field
 
 ## License
 

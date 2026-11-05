@@ -6,13 +6,13 @@
 The **AUDR adapter for [OpenRouter](https://openrouter.ai/docs)** meters calls made through
 OpenRouter's native TypeScript SDK. Every `chat.send()`, `responses.send()` (streamed or
 not) and `embeddings.generate()` becomes one
-[AUDR](https://openaudr.dev/spec/v1.0.0/) record for an `@openaudr/audr` `Client` your
+[AUDR](https://openaudr.dev) record for an `@openaudr/audr` `Client` your
 application owns. It reads requested output modalities, usage, cost, identifiers, the served
 model and the serving vendor only: never prompts, completions, tools, request `metadata` or
 error messages.
 
-> **Status: alpha.** The record model tracks AUDR v1.0.0; until 1.0.0, a minor release may
-> change the public API.
+> **Status: alpha.** The record model follows AUDR specification 1.x; until this package
+> reaches 1.0.0, a minor release may change the public API.
 
 ## Setup
 
@@ -164,7 +164,7 @@ has the full list.
 - [Reference](https://github.com/openaudr/audr/blob/main/adapters/openrouter/typescript/docs/reference.md): options, the lookup, agent runs, streams, token and cost formulas, record fields, diagnostics, privacy, what is not metered, operational bounds and runtime support
 - [Examples](https://github.com/openaudr/audr/tree/main/adapters/openrouter/typescript/examples): runnable against a local stand-in for the OpenRouter API, without network access
 - [Changelog](https://github.com/openaudr/audr/blob/main/adapters/openrouter/typescript/CHANGELOG.md)
-- [AUDR specification](https://openaudr.dev/spec/v1.0.0/), which defines every record field
+- [AUDR specification](https://openaudr.dev), which defines every record field
 
 ## License
 

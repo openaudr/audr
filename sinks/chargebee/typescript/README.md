@@ -3,15 +3,15 @@
 [![npm](https://img.shields.io/npm/v/@openaudr/audr-sink-chargebee?include_prereleases)](https://www.npmjs.com/package/@openaudr/audr-sink-chargebee)
 [![Node versions](https://img.shields.io/node/v/@openaudr/audr-sink-chargebee)](https://www.npmjs.com/package/@openaudr/audr-sink-chargebee)
 
-The **Chargebee sink** for [AUDR](https://openaudr.dev/spec/v1.0.0/) delivers record batches
+The **Chargebee sink** for [AUDR](https://openaudr.dev) delivers record batches
 from an [`@openaudr/audr`](https://www.npmjs.com/package/@openaudr/audr) `Client` to a
 Chargebee site's usage-ingest batch endpoint, for Chargebee Usage-Based Billing. Each
 record becomes one usage event, routed on `attribution.subscription_id` and de-duplicated
 on `record_id`. ESM with full type declarations; no runtime dependencies beyond
 `@openaudr/audr`.
 
-> **Status: alpha.** The record model tracks AUDR v1.0.0; until 1.0.0, a minor release may
-> change the public API.
+> **Status: alpha.** The record model follows AUDR specification 1.x; until this package
+> reaches 1.0.0, a minor release may change the public API.
 
 ## Setup
 
@@ -107,7 +107,7 @@ enforced.
 - [Reference](https://github.com/openaudr/audr/blob/main/sinks/chargebee/typescript/docs/reference.md): options, flattening, responses, retries, diagnostics
 - [Examples](https://github.com/openaudr/audr/tree/main/sinks/chargebee/typescript/examples): runnable against a stand-in ingest endpoint, without network access
 - [Changelog](https://github.com/openaudr/audr/blob/main/sinks/chargebee/typescript/CHANGELOG.md)
-- [AUDR specification](https://openaudr.dev/spec/v1.0.0/), which defines every record field
+- [AUDR specification](https://openaudr.dev), which defines every record field
 
 ## License
 

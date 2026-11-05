@@ -1,7 +1,7 @@
 {
   "name": "@openaudr/audr-adapter-mastra",
   "version": "0.2.0",
-  "description": "Meter Mastra model calls, embeddings and tool executions as AUDR (Agent Usage Detail Record) v1.0.0 records.",
+  "description": "Meter Mastra model calls, embeddings and tool executions as AUDR (Agent Usage Detail Record) records.",
   "license": "Apache-2.0",
   "author": "The AUDR contributors",
   "homepage": "https://github.com/openaudr/audr/tree/main/adapters/mastra/typescript#readme",
