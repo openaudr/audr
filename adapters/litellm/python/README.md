@@ -5,12 +5,12 @@
 
 The **AUDR callback** for [LiteLLM](https://docs.litellm.ai) turns every provider-reported
 completion, Responses API, embedding and rerank call made through the LiteLLM Python SDK or
-`Router` into one [AUDR](https://openaudr.dev/spec/v1.0.0/) record for an `audr.Client`
+`Router` into one [AUDR](https://openaudr.dev) record for an `audr.Client`
 your application owns. It reads usage, cost, identifiers and timings only: never prompts,
 messages, responses, tool arguments, API keys or exception messages.
 
-> **Status: alpha.** The record model tracks AUDR v1.0.0; until 1.0.0, a minor release may
-> change the public API.
+> **Status: alpha.** The record model follows AUDR specification 1.x; until this package
+> reaches 1.0.0, a minor release may change the public API.
 
 ## Setup
 
@@ -134,7 +134,7 @@ running.
 - [Reference](https://github.com/openaudr/audr/blob/main/adapters/litellm/python/docs/reference.md): options, request metadata, record fields, shutdown order, diagnostics, operational bounds
 - [Examples](https://github.com/openaudr/audr/tree/main/adapters/litellm/python/examples): runnable on mock responses, without network access
 - [Changelog](https://github.com/openaudr/audr/blob/main/adapters/litellm/python/CHANGELOG.md)
-- [AUDR specification](https://openaudr.dev/spec/v1.0.0/), which defines every record field
+- [AUDR specification](https://openaudr.dev), which defines every record field
 
 ## License
 

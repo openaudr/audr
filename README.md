@@ -166,7 +166,7 @@ Adapters, sinks and tools maintained outside this repository are listed in
 
 ## Status
 
-The current specification version is [1.0.0](spec/SPEC.md).
+The current specification version is [1.1.0](spec/SPEC.md).
 
 ## Governance
 

@@ -6,12 +6,12 @@
 The **AUDR adapter for [Merge Gateway](https://docs.merge.dev/merge-gateway/overview)**
 meters calls made through Gateway's native TypeScript SDK. Every `responses.create()`,
 streamed or not, and every `embeddings.create()` becomes one
-[AUDR](https://openaudr.dev/spec/v1.0.0/) record for an `@openaudr/audr` `Client` your
+[AUDR](https://openaudr.dev) record for an `@openaudr/audr` `Client` your
 application owns. It reads requested output modalities, usage, cost, identifiers and the
 served model only: never input, output, tools, tags or error messages.
 
-> **Status: alpha.** The record model tracks AUDR v1.0.0; until 1.0.0, a minor release may
-> change the public API.
+> **Status: alpha.** The record model follows AUDR specification 1.x; until this package
+> reaches 1.0.0, a minor release may change the public API.
 
 ## Setup
 
@@ -131,7 +131,7 @@ Not metered: calls the SDK rejects, streams not read to their terminal frame, th
 - [Reference](https://github.com/openaudr/audr/blob/main/adapters/merge-gateway/typescript/docs/reference.md): options, agent runs, Merge tracing, streams, record fields, diagnostics, operational bounds
 - [Examples](https://github.com/openaudr/audr/tree/main/adapters/merge-gateway/typescript/examples): runnable against a local stand-in for the Gateway API, without network access
 - [Changelog](https://github.com/openaudr/audr/blob/main/adapters/merge-gateway/typescript/CHANGELOG.md)
-- [AUDR specification](https://openaudr.dev/spec/v1.0.0/), which defines every record field
+- [AUDR specification](https://openaudr.dev), which defines every record field
 
 ## License
 

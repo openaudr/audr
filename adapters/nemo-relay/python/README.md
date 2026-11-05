@@ -5,12 +5,12 @@
 
 The **AUDR plugin** for [NVIDIA NeMo Relay](https://pypi.org/project/nemo-relay/) turns
 every completed Relay LLM call and tool execution into one
-[AUDR](https://openaudr.dev/spec/v1.0.0/) record for an `audr.Client` your application
+[AUDR](https://openaudr.dev) record for an `audr.Client` your application
 owns. It reads usage, identifiers and timings only: never prompts, responses, tool
 arguments or tool results.
 
-> **Status: alpha.** The record model tracks AUDR v1.0.0; until 1.0.0, a minor release may
-> change the public API.
+> **Status: alpha.** The record model follows AUDR specification 1.x; until this package
+> reaches 1.0.0, a minor release may change the public API.
 
 ## Setup
 
@@ -144,7 +144,7 @@ no normalized usage.
 - [Reference](https://github.com/openaudr/audr/blob/main/adapters/nemo-relay/python/docs/reference.md): options, attribution, record fields, errors, diagnostics, operational bounds
 - [Examples](https://github.com/openaudr/audr/tree/main/adapters/nemo-relay/python/examples): `agent_scope.py` runs on a canned response, without network access
 - [Changelog](https://github.com/openaudr/audr/blob/main/adapters/nemo-relay/python/CHANGELOG.md)
-- [AUDR specification](https://openaudr.dev/spec/v1.0.0/), which defines every record field
+- [AUDR specification](https://openaudr.dev), which defines every record field
 
 ## License
 
