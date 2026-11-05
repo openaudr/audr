@@ -164,10 +164,6 @@ asyncio.run(main())
 Adapters, sinks and tools maintained outside this repository are listed in
 [`IMPLEMENTATIONS.md`](IMPLEMENTATIONS.md).
 
-## Status
-
-The current specification version is [1.1.0](spec/SPEC.md).
-
 ## Governance
 
 AUDR was drafted at Chargebee, and is being improved with collaboration across
