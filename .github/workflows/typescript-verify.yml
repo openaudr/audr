@@ -65,6 +65,9 @@ jobs:
             adapters/merge-gateway/typescript:
               - *core
               - "adapters/merge-gateway/typescript/**"
+            adapters/openai/typescript:
+              - *core
+              - "adapters/openai/typescript/**"
             adapters/openrouter/typescript:
               - *core
               - "adapters/openrouter/typescript/**"
