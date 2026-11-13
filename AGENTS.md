@@ -26,6 +26,7 @@ identity and attribution that records from different systems join.
 | `adapters/core/typescript/` | [`adapters/core/typescript/AGENTS.md`](adapters/core/typescript/AGENTS.md) |
 | `adapters/merge-gateway/typescript/` | [`adapters/merge-gateway/typescript/AGENTS.md`](adapters/merge-gateway/typescript/AGENTS.md) |
 | `adapters/openrouter/typescript/` | [`adapters/openrouter/typescript/AGENTS.md`](adapters/openrouter/typescript/AGENTS.md) |
+| `adapters/langfuse/python/` | [`adapters/langfuse/python/AGENTS.md`](adapters/langfuse/python/AGENTS.md) |
 | `adapters/litellm/python/` | [`adapters/litellm/python/AGENTS.md`](adapters/litellm/python/AGENTS.md) |
 | `adapters/nemo-relay/python/` | [`adapters/nemo-relay/python/AGENTS.md`](adapters/nemo-relay/python/AGENTS.md) |
 | `adapters/vercel-ai/typescript/` | [`adapters/vercel-ai/typescript/AGENTS.md`](adapters/vercel-ai/typescript/AGENTS.md) |

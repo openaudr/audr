@@ -5,6 +5,7 @@ updates:
   - package-ecosystem: uv
     directories:
       - /adapters/core/python
+      - /adapters/langfuse/python
       - /adapters/litellm/python
       - /adapters/nemo-relay/python
       - /sinks/chargebee/python

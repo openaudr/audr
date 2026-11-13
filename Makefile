@@ -1,5 +1,5 @@
 .PHONY: help spec check schema examples conformance lint fresh links versions tools-test install clean all
-.PHONY: python core-python adapter-litellm-python adapter-nemo-relay-python sink-chargebee-python
+.PHONY: python core-python adapter-langfuse-python adapter-litellm-python adapter-nemo-relay-python sink-chargebee-python
 .PHONY: typescript typescript-install typescript-lint core-typescript adapter-merge-gateway-typescript adapter-openrouter-typescript adapter-vercel-ai-typescript adapter-mastra-typescript sink-chargebee-typescript sink-lago-typescript
 
 PYTHON ?= python3
@@ -46,6 +46,9 @@ tools-test: ## Test the repository tools
 core-python: ## Verify the core Python SDK (adapters/core/python)
 	@$(MAKE) -C adapters/core/python verify
 
+adapter-langfuse-python: ## Verify the Langfuse Python adapter
+	@$(MAKE) -C adapters/langfuse/python verify
+
 adapter-litellm-python: ## Verify the LiteLLM Python adapter
 	@$(MAKE) -C adapters/litellm/python verify
 
@@ -55,7 +58,7 @@ adapter-nemo-relay-python: ## Verify the NeMo Relay Python adapter
 sink-chargebee-python: ## Verify the Chargebee Python sink
 	@$(MAKE) -C sinks/chargebee/python verify
 
-python: core-python adapter-litellm-python adapter-nemo-relay-python sink-chargebee-python ## Verify every Python package
+python: core-python adapter-langfuse-python adapter-litellm-python adapter-nemo-relay-python sink-chargebee-python ## Verify every Python package
 
 typescript-install: ## Install every TypeScript package from the root lockfile and build the core
 	npm ci

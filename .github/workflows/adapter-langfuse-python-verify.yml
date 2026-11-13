@@ -1,0 +1,85 @@
+name: Verify Langfuse adapter (Python)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "adapters/langfuse/python/**"
+      - "adapters/core/python/**"
+      - ".github/workflows/adapter-langfuse-python-verify.yml"
+  pull_request:
+    paths:
+      - "adapters/langfuse/python/**"
+      - "adapters/core/python/**"
+      - ".github/workflows/adapter-langfuse-python-verify.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: adapter-langfuse-python-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: adapters/langfuse/python
+
+jobs:
+  test:
+    name: Python ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v6
+        with:
+          version: "0.12.18"
+          python-version: "${{ matrix.python }}"
+
+      - name: Install
+        run: make install
+
+      - name: Lint
+        run: make lint
+
+      - name: Tests
+        run: make test
+
+      - name: Examples
+        run: make examples
+
+  package:
+    name: Build and verify wheel
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v6
+        with:
+          version: "0.12.18"
+          python-version: "3.12"
+
+      - name: Install
+        run: make install
+
+      - name: Build and verify
+        run: make isolation
+
+      - name: Upload distributions
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: audr-adapter-langfuse-dist
+          path: adapters/langfuse/python/dist/
