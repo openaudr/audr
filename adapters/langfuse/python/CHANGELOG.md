@@ -7,10 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-13
+
 ### Added
 
 - Initial release: an OpenTelemetry span processor that turns Langfuse generation,
   embedding, tool and retriever observations into AUDR records for an existing
   `audr.Client`.
-- `docs/reference.md` documents every option, the span metadata, record fields, the
-  shutdown order, log messages and operational bounds.
