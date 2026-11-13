@@ -24,7 +24,7 @@ importing `LangfuseAudrProcessor` raises it when the `runtime` extra is not inst
 | `attribution_defaults` | `Attribution()` | Values every record starts from; may be partial |
 | `provider` | `None` | Provider slug (`^[a-z0-9-]+$`) for a generation or embedding whose span names none |
 | `max_pending_handoffs` | `1000` | Records waiting to reach the client loop, 1 to 100000 |
-| `max_tracked_spans` | `10000` | Parents remembered for nested model calls, 1 to 1000000 |
+| `max_tracked_spans` | `10000` | Open spans, and parents of nested model calls, remembered at once; 1 to 1000000 |
 
 An `attribution_defaults` value that can never be billed, such as a non-pseudonymous
 `user_id`, or a `provider` that is not a slug, raises `pydantic.ValidationError` at
@@ -48,7 +48,7 @@ The processor sees only spans the provider records:
 
 Attribution is read from `audr_*` keys in observation metadata and in trace metadata set
 with `propagate_attributes(metadata=...)`. The Langfuse SDK JSON-encodes every metadata
-value; the adapter decodes it and accepts an unencoded string too.
+value, and the adapter decodes it.
 
 | Key | Attribution field |
 | --- | --- |
@@ -59,10 +59,13 @@ value; the adapter decodes it and accepts an unencoded string too.
 | `audr_feature_id` | `feature_id` |
 | `audr_labels` | `labels`, an object of string values |
 
-Each field resolves from the first source that sets it: observation metadata, trace
-metadata, `langfuse.environment` (for `environment` only), then `attribution_defaults`.
-`labels` merge by key across observation metadata, trace metadata and
-`attribution_defaults`, in that order of precedence for a shared key. A merged map above the
+Each field resolves from the first source that sets it: the span's observation metadata,
+the observation metadata of the spans still open around it (nearest first), trace metadata,
+`langfuse.environment` (for `environment` only), then `attribution_defaults`. `labels` merge
+by key across the same sources, in that order of precedence for a shared key. Metadata set
+on an enclosing observation, such as the `metadata` of a LangChain call, therefore reaches
+the model span inside it; see [Nested model calls](#nested-model-calls). An enclosing span
+forgotten under `max_tracked_spans` contributes nothing. A merged map above the
 specification's 20-label limit skips the record.
 
 `langfuse.environment` is used when it is an AUDR environment (`production`, `staging`,
@@ -83,8 +86,10 @@ Langfuse's trace `user.id` is never read.
 | `retriever` | `retrieval` | `tool` | `self-hosted` | span name |
 
 The model name is `langfuse.observation.model.name`, falling back to
-`gen_ai.response.model`, then `gen_ai.request.model`. Model records carry
-`resource.modality: text`.
+`gen_ai.response.model`, then `gen_ai.request.model`. Langfuse records no modality:
+`resource.modality` is `multimodal` when any usage count whose key names audio, image or
+video is positive (`input_audio`, `input_modality_IMAGE`, `cached_modality_AUDIO`,
+`*_tokens_details.audio_tokens`), and `text` otherwise, including for a cost-only record.
 
 The provider is the first of `gen_ai.provider.name`, `gen_ai.system`, the LangChain
 handler's `ls_provider` observation metadata, and `LangfuseConfig.provider`, lowercased with
@@ -152,6 +157,8 @@ record is billed:
   resolved, the parent is recorded.
 - A tool or retriever span is never suppressed, and never suppresses its parent.
 - Only the direct parent is checked, and a parent in another process is not tracked.
+- The billed child carries the `audr_*` metadata of the open spans around it, so the
+  `metadata` passed to a LangChain call applies to the drop-in span that is recorded.
 
 At most `max_tracked_spans` parents are remembered at once. Beyond that the oldest is
 forgotten; it is normally a parent that ended before its child and will never be looked up.
@@ -173,7 +180,6 @@ package's release.
   spans with an empty name.
 - A model span whose nested model span already produced a record; see
   [Nested model calls](#nested-model-calls).
-- Failed tool and retriever spans are metered, with `run.error_code`.
 - Audio duration and image counts, which Langfuse does not record.
 
 ## Shutdown order
@@ -220,7 +226,7 @@ Delivery outcomes after a record is queued belong to the client and its sink; in
 | Bound | Value |
 | --- | --- |
 | Records waiting to reach the client loop | `max_pending_handoffs`, default 1000; overflow drops with a warning |
-| Parents remembered for nested model calls | `max_tracked_spans`, default 10000; overflow forgets the oldest |
+| Open spans, and parents of nested model calls, remembered | `max_tracked_spans` each, default 10000; overflow forgets the oldest |
 | Labels per record after merging | 20, from the specification |
 | Propagated metadata value | 200 characters each, enforced by the Langfuse SDK, which drops a longer value |
 

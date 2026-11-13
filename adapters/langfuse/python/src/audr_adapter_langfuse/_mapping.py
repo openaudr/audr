@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import math
 import re
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Final, TypeAlias, get_args
@@ -21,6 +21,7 @@ from audr import (
     Emitter,
     Environment,
     LlmUsage,
+    Modality,
     Operation,
     Resource,
     Run,
@@ -85,6 +86,10 @@ _RAW_DETAILS: Final = (
     "completion_tokens_details",
     "output_tokens_details",
 )
+# Count keys naming a modality AUDR does not call text, in Langfuse buckets
+# (`input_audio`, `input_modality_IMAGE`, `cached_modality_VIDEO`) and raw details
+# (`audio_tokens`, `image_tokens`).
+_NON_TEXT_MARKERS: Final = ("audio", "image", "video")
 
 
 @dataclass(frozen=True, slots=True)
@@ -122,15 +127,20 @@ def map_span(
     *,
     attribution_defaults: Attribution,
     provider: str | None,
+    ancestors: Sequence[Mapping[str, object]] = (),
 ) -> MappingResult:
-    """Map one ended span without reading observation input or output."""
+    """Map one ended span without reading observation input or output.
+
+    ``ancestors`` are the attributes of the open spans enclosing it, nearest first; their
+    ``audr_*`` observation metadata applies under the span's own.
+    """
     attributes: Mapping[str, object] = span.attributes or {}
     kind = attributes.get(_TYPE)
     operation = _OPERATIONS.get(kind) if isinstance(kind, str) else None
     if operation is None:
         return RecordSkipped(_pointer(_TYPE))
     try:
-        return _map(span, attributes, operation, attribution_defaults, provider)
+        return _map(span, attributes, ancestors, operation, attribution_defaults, provider)
     except _Malformed as error:
         return RecordMalformed(error.path)
 
@@ -138,11 +148,12 @@ def map_span(
 def _map(
     span: ReadableSpan,
     attributes: Mapping[str, object],
+    ancestors: Sequence[Mapping[str, object]],
     operation: Operation,
     attribution_defaults: Attribution,
     default_provider: str | None,
 ) -> MappingResult:
-    attribution = _resolve_attribution(attributes, attribution_defaults)
+    attribution = _resolve_attribution(attributes, ancestors, attribution_defaults)
     if isinstance(attribution, RecordSkipped):
         return attribution
 
@@ -156,7 +167,8 @@ def _map(
         )
         usage = Usage(tool=ToolUsage(type=_TOOL_USAGE_TYPES[operation], call_count=1))
     else:
-        llm_usage = _llm_usage(attributes.get(_USAGE))
+        details = _decode_object(attributes.get(_USAGE), _USAGE)
+        llm_usage = _llm_usage(details)
         cost = _cost(attributes.get(_COST))
         # The OpenAI wrapper writes an all-zero cost on failure, so only a positive cost
         # shows that a failed call was billed.
@@ -173,9 +185,12 @@ def _map(
         model = _first_string(attributes, _MODEL, "gen_ai.response.model", "gen_ai.request.model")
         if model is None:
             return RecordSkipped(_pointer(_MODEL))
-        # Langfuse records no modality, and a token-metered call is text.
         resource = Resource(
-            provider=provider, type="model", name=model, operation=operation, modality="text"
+            provider=provider,
+            type="model",
+            name=model,
+            operation=operation,
+            modality=_modality(details),
         )
         usage = Usage(llm=llm_usage)
 
@@ -195,9 +210,12 @@ def _map(
 
 
 def _resolve_attribution(
-    attributes: Mapping[str, object], defaults: Attribution
+    attributes: Mapping[str, object],
+    ancestors: Sequence[Mapping[str, object]],
+    defaults: Attribution,
 ) -> Attribution | RecordSkipped:
-    """Merge observation metadata over trace metadata over environment and defaults."""
+    """Merge observation metadata, then the nearest ancestor's down to the farthest's, over
+    trace metadata over environment and defaults."""
     values = defaults.model_dump(include=set(_ATTRIBUTION_FIELDS - {"labels"}), exclude_none=True)
     labels: dict[str, object] = dict(defaults.labels or {})
     environment = attributes.get(_ENVIRONMENT)
@@ -205,12 +223,17 @@ def _resolve_attribution(
         environment = _LANGFUSE_ENVIRONMENTS.get(environment, environment)
         if environment in _ENVIRONMENTS:
             values["environment"] = environment
-    for prefix in (_TRACE_METADATA, _OBSERVATION_METADATA):
+    sources = [
+        (attributes, _TRACE_METADATA),
+        *((ancestor, _OBSERVATION_METADATA) for ancestor in reversed(ancestors)),
+        (attributes, _OBSERVATION_METADATA),
+    ]
+    for source, prefix in sources:
         for field in _ATTRIBUTION_FIELDS:
             key = f"{prefix}.{_METADATA_KEY_PREFIX}{field}"
-            if key not in attributes:
+            if key not in source:
                 continue
-            value = _decode(attributes[key])
+            value = _decode(source[key])
             if field != "labels":
                 values[field] = value
             elif isinstance(value, dict):
@@ -231,8 +254,7 @@ def _resolve_attribution(
     return attribution
 
 
-def _llm_usage(raw: object) -> LlmUsage | None:
-    details = _decode_object(raw, _USAGE)
+def _llm_usage(details: Mapping[str, object] | None) -> LlmUsage | None:
     if details is None:
         return None
     counts = _raw_counts(details) if _RAW_KEYS.intersection(details) else _bucket_counts(details)
@@ -299,6 +321,26 @@ def _raw_counts(details: Mapping[str, object]) -> dict[str, int | None]:
         "cache_write_tokens": cache_write,
         "reasoning_tokens": reasoning,
     }
+
+
+def _modality(details: Mapping[str, object] | None) -> Modality:
+    """`multimodal` when an audio, image or video count is positive, else `text`.
+
+    Langfuse records no modality, and those tokens come alongside text, so the OpenRouter
+    adapter's rule applies: more than one kind is `multimodal`.
+    """
+    if details is None:
+        return "text"
+    sources = [details, *(_nested(details, key) for key in _RAW_DETAILS)]
+    non_text = any(
+        isinstance(value, int)
+        and not isinstance(value, bool)
+        and value > 0
+        and any(marker in key.lower() for marker in _NON_TEXT_MARKERS)
+        for source in sources
+        for key, value in source.items()
+    )
+    return "multimodal" if non_text else "text"
 
 
 def _is_extra_bucket(key: str, prefix: str, aliases: tuple[str, ...]) -> bool:

@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Mapping
 from threading import Lock
-from typing import assert_never
+from typing import TypeVar, assert_never
 
 from audr import AUDR, Client, SubmitOutcome
 from opentelemetry.context import Context
@@ -28,6 +29,8 @@ _LOGGER = logging.getLogger(__name__)
 _QUIET_SKIPS = frozenset(
     {"/attributes/langfuse.observation.type", "/attributes/langfuse.observation.usage_details"}
 )
+_SpanKey = tuple[int, int]
+_V = TypeVar("_V")
 
 
 class LangfuseAudrProcessor(SpanProcessor):
@@ -69,11 +72,19 @@ class LangfuseAudrProcessor(SpanProcessor):
         # LangChain's ChatOpenAI calls), so such a parent repeats its child's usage. A dict
         # keeps insertion order, so the oldest entry is evicted when full: a parent that
         # ended before its child is never taken and would otherwise stay forever.
-        self._billed_parents: dict[tuple[int, int], None] = {}
-        self._billed_parents_lock = Lock()
+        self._billed_parents: dict[_SpanKey, None] = {}
+        # Spans still open, so an ended span can read the `audr_*` metadata of the
+        # observations it ran inside: the drop-in's generation carries none of the metadata
+        # set on the LangChain call around it. Bounded and evicted the same way.
+        self._open_spans: dict[_SpanKey, Span] = {}
+        self._lock = Lock()
 
     def on_start(self, span: Span, parent_context: Context | None = None) -> None:
-        """Do nothing: every metered value is final only when the span ends."""
+        """Remember the open span; its metadata is set after it starts."""
+        if span.context is None:
+            return
+        with self._lock:
+            self._track(self._open_spans, (span.context.trace_id, span.context.span_id), span)
 
     def on_end(self, span: ReadableSpan) -> None:
         """Map one ended span and hand any record to the client's loop."""
@@ -81,11 +92,13 @@ class LangfuseAudrProcessor(SpanProcessor):
             _LOGGER.warning("Langfuse span ignored: adapter is closed")
             return
         child_billed = self._take_billed(span)
+        ancestors = self._open_ancestors(span)
         try:
             result = map_span(
                 span,
                 attribution_defaults=self._config.attribution_defaults,
                 provider=self._config.provider,
+                ancestors=ancestors,
             )
         except Exception:
             _LOGGER.warning("Langfuse span mapping failed internally")
@@ -111,23 +124,39 @@ class LangfuseAudrProcessor(SpanProcessor):
         if span.context is None:
             return False
         key = (span.context.trace_id, span.context.span_id)
-        with self._billed_parents_lock:
+        with self._lock:
             if key not in self._billed_parents:
                 return False
             del self._billed_parents[key]
             return True
 
+    def _open_ancestors(self, span: ReadableSpan) -> list[Mapping[str, object]]:
+        """Forget this span and return the attributes of its open ancestors, nearest first."""
+        found: list[Mapping[str, object]] = []
+        with self._lock:
+            if span.context is not None:
+                self._open_spans.pop((span.context.trace_id, span.context.span_id), None)
+            parent = span.parent
+            while parent is not None:
+                ancestor = self._open_spans.get((parent.trace_id, parent.span_id))
+                if ancestor is None:
+                    break
+                found.append(ancestor.attributes or {})
+                parent = ancestor.parent
+        return found
+
     def _mark_parent_billed(self, span: ReadableSpan) -> None:
         # A remote parent never ends in this process, so remembering it would only leak.
         if span.parent is None or span.parent.is_remote:
             return
-        key = (span.parent.trace_id, span.parent.span_id)
-        with self._billed_parents_lock:
-            if key not in self._billed_parents and (
-                len(self._billed_parents) >= self._config.max_tracked_spans
-            ):
-                del self._billed_parents[next(iter(self._billed_parents))]
-            self._billed_parents[key] = None
+        with self._lock:
+            self._track(self._billed_parents, (span.parent.trace_id, span.parent.span_id), None)
+
+    def _track(self, store: dict[_SpanKey, _V], key: _SpanKey, value: _V) -> None:
+        """Store under the held lock, evicting the oldest entry when full."""
+        if key not in store and len(store) >= self._config.max_tracked_spans:
+            del store[next(iter(store))]
+        store[key] = value
 
     def shutdown(self) -> None:
         """Do nothing: a shut-down provider ends no more spans, and ``drain()`` must still work."""

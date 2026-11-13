@@ -23,7 +23,8 @@ class LangfuseConfig(BaseModel):
     names none. Langfuse carries no provider field, so without it such
     observations are skipped rather than attributed to a guessed provider.
 
-    ``max_tracked_spans`` bounds the parent spans remembered because a nested model span
+    ``max_tracked_spans`` bounds, each, the open spans remembered so a span can inherit
+    their ``audr_*`` metadata, and the parent spans remembered because a nested model span
     inside them already produced a record; the oldest is evicted when full.
     """
 

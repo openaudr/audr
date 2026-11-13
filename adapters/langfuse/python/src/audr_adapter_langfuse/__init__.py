@@ -29,7 +29,7 @@ def __getattr__(name: str) -> object:
         if error.name is None or not error.name.startswith("opentelemetry"):
             raise
         raise LangfuseActivationError(
-            "Langfuse is required to activate the processor; install the runtime extra"
+            "the OpenTelemetry SDK is required to activate the processor; install the runtime extra"
         ) from error
     processor: object = getattr(module, name)
     return processor

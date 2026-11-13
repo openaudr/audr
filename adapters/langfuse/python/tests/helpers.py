@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from audr import Attribution
@@ -53,11 +54,13 @@ def map_result(
     *,
     defaults: Attribution | None = None,
     provider: str | None = "openai",
+    ancestors: Sequence[Mapping[str, object]] = (),
 ) -> MappingResult:
     return map_span(
         span() if readable is None else readable,
         attribution_defaults=defaults or Attribution(environment="test"),
         provider=provider,
+        ancestors=ancestors,
     )
 
 

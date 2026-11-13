@@ -311,13 +311,14 @@ async def _nested(
     outer_usage: dict[str, int] | None,
     inner_usage: dict[str, int] | None,
     inner_type: Literal["generation", "tool"] = "generation",
+    outer_metadata: dict[str, str] | None = None,
 ) -> list[AUDR]:
     provider.add_span_processor(harness.processor)
     langfuse = _langfuse(provider)
     with (
         propagate_attributes(metadata={"audr_account_id": "acct_42"}),
         langfuse.start_as_current_observation(
-            name="outer", as_type="generation", model="gpt-5.6-luna"
+            name="outer", as_type="generation", model="gpt-5.6-luna", metadata=outer_metadata
         ) as outer,
     ):
         if inner_type == "tool":
@@ -345,6 +346,26 @@ async def test_nested_model_span_is_billed_once(
 
     assert [record.resource.name for record in records] == ["gpt-5.6-luna"]
     assert records[0].run.parent_span_id is not None
+
+
+async def test_nested_model_span_inherits_outer_attribution(
+    harness: Harness, langfuse_provider: TracerProvider
+) -> None:
+    # LangChain call metadata lands on the outer span only; the drop-in span is billed.
+    usage = {"input": 10, "output": 5}
+
+    records = await _nested(
+        harness,
+        langfuse_provider,
+        outer_usage=usage,
+        inner_usage=usage,
+        outer_metadata={"audr_feature_id": "support-chat"},
+    )
+
+    assert len(records) == 1
+    assert records[0].run.parent_span_id is not None
+    assert records[0].attribution.feature_id == "support-chat"
+    assert harness.processor._open_spans == {}
 
 
 async def test_outer_usage_is_billed_when_inner_reports_none(

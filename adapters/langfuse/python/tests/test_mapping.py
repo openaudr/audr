@@ -226,6 +226,44 @@ def test_usage_shapes(details: dict[str, object], expected: dict[str, int]) -> N
     assert usage.model_dump(exclude_none=True) == {**expected, "requests": 1}
 
 
+@pytest.mark.parametrize(
+    ("details", "modality"),
+    [
+        ({"input": 10, "output": 5}, "text"),
+        ({"input": 10, "input_modality_TEXT": 4, "cached_modality_TEXT": 2}, "text"),
+        ({"input": 10, "input_audio": 4}, "multimodal"),
+        ({"input": 10, "input_modality_IMAGE": 4}, "multimodal"),
+        ({"input": 10, "output_audio": 0}, "text"),
+        (
+            {
+                "prompt_tokens": 10,
+                "completion_tokens": 5,
+                "prompt_tokens_details": {"audio_tokens": 4},
+            },
+            "multimodal",
+        ),
+        (
+            {
+                "prompt_tokens": 10,
+                "completion_tokens": 5,
+                "prompt_tokens_details": {"audio_tokens": 0},
+            },
+            "text",
+        ),
+    ],
+)
+def test_modality_from_usage(details: dict[str, object], modality: str) -> None:
+    assert ready(map_result(span(_usage(details)))).record.resource.modality == modality
+
+
+def test_cost_only_generation_is_text() -> None:
+    attributes = generation_attributes(
+        **{USAGE: None, "langfuse.observation.cost_details": json.dumps({"total": 0.5})}
+    )
+
+    assert ready(map_result(span(attributes))).record.resource.modality == "text"
+
+
 def test_embedding_maps_operation() -> None:
     attributes = _usage({"input": 8})
     attributes["langfuse.observation.type"] = "embedding"
@@ -420,6 +458,31 @@ def test_attribution_precedence_and_label_merge() -> None:
     assert attribution.feature_id == "support-chat"
     assert attribution.user_id is None
     assert attribution.labels == {"region": "us", "team": "support", "tier": "silver"}
+
+
+def test_open_ancestor_metadata_applies_under_the_span_own() -> None:
+    attributes = generation_attributes(**{f"{OBS_META}.audr_user_id": json.dumps("u_own")})
+    nearest = {
+        f"{OBS_META}.audr_feature_id": json.dumps("near"),
+        f"{OBS_META}.audr_user_id": json.dumps("u_near"),
+        f"{OBS_META}.audr_labels": json.dumps({"tier": "silver"}),
+    }
+    farthest = {
+        f"{OBS_META}.audr_feature_id": json.dumps("far"),
+        f"{OBS_META}.audr_account_id": json.dumps("acct_far"),
+        f"{OBS_META}.audr_labels": json.dumps({"team": "support", "tier": "gold"}),
+        f"{TRACE_META}.audr_subscription_id": json.dumps("sub_ignored"),
+    }
+
+    attribution = ready(
+        map_result(span(attributes), ancestors=[nearest, farthest])
+    ).record.attribution
+
+    assert attribution.user_id == "u_own"
+    assert attribution.feature_id == "near"
+    assert attribution.account_id == "acct_far"
+    assert attribution.subscription_id is None
+    assert attribution.labels == {"team": "support", "tier": "silver"}
 
 
 def test_langfuse_environment_used_only_when_it_is_an_audr_value() -> None:

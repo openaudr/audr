@@ -85,7 +85,8 @@ version that keeps Langfuse offline is
 ## Attribution
 
 Attribution is read for each span from `audr_*` metadata keys, field by field: observation
-metadata wins over trace metadata set with `propagate_attributes()`, which wins over
+metadata wins over that of the observations still open around it, nearest first, which wins
+over trace metadata set with `propagate_attributes()`, which wins over
 `langfuse.environment` (only when it is exactly an AUDR environment), which wins over
 `LangfuseConfig.attribution_defaults`. `labels` merge by key. Langfuse experiment runs
 (`sdk-experiment`) are attributed to `evaluation`. Flat keys keep each value under
@@ -146,8 +147,9 @@ other OpenTelemetry instrumentation are not metered.
 
 When one model call is recorded as a model span inside another, as with LangChain's
 `ChatOpenAI` while the `langfuse.openai` drop-in is imported, only the inner span is
-recorded. Running this adapter alongside another AUDR adapter that observes the same calls, such as
-the LiteLLM adapter, records each call twice.
+recorded, with the `audr_*` metadata of the spans around it. Running this adapter alongside
+another AUDR adapter that observes the same calls, such as the LiteLLM adapter, records each
+call twice.
 
 ## Documentation
 

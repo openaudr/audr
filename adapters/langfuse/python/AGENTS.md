@@ -25,7 +25,8 @@ Update [`docs/reference.md`](docs/reference.md) when public behaviour changes.
    infer usage from absence.
 3. Bill a nested model call once: a model span whose direct model child produced a record is
    not recorded. Bound the remembered parents by `max_tracked_spans`, evicting the oldest, and
-   never track a remote parent.
+   never track a remote parent. A span inherits the `audr_*` observation metadata of its open
+   ancestors, under its own, so the billed child keeps the attribution set on its parent.
 4. Never guess the provider from the model name. An unresolved provider skips the record.
 5. Never copy Langfuse's `user.id` to `attribution.user_id`; it is commonly an email.
 6. Spans end on whichever thread ran the work, so every record crosses to the client's loop
