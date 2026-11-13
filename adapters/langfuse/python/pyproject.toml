@@ -1,0 +1,103 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "audr-adapter-langfuse"
+dynamic = ["version"]
+description = "Langfuse adapter for AUDR (experimental)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+authors = [
+  { name = "The AUDR contributors", email = "audr@chargebee.com" },
+]
+keywords = ["audr", "langfuse", "opentelemetry", "llm", "adapter", "metering"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Framework :: AsyncIO",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Typing :: Typed",
+]
+dependencies = [
+  "audr>=0.2,<0.3",
+  "pydantic>=2.10,<3",
+]
+
+[project.optional-dependencies]
+# The runtime is optional so the adapter can be installed and type-checked without it;
+# the processor imports OpenTelemetry directly, so its SDK is declared alongside Langfuse.
+runtime = [
+  "langfuse>=5.2,<6",
+  "opentelemetry-sdk>=1.45,<2",
+]
+
+[project.urls]
+Homepage = "https://openaudr.dev"
+Issues = "https://github.com/openaudr/audr/issues"
+Source = "https://github.com/openaudr/audr/tree/main/adapters/langfuse/python"
+Changelog = "https://github.com/openaudr/audr/blob/main/adapters/langfuse/python/CHANGELOG.md"
+Specification = "https://openaudr.dev/spec/v1.1.0/"
+
+[tool.uv.sources]
+audr = { path = "../../core/python", editable = true }
+
+[dependency-groups]
+dev = [
+  "mypy>=1.13",
+  "pytest>=8",
+  "pytest-asyncio>=0.24",
+  "pytest-cov>=5",
+  "ruff>=0.8",
+]
+
+[tool.hatch.version]
+path = "src/audr_adapter_langfuse/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/audr_adapter_langfuse"]
+
+[tool.hatch.build.targets.sdist]
+# The sdist carries what is needed to build and to read the package, not the
+# development tree: tests reach outside the package root and cannot run from it.
+only-include = ["src", "README.md", "CHANGELOG.md", "LICENSE", "NOTICE"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "RUF"]
+
+[tool.mypy]
+strict = true
+plugins = ["pydantic.mypy"]
+files = ["src", "tests", "scripts", "examples"]
+python_version = "3.11"
+# `tests` has no `__init__.py`, so the base directories are named rather than guessed;
+# without this `tests/helpers.py` resolves as both `helpers` and `tests.helpers`.
+explicit_package_bases = true
+mypy_path = "src:."
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+# `tests` is an implicit namespace package so test modules can share fixtures.
+pythonpath = ["."]
+markers = [
+  "langfuse: requires the installed langfuse runtime extra",
+]
+
+[tool.coverage.run]
+source = ["audr_adapter_langfuse"]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true

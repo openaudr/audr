@@ -15,6 +15,7 @@
 
 # The Python packages.
 /adapters/core/python/         @openaudr/audr-maintainers
+/adapters/langfuse/python/     @openaudr/audr-maintainers
 /adapters/litellm/python/      @openaudr/audr-maintainers
 /adapters/nemo-relay/python/   @openaudr/audr-maintainers
 /sinks/chargebee/python/       @openaudr/audr-maintainers
