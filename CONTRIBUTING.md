@@ -60,6 +60,7 @@ make all         # check + python + typescript: everything CI runs
 | `make adapter-mastra-typescript` | `make install verify` in `adapters/mastra/typescript` |
 | `make sink-chargebee-typescript` | `make install verify` in `sinks/chargebee/typescript` |
 | `make sink-lago-typescript` | `make install verify` in `sinks/lago/typescript` |
+| `make sink-stigg-typescript` | `make install verify` in `sinks/stigg/typescript` |
 
 ## Where a change belongs
 

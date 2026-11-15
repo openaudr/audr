@@ -11,7 +11,8 @@
     "adapters/vercel-ai/typescript",
     "adapters/mastra/typescript",
     "sinks/chargebee/typescript",
-    "sinks/lago/typescript"
+    "sinks/lago/typescript",
+    "sinks/stigg/typescript"
   ],
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",

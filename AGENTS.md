@@ -35,6 +35,7 @@ identity and attribution that records from different systems join.
 | `sinks/chargebee/python/` | [`sinks/chargebee/python/AGENTS.md`](sinks/chargebee/python/AGENTS.md) |
 | `sinks/chargebee/typescript/` | [`sinks/chargebee/typescript/AGENTS.md`](sinks/chargebee/typescript/AGENTS.md) |
 | `sinks/lago/typescript/` | [`sinks/lago/typescript/AGENTS.md`](sinks/lago/typescript/AGENTS.md) |
+| `sinks/stigg/typescript/` | [`sinks/stigg/typescript/AGENTS.md`](sinks/stigg/typescript/AGENTS.md) |
 
 ## Invariants
 

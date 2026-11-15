@@ -92,7 +92,7 @@ sequenceDiagram
 | [`spec/`](spec/SPEC.md) | The standard: [`SPEC.md`](spec/SPEC.md) to implement it, [`audr.schema.json`](spec/audr.schema.json) to validate records, [`examples/record.json`](spec/examples/record.json) for a complete record |
 | [`conformance/`](conformance/README.md) | Language-neutral fixtures every implementation must reproduce |
 | [`adapters/`](adapters/README.md) | Things that produce records — the [Python](adapters/core/python/README.md) and [TypeScript](adapters/core/typescript/README.md) SDKs and runtime adapters |
-| [`sinks/`](sinks/README.md) | Things that consume records — destinations such as Chargebee and Lago |
+| [`sinks/`](sinks/README.md) | Things that consume records — destinations such as Chargebee, Lago and Stigg |
 | `tools/` | The specification generator and the repository checks, driven by the [`Makefile`](Makefile) |
 
 The schema's canonical URL is its `$id`:
@@ -159,7 +159,7 @@ asyncio.run(main())
 | --- | --- | --- |
 | Core SDK | [`audr`](adapters/core/python/README.md) (Python)<br>[`@openaudr/audr`](adapters/core/typescript/README.md) (TypeScript) | [`adapters/core/README.md`](adapters/core/README.md) — the `Client`, the sink contract, delivery states |
 | Adapters | [`audr-adapter-langfuse`](adapters/langfuse/python/README.md) (Python)<br>[`audr-adapter-litellm`](adapters/litellm/python/README.md) (Python)<br>[`audr-adapter-nemo-relay`](adapters/nemo-relay/python/README.md) (Python)<br>[`@openaudr/audr-adapter-merge-gateway`](adapters/merge-gateway/typescript/README.md) (TypeScript)<br>[`@openaudr/audr-adapter-openrouter`](adapters/openrouter/typescript/README.md) (TypeScript)<br>[`@openaudr/audr-adapter-vercel-ai`](adapters/vercel-ai/typescript/README.md) (TypeScript)<br>[`@openaudr/audr-adapter-mastra`](adapters/mastra/typescript/README.md) (TypeScript) | [`adapters/README.md`](adapters/README.md) |
-| Sinks | [`audr-sink-chargebee`](sinks/chargebee/python/README.md) (Python)<br>[`@openaudr/audr-sink-chargebee`](sinks/chargebee/typescript/README.md) (TypeScript)<br>[`@openaudr/audr-sink-lago`](sinks/lago/typescript/README.md) (TypeScript) | [`sinks/README.md`](sinks/README.md) |
+| Sinks | [`audr-sink-chargebee`](sinks/chargebee/python/README.md) (Python)<br>[`@openaudr/audr-sink-chargebee`](sinks/chargebee/typescript/README.md) (TypeScript)<br>[`@openaudr/audr-sink-lago`](sinks/lago/typescript/README.md) (TypeScript)<br>[`@openaudr/audr-sink-stigg`](sinks/stigg/typescript/README.md) (TypeScript) | [`sinks/README.md`](sinks/README.md) |
 
 Adapters, sinks and tools maintained outside this repository are listed in
 [`IMPLEMENTATIONS.md`](IMPLEMENTATIONS.md).
