@@ -149,6 +149,13 @@ The sink does not merge records that share `(run.run_id, run.span_id)`. When mor
 layer emits a record for the same call, such as a harness and a router, each becomes its own
 event, so emit usage for Stigg from one layer.
 
+> [!WARNING]
+> Do not deliver records from the [Stigg Agent SDK](https://github.com/stiggio/stigg-agent-sdk-ts)
+> (`@stigg/agent-sdk-js`, emitter `name` `@stigg/agent-sdk-js`) to this sink. The Agent SDK
+> already reports the usage it measures to Stigg, so every call would be counted twice. Use
+> this sink for usage that reaches Stigg by no other path, and send the Agent SDK's AUDR
+> records only to other destinations.
+
 ## Shutdown
 
 `client.shutdown()` drains the queue and closes the sink. `sink.close()` is idempotent and

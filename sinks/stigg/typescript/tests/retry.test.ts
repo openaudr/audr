@@ -124,7 +124,7 @@ describe('retryHintMs', () => {
     expect(retryHintMs(headers({}), NOW)).toBeUndefined();
   });
 
-  it('honours Retry-After if Stigg sends one', () => {
+  it('reads Retry-After in seconds, as Stigg sends it', () => {
     expect(retryHintMs(headers({ 'Retry-After': '4' }), NOW)).toBe(4000);
   });
 

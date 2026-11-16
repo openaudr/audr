@@ -64,7 +64,7 @@ export function isTransient(status: number): boolean {
 
 /**
  * The wait the response asks for, in milliseconds, or `undefined` without a valid hint.
- * Stigg sends no `Retry-After` today, rate limiting included; it is honoured if one appears.
+ * Stigg answers a rate-limited request with `429` and a `Retry-After` in seconds.
  */
 export function retryHintMs(headers: Headers, now: number = Date.now()): number | undefined {
   return parseRetryAfterMs(headers.get('Retry-After'), now);

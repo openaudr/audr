@@ -257,6 +257,13 @@ export class StiggSink implements Sink {
             `audr-sink-stigg: the API key is not permitted to report events (status=${status})`,
           );
           return failed(false, 'forbidden');
+        case 'not_found':
+          // The events endpoint never answers 404 for an event or customer it does not know,
+          // so the request reached another route.
+          this.#logger.error(
+            `audr-sink-stigg: the events endpoint was not found; check apiUrl (status=${status})`,
+          );
+          return failed(false, 'not_found');
         case 'too_large':
           this.#logger.warn(
             `audr-sink-stigg: Stigg rejected the request as too large (events=${events.length}); ` +

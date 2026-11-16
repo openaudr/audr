@@ -13,6 +13,7 @@ export type StatusClass =
   | 'invalid'
   | 'credential'
   | 'forbidden'
+  | 'not_found'
   | 'too_large'
   | 'transient'
   | 'permanent';
@@ -27,6 +28,7 @@ export function classifyStatus(status: number): StatusClass {
   if (status === 400) return 'invalid';
   if (status === 401) return 'credential';
   if (status === 403) return 'forbidden';
+  if (status === 404) return 'not_found';
   if (status === 413) return 'too_large';
   return isTransient(status) ? 'transient' : 'permanent';
 }

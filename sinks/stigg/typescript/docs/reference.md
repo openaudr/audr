@@ -132,7 +132,7 @@ unaffected.
 | `unencodable_record` | The record lacks the structure the encoder reads |
 | `duplicate_record_id` | Several records of the batch share a `record_id` and differ in content |
 | `bad_user_input:<field>`, `bad_user_input` | Stigg refused the event, see [Validation responses](#validation-responses) |
-| `auth`, `forbidden`, `payload_too_large`, `http_<status>` | Stigg refused the request that carried the record, after another record of the batch had reached an outcome, see [Batch results](#batch-results) |
+| `auth`, `forbidden`, `not_found`, `payload_too_large`, `http_<status>` | Stigg refused the request that carried the record, after another record of the batch had reached an outcome, see [Batch results](#batch-results) |
 
 Records that repeat an earlier record of the batch byte for byte share that record's event
 and its outcome. Records that share a `record_id` but differ are all rejected: Stigg accepts
@@ -151,6 +151,7 @@ response becomes part of one `BatchResult`.
 | `400` | The events the message names are rejected and the others are resent, see [Validation responses](#validation-responses) | `bad_user_input` when the message cannot be matched to the request |
 | `401` | Permanent failure | `auth` |
 | `403` | Permanent failure | `forbidden` |
+| `404` | Permanent failure: the request did not reach the events endpoint, which never answers `404` for an unknown event or customer. Check `apiUrl` | `not_found` |
 | `413` | Permanent failure | `payload_too_large` |
 | `408`, `409`, `429`, `500`–`599` | Retryable failure, once `retry` is exhausted | `http_<status>` |
 | Network error or timeout | Retryable failure, once `retry` is exhausted | the system error code or error class name |
@@ -161,8 +162,7 @@ response becomes part of one `BatchResult`.
   event only when the customer has a subscription or credit grant whose feature selects
   it. The sink cannot observe this.
 - Stigg rate-limits reporting at about 1,000 events per second for an API key and answers
-  `429` without `Retry-After`. The sink backs off and retries; a `Retry-After`, if one
-  appears, is honoured.
+  `429` with a `Retry-After` in seconds. The sink waits at least that long before it retries.
 - A permanent failure is Stigg's verdict on the request, and a retryable failure is not.
   [Batch results](#batch-results) describes how each is reported when another record of the
   batch has an outcome.
@@ -213,6 +213,8 @@ are all equal, and keeps the first.
   append-only, so an event can be neither replaced nor voided.
 - The sink does not merge records that share `(run.run_id, run.span_id)`. Records for the
   same call from different emitters, such as a harness and a router, each become an event.
+- The Stigg Agent SDK (`@stigg/agent-sdk-js`) reports the usage it measures to Stigg itself.
+  Its AUDR records must not be delivered to this sink, or every call is counted twice.
 
 ## Batch results
 
@@ -245,8 +247,8 @@ deliver again.
 | `multiplier` | `2` | Exponential growth factor, at least 1 |
 
 Delays use full-jitter exponential backoff. A `Retry-After` header, in seconds or as an HTTP
-date, raises a delay to the time it asks for, capped at `maxBackoffMs`; Stigg sends none
-today. `409` is retried, as Stigg's own SDKs retry it. Retries happen inside `deliver()`.
+date, raises a delay to the time it asks for, capped at `maxBackoffMs`; Stigg sends one with
+every `429`. `409` is retried, as Stigg's own SDKs retry it. Retries happen inside `deliver()`.
 
 ## Cancellation and shutdown
 
@@ -265,7 +267,7 @@ response body or a credential. A logger that throws cannot disturb delivery.
 
 | Level | When |
 | --- | --- |
-| `error` | The API key was rejected (`401`) or is not permitted to report events (`403`) |
+| `error` | The API key was rejected (`401`) or is not permitted to report events (`403`), or the events endpoint was not found (`404`) |
 | `error` | An unexpected internal failure; the batch is answered as in [Batch results](#batch-results), as a permanent failure with detail `internal_error` only when no record had an outcome |
 | `warn` | A request was refused as too large, rejected permanently, or ended on a transient status after its last attempt |
 | `warn` | Stigg answered a `2xx` other than `202` or `200` |

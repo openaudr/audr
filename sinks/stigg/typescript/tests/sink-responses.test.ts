@@ -35,7 +35,7 @@ describe('StiggSink responses', () => {
     [401, 'auth'],
     [403, 'forbidden'],
     [413, 'payload_too_large'],
-    [404, 'http_404'],
+    [404, 'not_found'],
     [422, 'http_422'],
     [301, 'http_301'],
     [302, 'http_302'],
@@ -116,6 +116,15 @@ describe('StiggSink responses', () => {
       ]);
     });
 
+    it('logs a missing endpoint as an error that names apiUrl', async () => {
+      const logger = recordingLogger();
+      await makeSink({ fetch: fakeFetch(() => respond(404)).fetch, logger }).deliver([record()]);
+
+      expect(logger.lines).toEqual([
+        'error: audr-sink-stigg: the events endpoint was not found; check apiUrl (status=404)',
+      ]);
+    });
+
     it('logs a forbidden key as an error', async () => {
       const logger = recordingLogger();
       const sink = makeSink({ fetch: fakeFetch(() => respond(403)).fetch, logger });
@@ -140,11 +149,11 @@ describe('StiggSink responses', () => {
 
     it('logs a permanent rejection and an exhausted retry budget with their status', async () => {
       const logger = recordingLogger();
-      await makeSink({ fetch: fakeFetch(() => respond(404)).fetch, logger }).deliver([record()]);
+      await makeSink({ fetch: fakeFetch(() => respond(422)).fetch, logger }).deliver([record()]);
       await makeSink({ fetch: fakeFetch(() => respond(503)).fetch, logger }).deliver([record()]);
 
       expect(logger.lines).toEqual([
-        'warn: audr-sink-stigg: the request was rejected permanently (status=404)',
+        'warn: audr-sink-stigg: the request was rejected permanently (status=422)',
         'warn: audr-sink-stigg: the request failed after 3 attempt(s) (status=503)',
       ]);
     });
@@ -156,7 +165,7 @@ describe('StiggSink responses', () => {
         labels: { note: 'private-label' },
       });
       const logger = recordingLogger();
-      const statuses = [400, 401, 403, 413, 422, 500];
+      const statuses = [400, 401, 403, 404, 413, 422, 500];
 
       for (const status of statuses) {
         const sink = makeSink({

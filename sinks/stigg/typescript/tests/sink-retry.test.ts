@@ -141,7 +141,7 @@ describe('StiggSink retries', () => {
       vi.useFakeTimers();
       vi.spyOn(Math, 'random').mockReturnValue(0);
       const { fetch, calls } = fakeFetch((_call, index) =>
-        index === 0 ? respond(503, undefined, { 'Retry-After': '2' }) : respond(202),
+        index === 0 ? respond(429, undefined, { 'Retry-After': '2' }) : respond(202),
       );
       const sink = makeSink({ fetch, retry: { initialBackoffMs: 100, maxBackoffMs: 30_000 } });
 
@@ -154,7 +154,7 @@ describe('StiggSink retries', () => {
       expect(calls).toHaveLength(2);
     });
 
-    it('ignores X-RateLimit-Reset, which Stigg does not define', async () => {
+    it('takes its hint from Retry-After, not X-RateLimit-Reset', async () => {
       vi.useFakeTimers();
       vi.spyOn(Math, 'random').mockReturnValue(0);
       const { fetch, calls } = fakeFetch((_call, index) =>
