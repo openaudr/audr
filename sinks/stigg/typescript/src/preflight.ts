@@ -9,9 +9,6 @@ import { type AudrRecord, type RejectedRecord } from '@openaudr/audr';
 import { createEvent, InvalidEventError, type StiggEvent } from './event.js';
 import { flattenRecord } from './flatten.js';
 
-/** Names the Stigg event of a record. */
-export type EventNamer = (record: AudrRecord) => string;
-
 export interface Preflight {
   /** One event per distinct `record_id`, in batch order. */
   readonly events: readonly StiggEvent[];
@@ -27,7 +24,7 @@ export interface Preflight {
  * rejected: Stigg accepts both and keeps the first under one idempotency key, so sending
  * either would silently discard the other.
  */
-export function preflight(batch: readonly AudrRecord[], eventName: EventNamer): Preflight {
+export function preflight(batch: readonly AudrRecord[], eventName: string): Preflight {
   const events = new Map<string, { readonly event: StiggEvent; readonly body: string }>();
   const rejected = new Map<string, string>();
   const reject = (id: string, detail: string): void => {
@@ -58,12 +55,12 @@ export function preflight(batch: readonly AudrRecord[], eventName: EventNamer): 
   };
 }
 
-function encode(record: AudrRecord, eventName: EventNamer): StiggEvent {
+function encode(record: AudrRecord, eventName: string): StiggEvent {
   // Stigg usage is append-only: an event can be neither replaced nor voided once accepted,
   // so a restatement has no home.
   if (record.corrects !== undefined) throw new InvalidEventError('unsupported_correction');
   return createEvent({
-    eventName: nameOf(record, eventName),
+    eventName,
     // The paying account is the Stigg customer. `subscription_id` stays a dimension: a Stigg
     // resource is not a subscription, and an unknown one leaves the usage uncounted.
     customerId: record.attribution.account_id,
@@ -71,13 +68,4 @@ function encode(record: AudrRecord, eventName: EventNamer): StiggEvent {
     eventTime: record.timing.event_time,
     dimensions: flattenRecord(record),
   });
-}
-
-function nameOf(record: AudrRecord, eventName: EventNamer): string {
-  try {
-    return eventName(record);
-  } catch {
-    // The host's function failed for this record; its error is never surfaced.
-    throw new InvalidEventError('invalid_event_name');
-  }
 }

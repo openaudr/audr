@@ -10,7 +10,7 @@ import {
 
 import { type CredentialOptions, resolveCredentials } from './credentials.js';
 import { isEventName, type StiggEvent } from './event.js';
-import { type EventNamer, preflight } from './preflight.js';
+import { preflight } from './preflight.js';
 import { classifyStatus, parseValidationErrors } from './response.js';
 import { type RetryOptions, RetryPolicy, retryHintMs } from './retry.js';
 import { Tally, type Stop } from './tally.js';
@@ -31,11 +31,10 @@ const UNCONFIRMED: Stop = { kind: 'unconfirmed' };
 
 export interface StiggSinkOptions extends CredentialOptions, TransportOptions {
   /**
-   * The Stigg event name every record is sent under, or a function that names each record's
-   * event. Stigg meters select events by name and may aggregate one name into several
-   * features. Always required.
+   * The Stigg event name every record is sent under. Stigg meters select events by name and
+   * dimensions, and may aggregate one name into several features. Always required.
    */
-  readonly eventName: string | ((record: AudrRecord) => string);
+  readonly eventName: string;
   readonly retry?: RetryOptions | undefined;
   /** Receives value-free diagnostics. Default: none, the sink logs nothing. */
   readonly logger?: Logger | undefined;
@@ -62,7 +61,7 @@ type Exchange =
 export class StiggSink implements Sink {
   readonly #endpoint: string;
   readonly #headers: Readonly<Record<string, string>>;
-  readonly #eventName: EventNamer;
+  readonly #eventName: string;
   readonly #retry: RetryPolicy;
   readonly #transport: Transport;
   readonly #logger: Logger;
@@ -76,7 +75,7 @@ export class StiggSink implements Sink {
       'User-Agent': USER_AGENT,
       'X-API-KEY': apiKey,
     });
-    this.#eventName = namer(options.eventName);
+    this.#eventName = validateEventName(options.eventName);
     this.#retry = new RetryPolicy(options.retry);
     this.#transport = new Transport(options);
     this.#logger = options.logger ? safe(options.logger) : SILENT;
@@ -313,12 +312,8 @@ export class StiggSink implements Sink {
   }
 }
 
-/**
- * The event namer for `eventName`. A fixed name is checked once, here; a name a function
- * returns is checked per record, which is rejected when it is not a valid name.
- */
-function namer(eventName: unknown): EventNamer {
-  if (typeof eventName === 'function') return eventName as EventNamer;
+/** Check `eventName` once, at construction, so no record is rejected for its name. */
+function validateEventName(eventName: unknown): string {
   if (eventName === undefined) {
     throw new ConfigurationError('eventName is required; name the Stigg event to report');
   }
@@ -328,7 +323,7 @@ function namer(eventName: unknown): EventNamer {
         'whitespace, that Stigg does not reserve',
     );
   }
-  return () => eventName;
+  return eventName;
 }
 
 function failed(retryable: boolean, detail: string): Stop {

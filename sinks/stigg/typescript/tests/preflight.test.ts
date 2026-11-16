@@ -1,11 +1,11 @@
 import { type AudrRecord } from '@openaudr/audr';
 import { describe, expect, it } from 'vitest';
 
-import { type EventNamer, preflight } from '../src/preflight.js';
+import { preflight } from '../src/preflight.js';
 import { CUSTOMER_ID, EVENT_NAME, record } from './helpers.js';
 
-const fixed: EventNamer = () => EVENT_NAME;
-const run = (batch: readonly AudrRecord[]): ReturnType<typeof preflight> => preflight(batch, fixed);
+const run = (batch: readonly AudrRecord[]): ReturnType<typeof preflight> =>
+  preflight(batch, EVENT_NAME);
 
 describe('preflight', () => {
   it('turns a record into one event with the agreed field mapping', () => {
@@ -76,43 +76,10 @@ describe('preflight', () => {
   });
 
   describe('event name', () => {
-    it('names each record through the given function', () => {
-      const batch = [record({ feature_id: 'llm_tokens' }), record({ feature_id: 'tool_calls' })];
-
-      const { events, rejected } = preflight(
-        batch,
-        (source) => `ai.${source.attribution.feature_id ?? 'other'}`,
-      );
-
-      expect(rejected).toEqual([]);
-      expect(events.map((event) => event.eventName)).toEqual(['ai.llm_tokens', 'ai.tool_calls']);
-    });
-
     it('sends a record without a feature_id, which is only a dimension here', () => {
       const source = record({ feature_id: undefined });
 
       expect(run([source]).events).toHaveLength(1);
-    });
-
-    it.each(['', ' ai.usage', 'usage.credit'])(
-      'rejects a record whose event name comes out as %j',
-      (name) => {
-        const source = record();
-
-        expect(preflight([source], () => name).rejected).toEqual([
-          { recordId: source.record_id, detail: 'invalid_event_name' },
-        ]);
-      },
-    );
-
-    it('rejects a record whose naming function throws, without its message', () => {
-      const source = record();
-
-      const { rejected } = preflight([source], () => {
-        throw new Error('secret detail');
-      });
-
-      expect(rejected).toEqual([{ recordId: source.record_id, detail: 'invalid_event_name' }]);
     });
   });
 

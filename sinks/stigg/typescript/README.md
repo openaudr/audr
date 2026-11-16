@@ -72,7 +72,7 @@ A runnable version against a stand-in endpoint is
 | Option | Environment | Default | Meaning |
 | --- | --- | --- | --- |
 | `apiKey` | `STIGG_API_KEY` | required | A Stigg server API key. It selects the Stigg environment. |
-| `eventName` | none | required | The event name, or `(record) => string` to name each record's event. |
+| `eventName` | none | required | The Stigg event name every record is sent under. |
 | `apiUrl` | `STIGG_API_URL` | `https://api.stigg.io` | An origin, the origin with `/api/v1`, or the full `/api/v1/events` URL. |
 | `retry`, `timeoutMs`, `fetch`, `logger` | none | see the reference | Retry budget, request deadline, `fetch` replacement and diagnostics. |
 
@@ -108,8 +108,7 @@ whose conditions an event matches counts it. A feature whose meter sums
 `usage__llm__input_tokens` over events named `ai.usage`, for example, counts the input tokens
 of every record the sink sends under that name, while another feature counts the same events'
 output tokens. Add a condition on `attribution__feature_id` to split one event name into
-several features, or name events per record with a function, such as
-`eventName: (record) => \`ai.${record.attribution.feature_id}\``.
+several features.
 
 The sink never sends a Stigg `resourceId`, so usage counts toward the customer's
 customer-level subscriptions. `attribution.subscription_id` is forwarded as the

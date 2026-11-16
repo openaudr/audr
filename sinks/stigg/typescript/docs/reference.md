@@ -11,7 +11,7 @@ covers setup and usage.
 | Option | Default | Purpose |
 | --- | --- | --- |
 | `apiKey` | `STIGG_API_KEY` | Stigg server API key, sent as the `X-API-KEY` header; always required. It selects the Stigg environment |
-| `eventName` | none | The Stigg event name, or `(record) => string` to name each record's event; always required |
+| `eventName` | none | The Stigg event name every record is sent under; always required |
 | `apiUrl` | `STIGG_API_URL`, then `https://api.stigg.io` | Stigg API origin, an origin with `/api/v1`, or the full events URL |
 | `retry` | see [Retries](#retries) | Retry budget and backoff |
 | `timeoutMs` | `10000` | Deadline for each HTTP request, in milliseconds |
@@ -27,7 +27,7 @@ import { StiggSink } from '@openaudr/audr-sink-stigg';
 
 const sink = new StiggSink({
   apiKey: process.env.STIGG_API_KEY,
-  eventName: (record) => `ai.${record.resource.type}`,
+  eventName: 'ai.usage',
   retry: { maxAttempts: 5, initialBackoffMs: 1_000 },
   timeoutMs: 20_000,
   logger: console,
@@ -63,10 +63,9 @@ features. The record's `attribution.feature_id` is an ordinary dimension,
 
 A name is valid when it is non-empty, has no leading or trailing whitespace, is at most 255
 characters, and is not one Stigg reserves for events it creates (`$usage.reported`,
-`$usage.ingested`, `usage.credit`). A fixed name that is not valid throws
-`ConfigurationError` from the constructor. A function is called once per record; a record
-for which it returns an invalid name, or throws, is rejected with `invalid_event_name`, and
-the function's error is never surfaced.
+`$usage.ingested`, `usage.credit`). A name that is not valid throws `ConfigurationError`
+from the constructor. To split usage across features, add meter conditions on dimensions
+such as `attribution__feature_id`.
 
 ## Event mapping
 
@@ -122,7 +121,6 @@ unaffected.
 | `detail` | Cause |
 | --- | --- |
 | `unsupported_correction` | The record carries `corrects`; Stigg usage is append-only |
-| `invalid_event_name` | The `eventName` function returned an invalid name for the record, or threw |
 | `missing_customer_id` | The record has no `attribution.account_id` |
 | `invalid_customer_id` | `attribution.account_id` does not match Stigg's customer ID pattern |
 | `invalid_field:/record_id` | `record_id` is not a non-empty string of at most 255 characters |

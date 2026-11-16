@@ -73,21 +73,6 @@ describe('StiggSink requests', () => {
     expect(calls[0]?.events[0]?.timestamp).toBe('2022-04-29T14:19:51.123Z');
   });
 
-  it('names each event through an eventName function', async () => {
-    const batch = [record({ feature_id: 'llm_tokens' }), record({ feature_id: 'tool_calls' })];
-    const { fetch, calls } = fakeFetch(ok);
-
-    await makeSink({
-      fetch,
-      eventName: (source) => `ai.${source.attribution.feature_id ?? 'other'}`,
-    }).deliver(batch);
-
-    expect(calls[0]?.events.map((event) => event.eventName)).toEqual([
-      'ai.llm_tokens',
-      'ai.tool_calls',
-    ]);
-  });
-
   it('sends cost as ordinary dimensions and adds no field of its own', async () => {
     const { fetch, calls } = fakeFetch(ok);
 
@@ -259,8 +244,8 @@ describe('StiggSink requests', () => {
       ).toThrow('eventName is required');
     });
 
-    it.each(['', ' ai.usage', 'x'.repeat(256), '$usage.reported', 42])(
-      'refuses the fixed name %j at construction',
+    it.each(['', ' ai.usage', 'x'.repeat(256), '$usage.reported', 42, () => 'ai.usage'])(
+      'refuses the name %j at construction',
       (eventName) => {
         expect(() => makeSink({ eventName: eventName as string })).toThrow(ConfigurationError);
       },

@@ -19,10 +19,9 @@ Examples must stub `fetch` and run without credentials or network access.
 
 ## Rules
 
-1. `apiKey` and `eventName` are always required. `eventName` is one name for every record
-   or a function that names each record's event; a fixed name is validated at construction,
-   and a record whose function-given name is not valid (empty, surrounded by whitespace,
-   longer than 255 characters or reserved by Stigg) is rejected as `invalid_event_name`.
+1. `apiKey` and `eventName` are always required. `eventName` is one name for every record,
+   validated at construction: not empty, not surrounded by whitespace, at most 255
+   characters and not reserved by Stigg.
    `attribution.feature_id` is not the event name: Stigg meters select events by name, and
    one name may feed several features. Explicit options take precedence over
    `STIGG_API_KEY` and `STIGG_API_URL`. The key is sent only in the `X-API-KEY` header to
