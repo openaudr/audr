@@ -80,6 +80,9 @@ jobs:
             sinks/lago/typescript:
               - *core
               - "sinks/lago/typescript/**"
+            sinks/stigg/typescript:
+              - *core
+              - "sinks/stigg/typescript/**"
 
   root-lint:
     name: Shared tooling format

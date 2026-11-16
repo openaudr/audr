@@ -28,3 +28,4 @@
 /adapters/mastra/typescript/      @openaudr/audr-maintainers
 /sinks/chargebee/typescript/      @openaudr/audr-maintainers
 /sinks/lago/typescript/           @openaudr/audr-maintainers
+/sinks/stigg/typescript/          @openaudr/audr-maintainers
