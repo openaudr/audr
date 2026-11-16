@@ -12,8 +12,6 @@ export type DimensionValue = string | number | boolean;
 export interface StiggEvent {
   readonly eventName: string;
   readonly customerId: string;
-  /** Present only when the record names a subscription; Stigg refuses an empty one. */
-  readonly resourceId?: string;
   /** A UTC instant with millisecond precision, such as `2026-10-29T12:00:00.000Z`. */
   readonly timestamp: string;
   readonly idempotencyKey: string;
@@ -23,7 +21,6 @@ export interface StiggEvent {
 export interface EventFields {
   readonly eventName: string;
   readonly customerId: string | undefined;
-  readonly resourceId: string | undefined;
   readonly idempotencyKey: string;
   /** An RFC 3339 instant. */
   readonly eventTime: string;
@@ -42,7 +39,6 @@ export const RESERVED_EVENT_NAMES: ReadonlySet<string> = new Set([
 ]);
 
 const CUSTOMER_ID = /^[a-zA-Z0-9][a-zA-Z0-9_|.@-]*$/;
-const RESOURCE_ID = /^[a-zA-Z0-9][a-zA-Z0-9_|.-]*$/;
 
 /**
  * A record cannot become a valid event. The message is the rejection detail: a stable code,
@@ -54,13 +50,10 @@ export class InvalidEventError extends Error {
 
 /** Build an immutable event from `fields`, throwing `InvalidEventError` on a rule it breaks. */
 export function createEvent(fields: EventFields): StiggEvent {
-  const { eventName, customerId, resourceId, idempotencyKey } = fields;
+  const { eventName, customerId, idempotencyKey } = fields;
   if (!isEventName(eventName)) throw new InvalidEventError('invalid_event_name');
   if (customerId === undefined) throw new InvalidEventError('missing_customer_id');
   if (!matches(customerId, CUSTOMER_ID)) throw new InvalidEventError('invalid_customer_id');
-  if (resourceId !== undefined && !matches(resourceId, RESOURCE_ID)) {
-    throw new InvalidEventError('invalid_resource_id');
-  }
   if (!isPresent(idempotencyKey) || idempotencyKey.length > MAX_FIELD_LENGTH) {
     throw new InvalidEventError('invalid_field:/record_id');
   }
@@ -69,7 +62,6 @@ export function createEvent(fields: EventFields): StiggEvent {
   return Object.freeze({
     eventName,
     customerId,
-    ...(resourceId === undefined ? {} : { resourceId }),
     timestamp,
     idempotencyKey,
     dimensions: Object.freeze({ ...fields.dimensions }),

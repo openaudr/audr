@@ -56,7 +56,6 @@ describe('StiggSink requests', () => {
       {
         eventName: EVENT_NAME,
         customerId: CUSTOMER_ID,
-        resourceId: 'sub_42',
         timestamp: '2022-04-29T14:19:51.123Z',
         idempotencyKey: source.record_id,
         dimensions: flattenRecord(source),
@@ -297,15 +296,6 @@ describe('StiggSink requests', () => {
       await new StiggSink({ apiKey: API_KEY, eventName: EVENT_NAME, fetch }).deliver([record()]);
 
       expect(calls[0]?.url).toBe('https://api.stigg.io/api/v1/events');
-    });
-
-    it('sends over http only when explicitly allowed', async () => {
-      const { fetch, calls } = fakeFetch(ok);
-      const sink = makeSink({ apiUrl: 'http://localhost:3000', allowInsecureHttp: true, fetch });
-
-      await sink.deliver([record()]);
-
-      expect(calls[0]?.url).toBe('http://localhost:3000/api/v1/events');
     });
 
     it('is unaffected by later changes to the options object', async () => {

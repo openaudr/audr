@@ -28,10 +28,10 @@ Examples must stub `fetch` and run without credentials or network access.
    `STIGG_API_KEY` and `STIGG_API_URL`. The key is sent only in the `X-API-KEY` header to
    the validated endpoint, and redirects are never followed.
 2. Stigg routes on `attribution.account_id` as `customerId`; return a record without one
-   as rejected with `missing_customer_id`. `attribution.subscription_id`, when present, is
-   `resourceId`; when absent the field is omitted, never sent empty. Both are checked
-   against Stigg's identifier patterns before sending (`invalid_customer_id`,
-   `invalid_resource_id`), because Stigg refuses the whole request for one bad event. Return
+   as rejected with `missing_customer_id`, and check it against Stigg's customer ID pattern
+   before sending (`invalid_customer_id`), because Stigg refuses the whole request for one
+   bad event. Never send `resourceId`: a Stigg resource is not an AUDR subscription, so
+   `attribution.subscription_id` is only a dimension. Return
    a record that carries `corrects` as rejected with `unsupported_correction`: Stigg usage
    is append-only.
 3. `record_id` is `idempotencyKey`, and `timing.event_time`, converted to UTC, is

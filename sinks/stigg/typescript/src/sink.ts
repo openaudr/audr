@@ -49,8 +49,7 @@ type Exchange =
  * Deliver AUDR records to Stigg's raw events endpoint, `POST /api/v1/events`.
  *
  * Each record becomes one event under the configured event name, for the customer its
- * `attribution.account_id` names and, when present, the resource its
- * `attribution.subscription_id` names, de-duplicated on `record_id`. Every field of the record
+ * `attribution.account_id` names, de-duplicated on `record_id`. Every field of the record
  * is sent as a dimension, so a Stigg meter can aggregate any counter. A record that cannot
  * become a valid event is rejected by name and never sent.
  *

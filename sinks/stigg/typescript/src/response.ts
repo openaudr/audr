@@ -39,14 +39,7 @@ export interface InvalidEvent {
 }
 
 const BAD_USER_INPUT = 'BadUserInput';
-const FIELDS = new Set([
-  'eventName',
-  'customerId',
-  'resourceId',
-  'timestamp',
-  'idempotencyKey',
-  'dimensions',
-]);
+const FIELDS = new Set(['eventName', 'customerId', 'timestamp', 'idempotencyKey', 'dimensions']);
 // `events[3]`, then optionally the field the issue is about: `events[3].customerId`.
 const EVENT_PATH = /\bevents\[(0|[1-9]\d*)\](?:\.([A-Za-z]+))?/g;
 

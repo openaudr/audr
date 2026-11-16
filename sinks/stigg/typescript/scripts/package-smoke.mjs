@@ -30,7 +30,8 @@ if (
   event.idempotencyKey !== record.record_id ||
   event.eventName !== 'ai.usage' ||
   event.customerId !== 'customer-1' ||
-  event.resourceId !== 'sub_1'
+  'resourceId' in event ||
+  event.dimensions.attribution__subscription_id !== 'sub_1'
 ) {
   throw new Error('record was not encoded');
 }

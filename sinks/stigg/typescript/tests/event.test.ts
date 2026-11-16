@@ -13,7 +13,6 @@ import {
 const FIELDS: EventFields = {
   eventName: 'ai.usage',
   customerId: 'customer-1',
-  resourceId: 'sub_1',
   idempotencyKey: 'rec_1',
   eventTime: '2022-04-29T14:19:51.123Z',
   dimensions: { usage__llm__input_tokens: 1200, resource__name: 'claude' },
@@ -86,17 +85,10 @@ describe('createEvent', () => {
     expect(createEvent(FIELDS)).toEqual({
       eventName: 'ai.usage',
       customerId: 'customer-1',
-      resourceId: 'sub_1',
       timestamp: '2022-04-29T14:19:51.123Z',
       idempotencyKey: 'rec_1',
       dimensions: { usage__llm__input_tokens: 1200, resource__name: 'claude' },
     });
-  });
-
-  it('omits the resource when the record names none, as Stigg refuses an empty one', () => {
-    const event = createEvent({ ...FIELDS, resourceId: undefined });
-
-    expect('resourceId' in event).toBe(false);
   });
 
   it('returns an event that cannot be changed, and does not alias the input', () => {
@@ -124,13 +116,6 @@ describe('createEvent', () => {
     'accepts the customer %j',
     (customerId) => {
       expect(reason({ customerId })).toBe('accepted');
-    },
-  );
-
-  it.each(['', ' ', 'user@example.test', '_leading', 'x'.repeat(256)])(
-    'rejects the resource %j',
-    (resourceId) => {
-      expect(reason({ resourceId })).toBe('invalid_resource_id');
     },
   );
 

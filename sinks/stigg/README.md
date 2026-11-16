@@ -2,8 +2,7 @@
 
 A [sink](../README.md) that delivers [AUDR](../../spec/SPEC.md) records to Stigg's raw events
 endpoint, for metering, entitlements and credits. Stigg routes on `attribution.account_id`
-as the customer, takes `attribution.subscription_id` as the resource when present, and
-de-duplicates on `record_id`; a record without an `account_id`, or one that corrects another
+as the customer and de-duplicates on `record_id`; a record without an `account_id`, or one that corrects another
 record, is rejected by name rather than sent.
 
 | Language | Distribution | Package guide |

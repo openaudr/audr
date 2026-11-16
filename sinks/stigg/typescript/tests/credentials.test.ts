@@ -70,12 +70,6 @@ describe('resolveCredentials', () => {
     expect(() => resolveCredentials({}, { STIGG_API_KEY: '' })).toThrow('apiKey must not be empty');
   });
 
-  it('requires allowInsecureHttp to be a boolean', () => {
-    expect(() =>
-      resolveCredentials({ ...MINIMAL, allowInsecureHttp: 'yes' as unknown as boolean }, {}),
-    ).toThrow('allowInsecureHttp must be a boolean');
-  });
-
   it('never puts the key in an error message', () => {
     const apiKey = 'secret key with spaces';
     let message = '';
@@ -98,29 +92,19 @@ describe('parseApiUrl', () => {
     'https://stigg.example.test/api/v1/',
     `https://stigg.example.test${EVENTS}`,
     `https://stigg.example.test${EVENTS}/`,
-    'HTTPS://STIGG.EXAMPLE.TEST',
   ])('normalises %s to the one events endpoint', (apiUrl) => {
     expect(parseApiUrl(apiUrl)).toBe(`https://stigg.example.test${EVENTS}`);
   });
 
-  it('keeps an explicit port', () => {
-    expect(parseApiUrl('https://stigg.internal:8443/api/v1')).toBe(
-      `https://stigg.internal:8443${EVENTS}`,
-    );
-  });
-
   it.each([
-    ['http://localhost:3000', `http://localhost:3000${EVENTS}`],
-    ['http://stigg-api:3000/api/v1', `http://stigg-api:3000${EVENTS}`],
-    ['http://127.0.0.1:3000', `http://127.0.0.1:3000${EVENTS}`],
-    ['http://[::1]:3000', `http://[::1]:3000${EVENTS}`],
-  ])('accepts %s over http only when opted in', (apiUrl, endpoint) => {
-    expect(() => parseApiUrl(apiUrl)).toThrow('allowInsecureHttp');
-    expect(parseApiUrl(apiUrl, true)).toBe(endpoint);
-  });
-
-  it('still requires https for a remote host unless opted in', () => {
-    expect(() => parseApiUrl('http://api.stigg.io')).toThrow(ConfigurationError);
+    ['http', 'http://stigg.example.test', 'apiUrl scheme must be https'],
+    ['a port', 'https://stigg.example.test:8443', 'apiUrl must not include a port'],
+    ['a default port', 'https://stigg.example.test:443', 'apiUrl must not include a port'],
+    ['an uppercase host', 'https://STIGG.example.test', 'apiUrl host must be lowercase'],
+    ['a trailing dot', 'https://stigg.example.test.', 'trailing dot'],
+    ['a single label', 'https://localhost', 'at least two labels'],
+  ] as const)('rejects %s by name', (_name, apiUrl, message) => {
+    expect(() => parseApiUrl(apiUrl)).toThrow(message);
   });
 
   it.each([
@@ -143,13 +127,14 @@ describe('parseApiUrl', () => {
     ['a dot segment', 'https://stigg.example.test/api/v1/../x'],
     ['a doubled slash', 'https://stigg.example.test/api/v1//'],
     ['an encoded dot segment', 'https://stigg.example.test/api/v1/%2e%2e/x'],
-    ['a default port', 'https://stigg.example.test:443'],
+    ['an uppercase scheme', 'HTTPS://stigg.example.test'],
+    ['an IPv6 address', 'https://[::1]'],
     ['a backslash that hides a host', 'https://evil.example.test\\@stigg.example.test'],
     ['a backslash after the host', 'https://stigg.example.test\\.evil.example.test'],
     ['a tab inside the host', 'https://stigg\t.example.test'],
     ['a newline inside the host', 'https://stigg.example.test\n'],
     ['an internationalised host', 'https://b\u00fccher.example.test'],
   ] as const)('rejects %s', (_name, apiUrl) => {
-    expect(() => parseApiUrl(apiUrl, true)).toThrow(ConfigurationError);
+    expect(() => parseApiUrl(apiUrl)).toThrow(ConfigurationError);
   });
 });

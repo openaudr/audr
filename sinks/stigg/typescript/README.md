@@ -40,7 +40,7 @@ const record = createRecord({
   attribution: {
     environment: 'production',
     account_id: 'acct_42', // the Stigg customer
-    subscription_id: 'sub_42', // optional: the Stigg resource
+    subscription_id: 'sub_42', // sent as a dimension
     feature_id: 'support-chat',
   },
 });
@@ -74,7 +74,6 @@ A runnable version against a stand-in endpoint is
 | `apiKey` | `STIGG_API_KEY` | required | A Stigg server API key. It selects the Stigg environment. |
 | `eventName` | none | required | The event name, or `(record) => string` to name each record's event. |
 | `apiUrl` | `STIGG_API_URL` | `https://api.stigg.io` | An origin, the origin with `/api/v1`, or the full `/api/v1/events` URL. |
-| `allowInsecureHttp` | none | `false` | Permit an `http:` URL, for a local Stigg API on a trusted network. |
 | `retry`, `timeoutMs`, `fetch`, `logger` | none | see the reference | Retry budget, request deadline, `fetch` replacement and diagnostics. |
 
 Explicit options take precedence over the environment. Credentials belong to the sink and
@@ -91,7 +90,6 @@ several environments, construct one sink per key and route records to the matchi
 | --- | --- |
 | the `eventName` option | `eventName` |
 | `attribution.account_id` | `customerId` |
-| `attribution.subscription_id`, when present | `resourceId` |
 | `record_id` | `idempotencyKey` |
 | `timing.event_time` | `timestamp`, converted to UTC |
 | Every field, flattened | `dimensions`, such as `usage__llm__input_tokens` |
@@ -113,9 +111,9 @@ output tokens. Add a condition on `attribution__feature_id` to split one event n
 several features, or name events per record with a function, such as
 `eventName: (record) => \`ai.${record.attribution.feature_id}\``.
 
-An event with `resourceId` counts only toward that resource's subscription, and an event
-without one only toward the customer-level subscription. When a customer's subscription is
-scoped to a resource, set `attribution.subscription_id` on every record.
+The sink never sends a Stigg `resourceId`, so usage counts toward the customer's
+customer-level subscriptions. `attribution.subscription_id` is forwarded as the
+`attribution__subscription_id` dimension, which a meter condition can filter on.
 
 For credits, a custom formula can read any dimension, such as
 `dimensions.cost__total_cost` when the emitter asserts a cost. The sink never computes a
@@ -133,11 +131,11 @@ maps each response status to an outcome.
 
 Transient failures are retried inside `deliver()`, a bounded number of times, with the
 identical request body. A retry therefore carries the same `idempotencyKey` and
-`timestamp`, which together with the customer, resource and event name let Stigg recognise
+`timestamp`, which together with the customer and event name let Stigg recognise
 it as the same event.
 
 A Stigg `202` confirms that the events were queued, not that a meter counted them. Stigg
-accepts an event for a customer or resource it does not know, and a meter counts it only
+accepts an event for a customer it does not know, and a meter counts it only
 when the customer has a subscription or credit grant whose feature selects it. Check the
 customer, the event name and the meter's filters in Stigg when usage does not appear.
 

@@ -10,6 +10,8 @@ export const EVENTS_PATH = '/api/v1/events';
 // A path an operator may reasonably write for the same endpoint. Anything else could point
 // the API key at a route the sink never meant to call.
 const ACCEPTED_PATHS = new Set(['', '/api/v1', EVENTS_PATH]);
+const HOST_LABEL = '[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?';
+const HOST = new RegExp(`^${HOST_LABEL}(?:\\.${HOST_LABEL})+$`);
 // Printable ASCII without whitespace: a value in this range cannot break out of a header.
 const API_KEY = /^[\x21-\x7e]+$/;
 
@@ -21,8 +23,6 @@ export interface CredentialOptions {
    * Env: `STIGG_API_URL`.
    */
   readonly apiUrl?: string | undefined;
-  /** Permit an `http:` URL, for a local Stigg API on a trusted network. Default `false`. */
-  readonly allowInsecureHttp?: boolean | undefined;
 }
 
 export interface Credentials {
@@ -41,15 +41,8 @@ export function resolveCredentials(
   if (apiKey === undefined) {
     throw new ConfigurationError('apiKey is required; provide apiKey or set STIGG_API_KEY');
   }
-  const allowInsecureHttp = options.allowInsecureHttp ?? false;
-  if (typeof allowInsecureHttp !== 'boolean') {
-    throw new ConfigurationError('allowInsecureHttp must be a boolean');
-  }
   return Object.freeze({
-    endpoint: parseApiUrl(
-      options.apiUrl ?? env.STIGG_API_URL ?? DEFAULT_API_URL,
-      allowInsecureHttp,
-    ),
+    endpoint: parseApiUrl(options.apiUrl ?? env.STIGG_API_URL ?? DEFAULT_API_URL),
     apiKey: validateApiKey(apiKey),
   });
 }
@@ -57,38 +50,38 @@ export function resolveCredentials(
 /**
  * Validate `apiUrl` as written and return the events URL it names.
  *
- * The authority is compared with what `URL` parsed from it, because `URL` silently
- * normalises backslashes, userinfo and default ports; a lenient reading would let a
- * configured value send the API key to a host nobody inspected.
+ * The host is checked as written, against a dotted host-label pattern that admits no
+ * scheme, port, path or userinfo; `URL` would silently normalise several of those away.
+ * Relaxing it would let a configured value redirect an authenticated request, and the API
+ * key with it.
  */
-export function parseApiUrl(apiUrl: unknown, allowInsecureHttp = false): string {
+export function parseApiUrl(apiUrl: unknown): string {
   if (typeof apiUrl !== 'string') throw new ConfigurationError('apiUrl must be a string');
   let url: URL;
   try {
     url = new URL(apiUrl);
   } catch {
-    throw new ConfigurationError('apiUrl must be an absolute URL with a host name');
+    throw new ConfigurationError('apiUrl must include a host name');
   }
-  if (url.protocol === 'http:') {
-    if (!allowInsecureHttp) {
-      throw new ConfigurationError(
-        'apiUrl must use https; set allowInsecureHttp to use http with a local Stigg API',
-      );
-    }
-  } else if (url.protocol !== 'https:') {
-    throw new ConfigurationError('apiUrl scheme must be https');
-  }
+  if (url.protocol !== 'https:') throw new ConfigurationError('apiUrl scheme must be https');
   if (url.username !== '' || url.password !== '') {
     throw new ConfigurationError('apiUrl must not include userinfo');
   }
-  if (/[?#]/.test(apiUrl)) {
-    throw new ConfigurationError('apiUrl must not include a query string or fragment');
+  if (url.search !== '' || apiUrl.includes('?')) {
+    throw new ConfigurationError('apiUrl must not include a query string');
+  }
+  if (url.hash !== '' || apiUrl.includes('#')) {
+    throw new ConfigurationError('apiUrl must not include a fragment');
   }
 
-  const [, authority = '', path = ''] = /^[a-z]+:\/\/([^/]*)(.*)$/i.exec(apiUrl) ?? [];
-  if (authority.toLowerCase() !== url.host) {
+  const [, host = '', path = ''] = /^https:\/\/([^/?#]*)([^?#]*)/.exec(apiUrl) ?? [];
+  if (host === '') throw new ConfigurationError('apiUrl must include a host name');
+  if (/:\d*$/.test(host)) throw new ConfigurationError('apiUrl must not include a port');
+  if (host.endsWith('.')) throw new ConfigurationError('apiUrl host must not have a trailing dot');
+  if (host !== host.toLowerCase()) throw new ConfigurationError('apiUrl host must be lowercase');
+  if (!HOST.test(host) || host !== url.hostname) {
     throw new ConfigurationError(
-      'apiUrl must be a plain host name or address with an optional non-default port',
+      'apiUrl host must be a dotted lowercase host name with at least two labels',
     );
   }
   if (!ACCEPTED_PATHS.has(path.replace(/\/$/, ''))) {
@@ -96,7 +89,7 @@ export function parseApiUrl(apiUrl: unknown, allowInsecureHttp = false): string 
       `apiUrl path must be empty, /api/v1 or ${EVENTS_PATH}; the sink only calls the events endpoint`,
     );
   }
-  return `${url.origin}${EVENTS_PATH}`;
+  return `https://${host}${EVENTS_PATH}`;
 }
 
 function validateApiKey(apiKey: unknown): string {

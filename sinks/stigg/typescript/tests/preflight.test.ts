@@ -21,7 +21,6 @@ describe('preflight', () => {
     expect(events[0]).toMatchObject({
       eventName: EVENT_NAME,
       customerId: CUSTOMER_ID,
-      resourceId: 'sub_42',
       idempotencyKey: source.record_id,
       timestamp: '2022-04-29T14:19:51.123Z',
     });
@@ -35,15 +34,16 @@ describe('preflight', () => {
 
   it('sends only the fields Stigg accepts', () => {
     expect(Object.keys(run([record({ subscription_id: 'sub_1' })]).events[0] ?? {}).sort()).toEqual(
-      ['customerId', 'dimensions', 'eventName', 'idempotencyKey', 'resourceId', 'timestamp'],
+      ['customerId', 'dimensions', 'eventName', 'idempotencyKey', 'timestamp'],
     );
   });
 
-  it('reports at customer level when the record names no subscription', () => {
-    const [event] = run([record()]).events;
+  it('sends a subscription_id only as a dimension, never as a Stigg resource', () => {
+    const [event] = run([record({ subscription_id: 'sub@1' })]).events;
 
     expect(event).toBeDefined();
     expect(event && 'resourceId' in event).toBe(false);
+    expect(event?.dimensions).toMatchObject({ attribution__subscription_id: 'sub@1' });
   });
 
   it('handles an empty batch', () => {
@@ -72,14 +72,6 @@ describe('preflight', () => {
 
     expect(run([source]).rejected).toEqual([
       { recordId: source.record_id, detail: 'invalid_customer_id' },
-    ]);
-  });
-
-  it('rejects a subscription_id Stigg cannot take as a resource', () => {
-    const source = record({ subscription_id: 'sub@1' });
-
-    expect(run([source]).rejected).toEqual([
-      { recordId: source.record_id, detail: 'invalid_resource_id' },
     ]);
   });
 

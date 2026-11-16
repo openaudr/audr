@@ -64,9 +64,9 @@ function encode(record: AudrRecord, eventName: EventNamer): StiggEvent {
   if (record.corrects !== undefined) throw new InvalidEventError('unsupported_correction');
   return createEvent({
     eventName: nameOf(record, eventName),
-    // The paying account is the Stigg customer; the subscription, when named, its resource.
+    // The paying account is the Stigg customer. `subscription_id` stays a dimension: a Stigg
+    // resource is not a subscription, and an unknown one leaves the usage uncounted.
     customerId: record.attribution.account_id,
-    resourceId: record.attribution.subscription_id,
     idempotencyKey: record.record_id,
     eventTime: record.timing.event_time,
     dimensions: flattenRecord(record),

@@ -13,7 +13,6 @@ covers setup and usage.
 | `apiKey` | `STIGG_API_KEY` | Stigg server API key, sent as the `X-API-KEY` header; always required. It selects the Stigg environment |
 | `eventName` | none | The Stigg event name, or `(record) => string` to name each record's event; always required |
 | `apiUrl` | `STIGG_API_URL`, then `https://api.stigg.io` | Stigg API origin, an origin with `/api/v1`, or the full events URL |
-| `allowInsecureHttp` | `false` | Permits an `http` `apiUrl`, which sends the API key unencrypted |
 | `retry` | see [Retries](#retries) | Retry budget and backoff |
 | `timeoutMs` | `10000` | Deadline for each HTTP request, in milliseconds |
 | `fetch` | `globalThis.fetch` | Replaces `fetch`, for example with one backed by an undici `Agent` for connection-pool tuning |
@@ -43,12 +42,12 @@ other path is rejected.
 | `apiUrl` | Endpoint |
 | --- | --- |
 | `https://api.stigg.io` | `https://api.stigg.io/api/v1/events` |
-| `https://stigg.internal:8443/api/v1` | `https://stigg.internal:8443/api/v1/events` |
-| `https://stigg.internal:8443/api/v1/events` | unchanged |
+| `https://api.stigg.io/api/v1` | `https://api.stigg.io/api/v1/events` |
+| `https://api.stigg.io/api/v1/events` | unchanged |
 
-A trailing slash is ignored. The URL must use `https`, unless `allowInsecureHttp` is set. It
-must not carry userinfo, a query string, a fragment, a backslash, an internationalised
-host name or an explicit default port. The API key is sent to the resulting endpoint only,
+A trailing slash is ignored. The URL must use `https` and a lowercase dotted host name. It
+must not carry a port, userinfo, a query string, a fragment, a backslash or an
+internationalised host name. The API key is sent to the resulting endpoint only,
 and the sink never follows a redirect.
 
 `apiKey` is a non-empty string of printable ASCII characters without spaces. Use a server
@@ -77,7 +76,6 @@ Every record becomes one event of Stigg's `POST /api/v1/events`.
 | --- | --- |
 | `eventName` | the `eventName` option |
 | `customerId` | `attribution.account_id` |
-| `resourceId` | `attribution.subscription_id`; omitted when the record has none |
 | `idempotencyKey` | `record_id` |
 | `timestamp` | `timing.event_time`, converted to UTC with millisecond precision, such as `"2026-10-29T12:00:00.000Z"` |
 | `dimensions` | the flattened record, see [Flattening](#flattening) |
@@ -85,13 +83,11 @@ Every record becomes one event of Stigg's `POST /api/v1/events`.
 - Stigg accepts only a UTC (`Z`) timestamp and refuses an offset such as `+02:00`, which
   AUDR permits; the sink converts it. Stigg defaults a missing timestamp to the ingestion
   time, so the sink always sends one, so that a retry reproduces the original event.
-- Stigg checks `customerId` against `^[a-zA-Z0-9][a-zA-Z0-9_|.@-]*$` and `resourceId` against
-  `^[a-zA-Z0-9][a-zA-Z0-9_|.-]*$`, each at most 255 characters. The sink applies the same
-  checks before sending.
-- An event with `resourceId` counts only toward that resource's subscription, and an event
-  without one only toward the customer-level subscription. A customer whose subscription is
-  scoped to a resource needs `attribution.subscription_id` on every record, or its usage is
-  not counted.
+- Stigg checks `customerId` against `^[a-zA-Z0-9][a-zA-Z0-9_|.@-]*$`, at most 255
+  characters. The sink applies the same check before sending.
+- The sink never sends `resourceId`, so usage counts toward the customer's customer-level
+  subscriptions. `attribution.subscription_id` is forwarded as the
+  `attribution__subscription_id` dimension, which a meter condition can filter on.
 - One record becomes one event. The sink never computes a price: a record's `cost` fields
   are forwarded as ordinary dimensions, which a credit formula can read.
 
@@ -129,7 +125,6 @@ unaffected.
 | `invalid_event_name` | The `eventName` function returned an invalid name for the record, or threw |
 | `missing_customer_id` | The record has no `attribution.account_id` |
 | `invalid_customer_id` | `attribution.account_id` does not match Stigg's customer ID pattern |
-| `invalid_resource_id` | `attribution.subscription_id` does not match Stigg's resource ID pattern |
 | `invalid_field:/record_id` | `record_id` is not a non-empty string of at most 255 characters |
 | `invalid_timestamp` | `timing.event_time` is not an RFC 3339 instant in the years 0000–9999 |
 | `unencodable_field:<pointer>` | The field at the JSON pointer cannot be a Stigg dimension, see [Flattening](#flattening) |
@@ -162,7 +157,7 @@ response becomes part of one `BatchResult`.
 | Any other status, redirects included | Permanent failure | `http_<status>` |
 
 - A `202` confirms that Stigg queued the events, not that a meter counted them. Stigg
-  accepts an event for a customer or resource it does not know, and a meter counts an
+  accepts an event for a customer it does not know, and a meter counts an
   event only when the customer has a subscription or credit grant whose feature selects
   it. The sink cannot observe this.
 - Stigg rate-limits reporting at about 1,000 events per second for an API key and answers
@@ -204,12 +199,12 @@ for one request. A fourth ends the request, and the events it still holds are re
 ## Idempotency
 
 A replay of a delivered record must not be counted twice. Stigg treats two events as the
-same when their `timestamp`, `customerId`, `resourceId`, `eventName` and `idempotencyKey`
+same when their `timestamp`, `customerId`, `eventName` and `idempotencyKey`
 are all equal, and keeps the first.
 
 - The sink serializes each request body once and resends it unchanged after a transient
   failure, so a retry is the same event.
-- Replaying a record with the same `record_id`, `timing.event_time`, account, subscription
+- Replaying a record with the same `record_id`, `timing.event_time`, account
   and event name is safe. A replay that changes any of them is a distinct event and is
   counted again. Keep them stable across replays, and keep an `eventName` function
   deterministic.

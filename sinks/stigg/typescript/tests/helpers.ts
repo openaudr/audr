@@ -32,7 +32,6 @@ export function records(count: number): AudrRecord[] {
 export interface SentEvent {
   readonly eventName: string;
   readonly customerId: string;
-  readonly resourceId?: string;
   readonly timestamp: string;
   readonly idempotencyKey: string;
   readonly dimensions: Record<string, string | number | boolean>;
