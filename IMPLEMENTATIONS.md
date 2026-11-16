@@ -22,7 +22,7 @@ contributing guide. Entries are alphabetical within each category.
 
 ### Adapters
 
-No entries yet.
+- [Stigg Agent SDK](https://github.com/stiggio/stigg-agent-sdk-ts) (by Stigg) — Writes an AUDR record for every model call it measures, to an `@openaudr/audr` client. Targets specification 1.1.0.
 
 ### Sinks
 
