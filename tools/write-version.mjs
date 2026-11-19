@@ -7,11 +7,8 @@
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 
+// `npm version` validates the version before it runs this script.
 const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
-if (typeof version !== 'string' || version === '') {
-  console.error('package.json: no version');
-  process.exit(1);
-}
 
 writeFileSync(
   'src/version.ts',
