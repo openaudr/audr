@@ -95,8 +95,8 @@ package:
   workspace. The dev dependency on `@openrouter/sdk` is pinned exactly to the floor of the
   peer range, so CI runs the suite against the oldest release the package claims to
   support. Raise the two together.
-- **Version:** `package.json` and `src/version.ts`; `tests/public-api.test.ts` keeps them
-  equal.
+- **Version:** `package.json`. `src/version.ts` is generated from it by `npm version`;
+  never edit it by hand. `tests/public-api.test.ts` keeps them equal.
 - **Examples** share `examples/stand-in.ts`, which replaces `fetch`. The package's
   `tsconfig.json` allows importing `.ts` files for them; `tsconfig.build.json` turns that
   off.

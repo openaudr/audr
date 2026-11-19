@@ -63,7 +63,8 @@ run without credentials or network access.
 
 The shared toolchain is defined in the top-level
 [`CONTRIBUTING.md`](../../../CONTRIBUTING.md#shared-typescript-toolchain). The version lives
-in `package.json` and `src/version.ts`; `tests/public-api.test.ts` keeps them equal.
+in `package.json`; `npm version` regenerates `src/version.ts` from it, and
+`tests/public-api.test.ts` keeps them equal.
 Targets beyond the shared `install / lint / test / build`:
 
 ```bash

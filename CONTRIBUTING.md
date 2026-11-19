@@ -226,11 +226,12 @@ several registries.
 | Language | Version declared in | Publish workflow | Registry and deployment environment |
 | --- | --- | --- | --- |
 | Python | `src/<package>/_version.py` | [`publish-python.yml`](.github/workflows/publish-python.yml) | PyPI, `pypi-<distribution>` |
-| TypeScript | `package.json` and `src/version.ts` | [`publish-typescript.yml`](.github/workflows/publish-typescript.yml) | npm, `npm-<name>`, where `<name>` omits the npm scope |
+| TypeScript | `package.json`; `src/version.ts` is generated from it | [`publish-typescript.yml`](.github/workflows/publish-typescript.yml) | npm, `npm-<name>`, where `<name>` omits the npm scope |
 
-A TypeScript version is set with
-`npm version X.Y.Z --no-git-tag-version --workspace <package-dir>`, which also updates the
-root lockfile, and `src/version.ts` is updated to match.
+A TypeScript version is set with one command,
+`npm version X.Y.Z --no-git-tag-version --workspace <package-dir>`, which updates
+`package.json` and the root lockfile, and runs the package's `version` script to regenerate
+`src/version.ts` through `tools/write-version.mjs`. Never edit `src/version.ts` by hand.
 
 1. Open a release pull request that sets the version and renames the `[Unreleased]`
    section of `CHANGELOG.md` to `[X.Y.Z] - YYYY-MM-DD`. The version changes only in a

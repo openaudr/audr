@@ -85,8 +85,8 @@ package:
   claims to support. Raise the two together. The 0.4 type declarations omit fields Gateway
   returns (`usage.cost`, the cache and reasoning counters, `vendor`), so `GatewayResult` in
   `src/mapping.ts` declares the documented shape.
-- **Version:** `package.json` and `src/version.ts`; `tests/public-api.test.ts` keeps them
-  equal.
+- **Version:** `package.json`. `src/version.ts` is generated from it by `npm version`;
+  never edit it by hand. `tests/public-api.test.ts` keeps them equal.
 
 ```bash
 make install     # install every TypeScript package from the root lockfile, then build the core
