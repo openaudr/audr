@@ -52,8 +52,8 @@ package:
   also a development dependency pinned to the lowest supported release. Raise the ranges
   and pins together.
 - **`ai` is a dev dependency only**, for the mock models in `ai/test`.
-- **Version:** `package.json` and `src/version.ts`; `tests/public-api.test.ts` keeps them
-  equal.
+- **Version:** `package.json`. `src/version.ts` is generated from it by `npm version`;
+  never edit it by hand. `tests/public-api.test.ts` keeps them equal.
 
 ```bash
 make install     # install every TypeScript package from the root lockfile, then build the core

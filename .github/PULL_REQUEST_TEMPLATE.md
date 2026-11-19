@@ -33,4 +33,6 @@ Generated files — never edit these directly:
   adapters/core/python/src/audr/record/_schema.py           (run `make models`)
   adapters/core/typescript/src/generated-schema.ts          (run `make schema` there)
   adapters/core/typescript/src/generated-validator.ts       (run `make schema` there)
+  adapters/*/typescript/src/version.ts                      (run `npm version X.Y.Z --no-git-tag-version --workspace <package-dir>`)
+  sinks/*/typescript/src/version.ts                         (run `npm version X.Y.Z --no-git-tag-version --workspace <package-dir>`)
 -->

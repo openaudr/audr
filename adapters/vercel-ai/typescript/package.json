@@ -50,7 +50,8 @@
     "format": "eslint --fix . && prettier --write .",
     "test": "vitest run --coverage",
     "check:package": "publint --strict && attw --pack . --profile esm-only",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "version": "node ../../../tools/write-version.mjs"
   },
   "peerDependencies": {
     "@openaudr/audr": "^0.2.0",

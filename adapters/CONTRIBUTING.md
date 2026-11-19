@@ -92,7 +92,7 @@ A TypeScript package contains the same `tests/`, `README.md` (the npm page), `AG
 | --- | --- |
 | `package.json` | Package metadata, on the shared toolchain; dependencies are locked in the repository's root `package-lock.json` |
 | `Makefile` | `install`, `lint`, `test`, `build`, `examples`, `isolation`, `verify` |
-| `src/`, with `src/version.ts` | The package; `tests/public-api.test.ts` pins its exports and keeps the version equal to `package.json` |
+| `src/`, with `src/version.ts` | The package; `src/version.ts` is generated from `package.json` by the `version` script, and `tests/public-api.test.ts` pins its exports and keeps the version equal to `package.json` |
 | `examples/` | Runnable examples on mock models, run by `make examples` |
 | `scripts/package-smoke.mjs` | The smoke test `make isolation` runs against the installed tarball, through `tools/verify-npm-package.mjs` |
 

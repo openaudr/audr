@@ -61,8 +61,8 @@ package:
   Raise the two together, and only when the adapter needs a newer `ai`. The floor is where
   `embed`, `embedMany` and `rerank` gained `runtimeContext`; earlier 7.x releases drop
   per-call attribution on those calls.
-- **Version:** `package.json` and `src/version.ts`; `tests/public-api.test.ts` keeps them
-  equal.
+- **Version:** `package.json`. `src/version.ts` is generated from it by `npm version`;
+  never edit it by hand. `tests/public-api.test.ts` keeps them equal.
 
 ```bash
 make install     # install every TypeScript package from the root lockfile, then build the core

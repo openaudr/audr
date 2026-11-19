@@ -71,8 +71,8 @@ package:
 - **Dependencies:** `@openaudr/audr` is a peer dependency. The dev dependency on the same range
   links the repository's core through the root npm workspace, and `make install` builds
   the core first. The sink calls Stigg with `fetch`; it does not depend on a Stigg SDK.
-- **Version:** `package.json` and `src/version.ts`; `tests/public-api.test.ts` keeps them
-  equal.
+- **Version:** `package.json`. `src/version.ts` is generated from it by `npm version`;
+  never edit it by hand. `tests/public-api.test.ts` keeps them equal.
 - **Tests:** no test reaches the network. `tests/setup.ts` replaces the global `fetch`
   with one that fails and clears the `STIGG_*` variables; every test injects its own
   `fetch`.
