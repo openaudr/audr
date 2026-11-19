@@ -60,7 +60,7 @@
     "version": "node ../../../tools/write-version.mjs"
   },
   "dependencies": {
-    "uuid": "^14.0.2"
+    "uuid": "^14.0.3"
   },
   "devDependencies": {
     "ajv": "^8.20.0",
