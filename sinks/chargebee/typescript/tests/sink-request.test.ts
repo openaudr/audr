@@ -21,7 +21,7 @@ describe('ChargebeeSink requests', () => {
       Accept: 'application/json',
       Authorization: `Basic ${btoa('test_key:')}`,
       'Content-Type': 'application/json;charset=UTF-8',
-      'User-Agent': `audr-ingestion-typescript/${VERSION}`,
+      'User-Agent': `audr-sink-chargebee/${VERSION} (typescript)`,
     });
     expect(call?.body.events.map((event) => Object.keys(event).sort())).toEqual([
       ['deduplication_id', 'properties', 'subscription_id', 'usage_timestamp'],

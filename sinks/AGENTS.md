@@ -16,6 +16,8 @@ This file summarises the rules to observe and the steps to follow.
    built.
 5. Keep credentials out of logs, errors and `repr()`.
 6. Run `audr.testing.assert_sink_contract()` in the test suite.
+7. Send `User-Agent: audr-sink-<target>/<version> (<language>)`, as
+   [`CONTRIBUTING.md`](CONTRIBUTING.md#identifying-the-sink) defines it.
 
 ## Creating a new sink
 

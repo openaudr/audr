@@ -29,7 +29,7 @@ describe('LagoSink requests', () => {
       Accept: 'application/json',
       Authorization: `Bearer ${API_KEY}`,
       'Content-Type': 'application/json;charset=UTF-8',
-      'User-Agent': `audr-sink-lago/${VERSION}`,
+      'User-Agent': `audr-sink-lago/${VERSION} (typescript)`,
     });
   });
 

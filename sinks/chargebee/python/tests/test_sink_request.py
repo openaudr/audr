@@ -47,7 +47,7 @@ async def test_sender_builds_the_required_batch_request() -> None:
     assert request.headers["Content-Type"] == "application/json;charset=UTF-8"
     assert request.headers["Accept"] == "application/json"
     assert request.headers["Authorization"] == "Basic dGVzdF9rZXk6"
-    assert request.headers["User-Agent"] == f"audr-ingestion-python/{__version__}"
+    assert request.headers["User-Agent"] == f"audr-sink-chargebee/{__version__} (python)"
     [event] = json.loads(request.content)["events"]
     assert event["subscription_id"] == "sub_123"
     assert event["deduplication_id"] == record.record_id

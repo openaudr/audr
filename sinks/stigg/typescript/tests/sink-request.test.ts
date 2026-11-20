@@ -30,7 +30,7 @@ describe('StiggSink requests', () => {
     expect(calls[0]?.headers).toEqual({
       Accept: 'application/json',
       'Content-Type': 'application/json;charset=UTF-8',
-      'User-Agent': `audr-sink-stigg/${VERSION}`,
+      'User-Agent': `audr-sink-stigg/${VERSION} (typescript)`,
       'X-API-KEY': API_KEY,
     });
   });

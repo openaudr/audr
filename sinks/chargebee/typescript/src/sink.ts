@@ -18,7 +18,7 @@ import { VERSION } from './version.js';
 // Chargebee property names match [a-zA-Z][a-zA-Z0-9_]*, so path segments may only be
 // joined by underscores.
 const SEPARATOR = /^_+$/;
-const USER_AGENT = `audr-ingestion-typescript/${VERSION}`;
+const USER_AGENT = `audr-sink-chargebee/${VERSION} (typescript)`;
 const ERROR_CODE_FIELDS = ['api_error_code', 'error_code', 'code'] as const;
 const SILENT: Logger = { warn: () => undefined, error: () => undefined };
 

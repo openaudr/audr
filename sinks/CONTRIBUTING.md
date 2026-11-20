@@ -43,6 +43,20 @@ batch. The rules a sink must hold to:
 `audr.testing.assert_sink_contract(sink)` exercises these rules. It runs in every sink's
 test suite; a sink that does not pass it is not accepted.
 
+## Identifying the sink
+
+An HTTP sink sends a `User-Agent` header of the form `<package-name>/<version> (<language>)`,
+for example `audr-sink-lago/1.2.0 (typescript)`, so a destination operator can tell which
+sink and language sent a request.
+
+- `<package-name>` is the distribution name without an npm scope: `audr-sink-<target>`. A
+  scope's `@` and `/` are not valid in an HTTP product token.
+- `<version>` is read from the package's version source, `_version.py` or the generated
+  `src/version.ts`, never written by hand.
+- `<language>` is `python` or `typescript`, in lower case.
+
+A test asserts the exact header the sink sends.
+
 ## Python specifics
 
 ```python
