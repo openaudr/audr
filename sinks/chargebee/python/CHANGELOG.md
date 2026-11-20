@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The `User-Agent` header sent to the destination is now
+  `audr-sink-chargebee/<version> (python)`, instead of `audr-ingestion-python/<version>`, following the format every sink uses.
+
 ## [0.3.0] - 2026-10-21
 
 ### Changed
