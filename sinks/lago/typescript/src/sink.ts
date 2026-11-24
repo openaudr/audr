@@ -20,7 +20,7 @@ import { VERSION } from './version.js';
 const MAX_EVENTS_PER_REQUEST = 100;
 /** `422` responses acted on per request before the events still unsettled are given up. */
 const MAX_SALVAGE_PASSES = 3;
-const USER_AGENT = `audr-sink-lago/${VERSION}`;
+const USER_AGENT = `audr-sink-lago/${VERSION} (typescript)`;
 const SILENT: Logger = { warn: () => undefined, error: () => undefined };
 const SAFE_NAME = /^[A-Za-z][A-Za-z0-9_]{0,63}$/;
 

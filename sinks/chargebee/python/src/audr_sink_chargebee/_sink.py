@@ -28,7 +28,7 @@ from audr_sink_chargebee._version import __version__
 _LOGGER = logging.getLogger(__name__)
 
 _ACCEPTED_STATUS_CODES = frozenset({202, 207})
-_USER_AGENT = f"audr-ingestion-python/{__version__}"
+_USER_AGENT = f"audr-sink-chargebee/{__version__} (python)"
 
 # Chargebee property names must match [a-zA-Z][a-zA-Z0-9_]*, so the separator
 # used to join flattened path segments may only be one or more underscores.
