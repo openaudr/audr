@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - The `User-Agent` header sent to the destination is now
-  `audr-sink-stigg/<version> (typescript)`, instead of `audr-sink-stigg/<version>`, following the format every sink uses.
+  `audr-sink-stigg/<version> (typescript)` instead of `audr-sink-stigg/<version>`,
+  following the format every sink uses.
 
 ## [0.1.0] - 2026-11-16
 
