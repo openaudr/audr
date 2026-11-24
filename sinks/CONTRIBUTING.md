@@ -90,8 +90,8 @@ Directory `sinks/<target>/<language>/`, distribution `audr-sink-<target>`, impor
 | `AGENTS.md` | How to work inside this package |
 | `CHANGELOG.md`, `LICENSE`, `NOTICE` | Release history and licensing |
 
-Outside the package: a workflow `.github/workflows/sink-<target>-python-verify.yml` for
-Python, or a filter in `.github/workflows/typescript-verify.yml` for TypeScript, a root
+Outside the package: a filter in `.github/workflows/python-verify.yml` for Python, or a
+filter in `.github/workflows/typescript-verify.yml` for TypeScript, a root
 `Makefile` target, a `CODEOWNERS` line, a row in the table in [`README.md`](README.md),
 and a component `README.md` at `sinks/<target>/` indexing the languages.
 
