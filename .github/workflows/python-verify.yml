@@ -3,14 +3,7 @@ name: Verify Python packages
 on:
   push:
     branches: [main]
-    paths: &paths
-      - "adapters/*/python/**"
-      - "sinks/*/python/**"
-      - "spec/**"
-      - "conformance/**"
-      - ".github/workflows/python-verify.yml"
   pull_request:
-    paths: *paths
 
 permissions:
   contents: read
