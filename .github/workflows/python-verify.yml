@@ -1,0 +1,193 @@
+name: Verify Python packages
+
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - "adapters/*/python/**"
+      - "sinks/*/python/**"
+      - "spec/**"
+      - "conformance/**"
+      - ".github/workflows/python-verify.yml"
+  pull_request:
+    paths: *paths
+
+permissions:
+  contents: read
+
+concurrency:
+  group: python-verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Changed packages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      packages: ${{ steps.filter.outputs.changes }}
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # One filter per package directory. Every package is tested against the core
+      # through a path source, so each filter includes the core's.
+      - name: Match changed files to packages
+        id: filter
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          filters: |
+            adapters/core/python: &core
+              - "adapters/core/python/**"
+              - "spec/**"
+              - "conformance/**"
+              - ".github/workflows/python-verify.yml"
+            adapters/langfuse/python:
+              - *core
+              - "adapters/langfuse/python/**"
+            adapters/litellm/python:
+              - *core
+              - "adapters/litellm/python/**"
+            adapters/nemo-relay/python:
+              - *core
+              - "adapters/nemo-relay/python/**"
+            sinks/chargebee/python:
+              - *core
+              - "sinks/chargebee/python/**"
+
+  test:
+    name: ${{ matrix.package }} on Python ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.packages != '[]'
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJSON(needs.changes.outputs.packages) }}
+        python: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v6
+        with:
+          version: "0.12.18"
+          python-version: "${{ matrix.python }}"
+
+      - name: Install
+        run: make install
+
+      - name: Lint
+        run: make lint
+
+      - name: Generated models are up to date
+        if: matrix.package == 'adapters/core/python'
+        run: make models-check
+
+      - name: Tests
+        run: make test
+
+      # The NeMo Relay examples need the runtime extra; the nemo-relay-runtime job runs them.
+      - name: Examples
+        if: matrix.package != 'adapters/nemo-relay/python'
+        run: make examples
+
+  nemo-relay-runtime:
+    name: adapters/nemo-relay/python runtime
+    runs-on: ubuntu-latest
+    needs: changes
+    if: contains(fromJSON(needs.changes.outputs.packages), 'adapters/nemo-relay/python')
+    defaults:
+      run:
+        working-directory: adapters/nemo-relay/python
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v6
+        with:
+          version: "0.12.18"
+          python-version: "3.11"
+
+      - name: Install with runtime extra
+        run: uv sync --locked --group dev --extra runtime
+
+      - name: Runtime tests
+        run: uv run pytest -m nemo_relay
+
+      - name: Examples
+        run: make examples
+
+  package:
+    name: ${{ matrix.package }} build and isolation
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.packages != '[]'
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJSON(needs.changes.outputs.packages) }}
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v6
+        with:
+          version: "0.12.18"
+          python-version: "3.12"
+
+      - name: Install
+        run: make install
+
+      - name: Build and verify isolation
+        run: make isolation
+
+      - name: Name the distribution
+        id: dist
+        run: |
+          name="$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["name"])')"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+
+      - name: Upload distributions
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ steps.dist.outputs.name }}-dist
+          path: ${{ matrix.package }}/dist/
+
+  # One check that always reports, so branch protection can require it even though the
+  # jobs above run only for the packages a change touches.
+  verify:
+    name: Python verify
+    runs-on: ubuntu-latest
+    needs: [changes, test, nemo-relay-runtime, package]
+    if: always()
+    steps:
+      - name: Check job results
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for result in $RESULTS; do
+            case "$result" in
+              success | skipped) ;;
+              *) echo "::error::a Python verify job ended with '$result'"; exit 1 ;;
+            esac
+          done

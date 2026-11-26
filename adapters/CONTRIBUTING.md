@@ -96,8 +96,8 @@ A TypeScript package contains the same `tests/`, `README.md` (the npm page), `AG
 | `examples/` | Runnable examples on mock models, run by `make examples` |
 | `scripts/package-smoke.mjs` | The smoke test `make isolation` runs against the installed tarball, through `tools/verify-npm-package.mjs` |
 
-Outside the package: a workflow `.github/workflows/adapter-<target>-python-verify.yml` for
-Python, or a filter in `.github/workflows/typescript-verify.yml` for TypeScript, a root
+Outside the package: a filter in `.github/workflows/python-verify.yml` for Python, or a
+filter in `.github/workflows/typescript-verify.yml` for TypeScript, a root
 `Makefile` target, a `CODEOWNERS` line, a row in the table in [`README.md`](README.md),
 and a component `README.md` at `adapters/<target>/` indexing the languages.
 

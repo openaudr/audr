@@ -147,7 +147,11 @@ distribution name with hyphens replaced by underscores. The core is the one exce
 `audr`, not `audr-adapter-core`. On npm every package is published under the `@openaudr`
 scope, for example `@openaudr/audr` and `@openaudr/audr-sink-chargebee`.
 
-A Python package's CI workflow is `.github/workflows/<kind>-<target>-python-verify.yml`.
+Every Python package is verified by `.github/workflows/python-verify.yml`, which tests
+packages affected by the changed files. Changes to the core, specification, conformance
+fixtures, or the workflow itself select every Python package. Each package is one filter
+in its `changes` job, and the `Python verify` job reports the combined result.
+
 Every TypeScript package is verified by `.github/workflows/typescript-verify.yml`, which
 tests packages affected by the changed files. Changes to the core, specification,
 conformance fixtures, or shared TypeScript tooling select every TypeScript package. Each

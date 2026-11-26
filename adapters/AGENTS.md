@@ -32,8 +32,8 @@ issue agrees the runtime hook and the record shape; if none exists, stop and rep
 3. **Implement** in this order, with tests alongside each: the runtime hook and lifecycle;
    attribution resolution with configurable defaults; event-to-record mapping; the
    cross-thread handoff and `drain()` if the runtime uses worker threads.
-4. **Wire the repository:** `.github/workflows/adapter-<target>-python-verify.yml`
-   modelled on `adapter-nemo-relay-python-verify.yml`, a root `Makefile` target
+4. **Wire the repository:** a filter for the package in the `changes` job of
+   `.github/workflows/python-verify.yml`, a root `Makefile` target
    `adapter-<target>-python` added to `python`, a `CODEOWNERS` line, a row in
    [`README.md`](README.md), and `adapters/<target>/README.md` indexing the language.
 5. **Write the README** for PyPI: install, activate and shut down, attribution, record

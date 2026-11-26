@@ -35,8 +35,8 @@ issue agrees the routing key and the de-duplication key; if none exists, stop an
    record-to-event encoding, including the routing and de-duplication keys; the transport
    with timeout and retry policy; the response-to-`BatchResult` mapping; the `Sink` class
    composing them. Add the `assert_sink_contract` test and a no-live-network test.
-4. **Wire the repository:** `.github/workflows/sink-<target>-python-verify.yml` modelled
-   on `sink-chargebee-python-verify.yml`, a root `Makefile` target `sink-<target>-python`
+4. **Wire the repository:** a filter for the package in the `changes` job of
+   `.github/workflows/python-verify.yml`, a root `Makefile` target `sink-<target>-python`
    added to `python`, a `CODEOWNERS` line, a row in [`README.md`](README.md), and
    `sinks/<target>/README.md` indexing the language.
 5. **Write the README** for PyPI: install, configure, routing and delivery semantics, the
