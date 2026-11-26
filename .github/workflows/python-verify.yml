@@ -34,33 +34,29 @@ jobs:
         with:
           persist-credentials: false
 
-      # One filter per package directory. Every package depends on the core through a
-      # path source, so each filter includes the core's directory.
+      # One filter per package directory. Every package is tested against the core
+      # through a path source, so each filter includes the core's.
       - name: Match changed files to packages
         id: filter
         uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         with:
           filters: |
-            adapters/core/python:
+            adapters/core/python: &core
               - "adapters/core/python/**"
               - "spec/**"
               - "conformance/**"
               - ".github/workflows/python-verify.yml"
             adapters/langfuse/python:
-              - &core "adapters/core/python/**"
-              - &workflow ".github/workflows/python-verify.yml"
+              - *core
               - "adapters/langfuse/python/**"
             adapters/litellm/python:
               - *core
-              - *workflow
               - "adapters/litellm/python/**"
             adapters/nemo-relay/python:
               - *core
-              - *workflow
               - "adapters/nemo-relay/python/**"
             sinks/chargebee/python:
               - *core
-              - *workflow
               - "sinks/chargebee/python/**"
 
   test:
@@ -109,7 +105,7 @@ jobs:
   nemo-relay-runtime:
     name: adapters/nemo-relay/python runtime
     runs-on: ubuntu-latest
-    needs: [changes, test]
+    needs: changes
     if: contains(fromJSON(needs.changes.outputs.packages), 'adapters/nemo-relay/python')
     defaults:
       run:
@@ -138,7 +134,7 @@ jobs:
   package:
     name: ${{ matrix.package }} build and isolation
     runs-on: ubuntu-latest
-    needs: [changes, test]
+    needs: changes
     if: needs.changes.outputs.packages != '[]'
     defaults:
       run:
